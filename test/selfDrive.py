@@ -8,7 +8,7 @@ import skimage.io as io
 from skimage.util import img_as_float, crop
 from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
-
+#test change
 camera = picamera.PiCamera()
 
 GPIO.setmode(GPIO.BCM)
