@@ -16,7 +16,7 @@ We're developing a 1/10th scale vehicle platform with a trailer that can be used
 
 ## Technologies Used
 - Seeed Studio vehicle chassis
-- Python 3
+- Python 3.9.2
 - Raspberry Pi 4 Model B
 
 ## Project Status
