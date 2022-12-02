@@ -59,6 +59,7 @@ class Drive:
         """
         if cmd == 0:
             self.park()
+            dc = 0
         elif cmd > 0:
             self.forward()
             if cmd > 1:
@@ -83,13 +84,13 @@ def test_raw():
 
 
 def test_cmd():
-    steer = Drive()
+    drive = Drive()
     cmd = str(0)
     while cmd != "q":
-        steer.steer(float(cmd))
+        drive.drive(float(cmd))
         cmd = input("Enter new normalized drive command. q to quit:  ")
-    steer.stop()
-    steer.cleanup()
+    drive.stop()
+    drive.cleanup()
 
 
 if __name__ == "__main__":
