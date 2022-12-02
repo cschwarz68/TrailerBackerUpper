@@ -35,7 +35,7 @@ def main():
 
         values = js.update()
         steer.steer(values["axes"][3])
-        drive.drive(values["axes"][1])
+        drive.drive(-values["axes"][1])
 
         # Limit to 10 frames per second
         clock.tick(10)
