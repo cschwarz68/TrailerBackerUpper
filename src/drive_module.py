@@ -10,7 +10,7 @@ GPIO.setup(6, GPIO.OUT)
 GPIO.setup(25, GPIO.OUT)
 
 # known calibration settings
-drive_cal_50 = {"freq": 50, "full": 40}
+drive_cal_50 = {"freq": 50, "full": 40, "tol": 1e-3}
 
 
 class Drive:
@@ -57,7 +57,7 @@ class Drive:
         """
         normalized driving. 1 is full speed forward, -1 is full speed reverse
         """
-        if cmd == 0:
+        if abs(cmd) < self.cal["tol"]:
             self.park()
             dc = 0
         elif cmd > 0:
