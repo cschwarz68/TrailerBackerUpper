@@ -1,4 +1,3 @@
-import time
 import RPi.GPIO as GPIO
 
 # GPIO mode should be consistent across all modules
@@ -57,7 +56,7 @@ def test_cmd():
     cmd = str(0)
     while cmd != "q":
         steer.steer(float(cmd))
-        cmd = input("Enter new raw steer command. q to quit:  ")
+        cmd = input("Enter new normalized steer command. q to quit:  ")
     steer.stop()
     steer.cleanup()
 
