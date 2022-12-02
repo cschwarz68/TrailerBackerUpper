@@ -10,7 +10,7 @@ GPIO.setup(6, GPIO.OUT)
 GPIO.setup(25, GPIO.OUT)
 
 # known calibration settings
-drive_cal_50 = {"freq": 50, "full": 40, "tol": 1e-3}
+drive_cal_50 = {"freq": 50, "full": 50, "tol": 1e-3}
 
 
 class Drive:
