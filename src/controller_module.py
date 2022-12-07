@@ -12,28 +12,35 @@ pygame.joystick.init()
 joystick_count = pygame.joystick.get_count()
 print(f"{str(joystick_count)} joysticks detected")
 
-# Get information on joystick 0
-joystick = pygame.joystick.Joystick(0)
-joystick.init()
-name = joystick.get_name()
-num_axes = joystick.get_numaxes()
-num_buttons = joystick.get_numbuttons()
-num_hats = joystick.get_numhats()
-info = {
-    "name": name,
-    "num_axes": num_axes,
-    "num_buttons": num_buttons,
-    "num_hats": num_hats,
-}
-print(
-    f"Joystick {name} has {str(num_axes)} axes, {str(num_buttons)} buttons, {str(num_hats)} hats"
-)
+if joystick_count > 0:
+    # Get information on joystick 0
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+    name = joystick.get_name()
+    num_axes = joystick.get_numaxes()
+    num_buttons = joystick.get_numbuttons()
+    num_hats = joystick.get_numhats()
+    info = {
+        "name": name,
+        "num_axes": num_axes,
+        "num_buttons": num_buttons,
+        "num_hats": num_hats,
+    }
+    print(
+        f"Joystick {name} has {str(num_axes)} axes, {str(num_buttons)} buttons, {str(num_hats)} hats"
+    )
+else:
+    print("controller_module: no joysticks found")
 
 
 def update():
     axes = []
     buttons = []
     hats = []
+
+    if joystick_count == 0:
+        values = {"axes": axes, "buttons": buttons, "hats": hats}
+        return values
 
     for i in range(num_axes):
         axis = joystick.get_axis(i)
@@ -78,6 +85,9 @@ class TextPrint:
 
 
 def show(screen, textPrint, values):
+    if joystick_count == 0:
+        return
+
     # DRAWING STEP
     # First, clear the screen to white. Don't put other drawing commands
     # above this, or they will be erased with this command.
