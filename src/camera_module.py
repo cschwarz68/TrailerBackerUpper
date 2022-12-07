@@ -12,12 +12,15 @@ camera = picamera.PiCamera()
 
 
 # main loop to save video
-def image_test():
+def image_test(p):
     camera.resolution = (1024, 768)
-    camera.start_preview()
+    # camera.start_preview()
     # Camera warm-up time
     time.sleep(2)
-    camera.capture("foo.jpg")
+
+    # basic capture
+    file = p / "image.jpg"
+    camera.capture(str(file))
 
     # using raw array
     rawCapture = PiRGBArray(camera)
@@ -32,6 +35,8 @@ def image_test():
     camera.capture(image, "bgr")
     image = image.reshape((480, 640, 3))
     cv2.imshow("Image2", image)
+
+    # camera.stop_preview()
 
 
 def video_test():
@@ -54,15 +59,9 @@ if __name__ == "__main__":
 
     p = Path("../media")
 
-    camera.start_preview()
-    # Camera warm-up time
-    time.sleep(2)
-
     print("image test")
-    image_test()
-
-    print("video test")
-    video_test()
+    image_test(p)
 
     print("preview test")
     preview_test()
+    time.sleep(10)
