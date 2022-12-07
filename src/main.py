@@ -1,44 +1,41 @@
-import pygame
+from inputs import get_gamepad
+import time
 
 # local imports
-import controller_module as js
 import drive_module as dr
 import steer_module as sr
 
 
 def main():
-    pygame.init()
-
-    # Used to manage how fast the screen updates
-    clock = pygame.time.Clock()
+    print("starting main program")
 
     steer = sr.Steer()
     drive = dr.Drive()
 
+    # test steering upon startup
+    steer.steer(-0.5)
+    time.sleep(0.5)
+    steer.steer(0.5)
+    time.sleep(0.5)
+    steer.steer(0)
+
     # Loop until the user clicks the close button.
     done = False
     while not done:
+        events = get_gamepad()
         # Process events
-        for event in pygame.event.get():  # User did something
-            if event.type == pygame.QUIT:  # If user clicked close
-                print("Quit")
-                done = True  # Flag that we are done so we exit this loop
-
-            # Possible joystick actions:
-            # JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
-            if event.type == pygame.JOYBUTTONDOWN:
-                print("Joystick button pressed.")
-                if js.joystick.get_button(1):  # 'X'
-                    done = True
-            if event.type == pygame.JOYBUTTONUP:
-                print("Joystick button released.")
-
-        values = js.update()
-        steer.steer(values["axes"][3])
-        drive.drive(-values["axes"][1])
-
-        # Limit to 10 frames per second
-        clock.tick(10)
+        for event in events:
+            if event.ev_type == "Key":
+                if event.code == "BTN_EAST":
+                    if event.state == 1:
+                        done = True
+            if event.ev_type == "Absolute":
+                if event.code == "ABS_RX":
+                    x = float(event.state) / 32767.0
+                    steer.steer(x)
+                elif event.code == "ABS_Y":
+                    y = float(event.state) / 32767.0
+                    drive.drive(y)
 
     steer.stop()
     steer.cleanup()
