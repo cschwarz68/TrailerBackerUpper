@@ -22,20 +22,25 @@ def main():
     # Loop until the user clicks the close button.
     done = False
     while not done:
-        events = get_gamepad()
-        # Process events
-        for event in events:
-            if event.ev_type == "Key":
-                if event.code == "BTN_EAST":
-                    if event.state == 1:
-                        done = True
-            if event.ev_type == "Absolute":
-                if event.code == "ABS_RX":
-                    x = float(event.state) / 32767.0
-                    steer.steer(x)
-                elif event.code == "ABS_Y":
-                    y = float(event.state) / 32767.0
-                    drive.drive(y)
+        try:
+            events = get_gamepad()
+            # Process events
+            for event in events:
+                if event.ev_type == "Key":
+                    if event.code == "BTN_EAST":
+                        if event.state == 1:
+                            done = True
+                if event.ev_type == "Absolute":
+                    if event.code == "ABS_RX":
+                        x = float(event.state) / 32767.0
+                        steer.steer(x)
+                    elif event.code == "ABS_Y":
+                        y = float(event.state) / 32767.0
+                        drive.drive(y)
+        except:
+            # auto-navigation code here
+            time.sleep(0.1)
+            continue
 
     steer.stop()
     steer.cleanup()
