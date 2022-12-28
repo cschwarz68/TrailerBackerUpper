@@ -11,6 +11,8 @@ from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
 from PIL import Image
+import picamera
+import time
 
 """
 gray = cv2.cvtColor(files[0], cv2.COLOR_BGR2GRAY)
@@ -62,6 +64,29 @@ def measureAngles(img):
             + str(region.axis_major_length)
         )"""
         return majorAxisDegree
+
+
+# test image processing on image from camera
+def take_picture():
+    with picamera.PiCamera() as camera:
+        """
+        camera.resolution = (320, 240)
+        camera.framerate = 24
+        time.sleep(2)
+        image = np.empty((240 * 320 * 3,), dtype=np.uint8)
+        camera.capture(image, "bgr")
+        image = image.reshape((240, 320, 3))
+        """
+        camera.capture("snapshot.jpg", format="jpeg")
+        image = mpimg.imread("/home/nads/Python/TrailerBackerUpper/snapshot.jpg")
+        os.remove("/home/nads/Python/TrailerBackerUpper/snapshot.jpg")
+        plt.imshow(image)
+        plt.show()
+        return image
+
+
+plt.imshow(imageChanger(take_picture()))
+plt.show()
 
 
 """
@@ -147,4 +172,5 @@ def processing_test():
 
 
 if __name__ == "__main__":
-    processing_test()
+    # processing_test()
+    take_picture()
