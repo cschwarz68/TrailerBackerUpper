@@ -5,13 +5,14 @@ import os
 from os import listdir
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.patches as mpatches
 import math
 import skimage
 from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
 from PIL import Image
-import picamera
+#import picamera
 import time
 
 """
@@ -47,14 +48,7 @@ def imageChanger(img):
 def measureAngles(img):
     # prop = regionprops(img)
     for region in regionprops(img):
-        minr, minc, maxr, maxc = region.bbox
-        y0, x0 = region.centroid
-        orientation = region.orientation
-        x1 = x0 + math.cos(orientation) * 0.5 * region.axis_minor_length
-        y1 = y0 - math.sin(orientation) * 0.5 * region.axis_minor_length
-        x2 = x0 - math.sin(orientation) * 0.5 * region.axis_major_length
-        y2 = y0 - math.cos(orientation) * 0.5 * region.axis_major_length
-        majorAxisDegree = orientation * (180 / np.pi) + 90
+        majorAxisDegree = region.orientation * (180 / np.pi) + 90
         """print(
             "Angle: "
             + str(majorAxisDegree)
@@ -64,8 +58,27 @@ def measureAngles(img):
             + str(region.axis_major_length)
         )"""
         return majorAxisDegree
-
-
+def plotLines(img):
+    for region in regionprops(img):
+        minr, minc, maxr, maxc = region.bbox
+        rect = mpatches.Rectangle((minc, minr), maxc - minc, maxr - minr, fill=False, edgecolor='red', linewidth=2)
+        y0, x0 = region.centroid
+        orientation = region.orientation
+        x1 = x0 + math.cos(orientation) * 0.5 * region.axis_minor_length
+        y1 = y0 - math.sin(orientation) * 0.5 * region.axis_minor_length
+        x2 = x0 - math.sin(orientation) * 0.5 * region.axis_major_length
+        y2 = y0 - math.cos(orientation) * 0.5 * region.axis_major_length
+        plt.add_patch(rect)
+        plt.plot((x0, x1), (y0, y1), '-r', linewidth = 2)
+        plt.plot(x0, y0, '.g', markersize = 5)
+        bx = (minc, maxc, maxc, minc, minc)
+        by = (minr, minr, maxr, maxr, minr)
+        plt.plot(bx, by, '-b', linewidth = 2)
+    return img
+testImage = imageChanger(mpimg.imread("/Users/adimukundan/Documents/GitHub/TrailerBackerUpper/test/assets/ropes.jpg"))
+plt.imshow(plotLines(testImage))
+plt.show()
+'''
 # test image processing on image from camera
 def take_picture():
     with picamera.PiCamera() as camera:
@@ -87,7 +100,7 @@ def take_picture():
 
 plt.imshow(imageChanger(take_picture()))
 plt.show()
-
+'''
 
 """
 finalFig = plt.figure(figsize=(10, 7))
@@ -173,4 +186,5 @@ def processing_test():
 
 if __name__ == "__main__":
     # processing_test()
-    take_picture()
+    print('hello')
+    # take_picture()
