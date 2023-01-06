@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 import os
-from os import listdir
 from matplotlib import pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.patches as mpatches
@@ -18,6 +17,7 @@ import datetime
 
 # function to modify image
 def image_changer(img):
+    print(img.shape)
     # crop to bottom half of image
     crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])].copy()
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
@@ -82,9 +82,10 @@ def take_picture():
         camera.capture(image, "bgr")
         image = image.reshape((240, 320, 3))
         """
-        date = datetime.datetime.now().strftime("%m_%d_%Y-%I_%M_%p")
+        date = datetime.datetime.now().strftime("%m_%d_%Y-%I_%M_%S%p")
         camera.capture(f"captures/snapshot_{date}.jpg", format="jpeg")
         image = mpimg.imread(f"captures/snapshot_{date}.jpg")
+        os.remove(f"captures/snapshot_{date}.jpg")
         return image
 
 
