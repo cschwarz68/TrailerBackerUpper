@@ -11,7 +11,8 @@ from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
 from PIL import Image
-#import picamera
+
+# import picamera
 import time
 import datetime
 
@@ -47,13 +48,14 @@ def measure_angles(img):
 
 def steering_output(angles):
     if len(angles) == 2:
-        return((180 - (angles[0]+angles[1]))/180)
+        return (180 - (angles[0] + angles[1])) / 180
     elif len(angles) == 1:
         if angles[0] >= 5:
-            return ((180-angles[0])/180)
+            return (180 - angles[0]) / 180
         else:
-            #throw stop flag as end has been reached
+            # throw stop flag as end has been reached
             pass
+
 
 def plot_lines(img):
     for region in regionprops(img):
@@ -129,7 +131,11 @@ def processing_test():
     for i in range(len(finalArray)):
         finalFig.add_subplot(rows, columns, i + 1)
         plt.imshow(finalArray[i])
-        print(names[i], measure_angles(finalArray[i]), steering_output(measure_angles(finalArray[i])))
+        print(
+            names[i],
+            measure_angles(finalArray[i]),
+            steering_output(measure_angles(finalArray[i])),
+        )
         plt.axis("off")
         plt.title(names[i])
     plt.show()
