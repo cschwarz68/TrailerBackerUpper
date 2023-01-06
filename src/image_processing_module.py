@@ -11,14 +11,12 @@ from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
 from PIL import Image
-
-# import picamera
+import picamera
 import time
 import datetime
 
 # function to modify image
 def image_changer(img):
-    print(img.shape)
     # crop to bottom half of image
     crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])].copy()
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
@@ -43,6 +41,7 @@ def measure_angles(img):
             + str(region.axis_major_length)
         )"""
         degrees.append(majorAxisDegree)
+    print(degrees)
     return degrees
 
 
@@ -142,5 +141,5 @@ def processing_test():
 
 
 if __name__ == "__main__":
-    processing_test()
-    # take_picture()
+    # processing_test()
+    take_picture()
