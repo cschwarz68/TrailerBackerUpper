@@ -41,7 +41,6 @@ def measure_angles(img):
             + str(region.axis_major_length)
         )"""
         degrees.append(majorAxisDegree)
-    print(degrees)
     return degrees
 
 
@@ -141,5 +140,5 @@ def processing_test():
 
 
 if __name__ == "__main__":
-    # processing_test()
-    take_picture()
+    processing_test()
+    # take_picture()
