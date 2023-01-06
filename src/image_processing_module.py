@@ -15,24 +15,6 @@ from PIL import Image
 #import picamera
 import time
 
-"""
-gray = cv2.cvtColor(files[0], cv2.COLOR_BGR2GRAY)
-blur = cv2.GaussianBlur(gray, (45, 45), 0)
-ret, binary = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)
-#remove small objects
-float = img_as_float(binary)
-label_float = label(float)
-filtered = remove_small_objects(label_float, 16000, 1)
-#show image
-imgPlot = plt.imshow(filtered)
-plt.show()
-#cv2.imshow("unblur", files[0])
-#cv2.imshow("filtered", filteredImage)
-#cv2.waitKey(0)
-#cv2.destroyAllWindows()
-#initialize image
-#image = cv2.imread("/Users/adimukundan/Documents/GitHub/TrailerBackerUpper/src/testimage.jpeg", cv2.IMREAD_GRAYSCALE)
-"""
 # function to modify image
 def imageChanger(img):
     crop = img[600:1200, 0:1920].copy()
@@ -44,9 +26,7 @@ def imageChanger(img):
     filtered = remove_small_objects(labelFloat, 16000, 1)
     return filtered
 
-
 def measureAngles(img):
-    # prop = regionprops(img)
     for region in regionprops(img):
         majorAxisDegree = region.orientation * (180 / np.pi) + 90
         """print(
@@ -58,6 +38,7 @@ def measureAngles(img):
             + str(region.axis_major_length)
         )"""
         return majorAxisDegree
+
 def plotLines(img):
     for region in regionprops(img):
         minr, minc, maxr, maxc = region.bbox
@@ -68,13 +49,14 @@ def plotLines(img):
         y1 = y0 - math.sin(orientation) * 0.5 * region.axis_minor_length
         x2 = x0 - math.sin(orientation) * 0.5 * region.axis_major_length
         y2 = y0 - math.cos(orientation) * 0.5 * region.axis_major_length
-        plt.add_patch(rect)
+        #plt.add_patch(rect)
         plt.plot((x0, x1), (y0, y1), '-r', linewidth = 2)
         plt.plot(x0, y0, '.g', markersize = 5)
         bx = (minc, maxc, maxc, minc, minc)
         by = (minr, minr, maxr, maxr, minr)
         plt.plot(bx, by, '-b', linewidth = 2)
     return img
+
 testImage = imageChanger(mpimg.imread("/Users/adimukundan/Documents/GitHub/TrailerBackerUpper/test/assets/ropes.jpg"))
 plt.imshow(plotLines(testImage))
 plt.show()
@@ -121,7 +103,7 @@ plt.show()
 
 def processing_test():
     # initialize folder
-    folder_dir = "/home/nads/Python/TrailerBackerUpper/test/assets"
+    folder_dir = "test/assets"
     # initialize image name array
     names = []
     for image in os.listdir(folder_dir):
@@ -185,6 +167,6 @@ def processing_test():
 
 
 if __name__ == "__main__":
-    # processing_test()
-    print('hello')
+    processing_test()
+    #print('hello')
     # take_picture()
