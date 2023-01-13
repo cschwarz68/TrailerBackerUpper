@@ -26,7 +26,7 @@ def image_test():
     p = Path("../captures")
     file = p / "image.jpg"
     file = "image.jpg"
-    camera.capture(str(file))
+    # camera.capture(str(file))
 
     # using raw array
     # rawCapture = PiRGBArray(camera)

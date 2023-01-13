@@ -45,14 +45,16 @@ def measure_angles(img):
 
 
 def steering_output(angles):
+    normalized_output = 0
     if len(angles) == 2:
-        return (180 - (angles[0] + angles[1])) / 180
+        normalized_output = (180 - (angles[0] + angles[1])) / 180
     elif len(angles) == 1:
         if angles[0] >= 5:
-            return (180 - angles[0]) / 180
+            normalized_output = (180 - angles[0]) / 180
         else:
             # throw stop flag as end has been reached
             pass
+    return normalized_output
 
 
 def plot_lines(img):
