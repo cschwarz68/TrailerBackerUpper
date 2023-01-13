@@ -11,8 +11,21 @@ from pathlib import Path
 
 print(cv2.__version__)
 
-# initialize camera and filename
 camera = picamera.PiCamera()
+
+
+class Camera:
+    def __init__(self):
+        # initialize camera and filename
+        self.camera = picamera.PiCamera(resolution="VGA")
+
+        # capture without warmup
+
+    def quick_capture(self):
+        image = np.empty((640 * 480 * 3,), dtype=np.uint8)
+        self.camera.capture(image, "bgr")
+        np.save("captures/test", image)
+        return image
 
 
 # main loop to save video

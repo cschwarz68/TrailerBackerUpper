@@ -5,8 +5,9 @@ import time
 import drive_module as dr
 import steer_module as sr
 import image_processing_module as ip
+
+# import camera_module as cm
 import quick_capture_module as qc
-import cv2
 from matplotlib import pyplot as plt
 
 
@@ -15,7 +16,8 @@ def main():
 
     steer = sr.Steer()
     drive = dr.Drive()
-    camera = qc.Camera()
+    stream = qc.StreamCamera()
+    # camera = cm.Camera()
 
     # test steering upon startup
     """
@@ -25,7 +27,6 @@ def main():
     time.sleep(0.5)
     steer.steer(0)
     """
-    # start cam
     # Loop until the user clicks the close button.
     done = False
     while not done:
@@ -40,10 +41,24 @@ def main():
                     # testing image taking
                     elif event.code == "BTN_WEST":
                         if event.state == 1:
-                            plt.imshow(ip.image_changer(camera.capture()))
-                            plt.show()
+                            image = stream.capture()
+                            filtered = ip.image_changer(image)
+                            # angle = ip.steering_output(ip.measure_angles(image))
+                            plt.imshow(image)
+                            plt.show(block=False)
+                            plt.pause(5)
+                            plt.imshow(filtered)
+                            plt.show(block=False)
                             plt.pause(3)
                             plt.close()
+                            # print(angle)
+                    """
+                    elif event.code == "BTN_SOUTH":
+                        if event.state == 1:
+                            image = camera.quick_capture()
+                            plt.imshow(image)
+                            plt.show()
+                    """
                 if event.ev_type == "Absolute":
                     if event.code == "ABS_RX":
                         x = float(event.state) / 32767.0
@@ -56,14 +71,16 @@ def main():
             # auto-navigation code here
 
             # steer.steer(ip.steering_output(ip.measure_angles(camera.capture())))
+            """
             image = ip.image_changer(camera.capture())
             steering_angle = ip.steering_output(ip.measure_angles(image))
             print(steering_angle)
             steer.steer(steering_angle)
             time.sleep(1)
+            """
             continue
-
-    camera.stop()
+    stream.stop()
+    # camera.stop()
     steer.stop()
     steer.cleanup()
 

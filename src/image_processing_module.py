@@ -18,13 +18,22 @@ import datetime
 # function to modify image
 def image_changer(img):
     # crop to bottom half of image
-    crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])].copy()
+    crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])]
     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (45, 45), 0)
-    ret, binary = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY)
+    print(f"max value of gray is {max(gray[0])}")
+    thresh = int(max(gray[0])*0.6)
+    # thresh = 150
+    plt.imshow(gray)
+    plt.show()
+    blur = cv2.GaussianBlur(gray, (21,21), 0)
+    plt.imshow(blur)
+    plt.show()
+    ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+    plt.imshow(binary)
+    plt.show()
     float = img_as_float(binary)
     labelFloat = label(float)
-    filtered = remove_small_objects(labelFloat, 16000, 1)
+    filtered = remove_small_objects(labelFloat, 1600, 1)
     return filtered
 
 
