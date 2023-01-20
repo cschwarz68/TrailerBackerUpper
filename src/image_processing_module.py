@@ -10,11 +10,16 @@ import skimage
 from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
-from PIL import Image
-import picamera
+from PIL import Image as im
+#import picamera
 import time
 import datetime
-
+def capture_test():
+    folder_dir = "captures"
+    for name in os.listdir(folder_dir):
+        string = folder_dir+"/"+name
+        array = np.fromstring(string)
+        print(array.shape)
 # function to modify image
 def image_changer(img):
     # crop to bottom half of image
@@ -23,20 +28,49 @@ def image_changer(img):
     print(f"max value of gray is {max(gray[0])}")
     thresh = int(max(gray[0])*0.6)
     # thresh = 150
-    plt.imshow(gray)
-    plt.show()
     blur = cv2.GaussianBlur(gray, (21,21), 0)
-    plt.imshow(blur)
-    plt.show()
     ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
-    plt.imshow(binary)
-    plt.show()
     float = img_as_float(binary)
     labelFloat = label(float)
     filtered = remove_small_objects(labelFloat, 1600, 1)
     return filtered
+def houghlines_changer():
+    image = cv2.imread("test/assets/ropes.jpg", cv2.IMREAD_GRAYSCALE)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    print(image.shape)
+    height = image.shape[0]
+    width = image.shape[1]
+    cropped_image = image[int(image.shape[0] / 2) : int(image.shape[0]), 0 : int(image.shape[1])]
+    gray_image = cv2.cvtColor(cropped_image, cv2.COLOR_RGB2GRAY)
+    blur = cv2.GaussianBlur(gray_image, (9,9), 0)
+    canny_image = cv2.Canny(blur, 100, 200)
+    lines = cv2.HoughLinesP(canny_image,
+                        rho=6,
+                        theta=np.pi/180,
+                        threshold=160,
+                        lines=np.array([]),
+                        minLineLength=40,
+                        maxLineGap=25)
+    image_with_lines = draw_the_lines(cropped_image, lines)
+    plt.imshow(image_with_lines)
+    plt.show()
+def region_of_interest(img, vertices):
+    mask = np.zeros_like(img)
+    channel_count = img.shape[2]
+    match_mask_color = (255,) * channel_count
+    cv2.fillPoly(mask, vertices, match_mask_color)
+    masked_image = cv2.bitwise_and(img, mask)
+    return masked_image
+def draw_the_lines(img, lines):
+    img = np.copy(img)
+    blank_image = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
 
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            cv2.line(blank_image, (x1,y1), (x2,y2), (0, 255, 0), thickness=10)
 
+    img = cv2.addWeighted(img, 0.8, blank_image, 1, 0.0)
+    return img
 def measure_angles(img):
     degrees = []
     for region in regionprops(img):
@@ -151,5 +185,7 @@ def processing_test():
 
 
 if __name__ == "__main__":
-    processing_test()
+    # processing_test()
     # take_picture()
+    # capture_test()
+    houghlines_changer()
