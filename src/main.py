@@ -5,10 +5,11 @@ import time
 import drive_module as dr
 import steer_module as sr
 import image_processing_module as ip
+import camera_module as cm
 
-# import camera_module as cm
 import quick_capture_module as qc
 from matplotlib import pyplot as plt
+import cv2
 
 
 def main():
@@ -16,8 +17,8 @@ def main():
 
     steer = sr.Steer()
     drive = dr.Drive()
-    stream = qc.StreamCamera()
-    # camera = cm.Camera()
+    # stream = qc.StreamCamera()
+    camera = cm.Camera()
 
     # test steering upon startup
     """
@@ -38,27 +39,25 @@ def main():
                     if event.code == "BTN_EAST":
                         if event.state == 1:
                             done = True
-                    # testing image taking
-                    elif event.code == "BTN_WEST":
-                        if event.state == 1:
-                            image = stream.capture()
-                            filtered = ip.image_changer(image)
-                            # angle = ip.steering_output(ip.measure_angles(image))
-                            plt.imshow(image)
-                            plt.show(block=False)
-                            plt.pause(5)
-                            plt.imshow(filtered)
-                            plt.show(block=False)
-                            plt.pause(3)
-                            plt.close()
-                            # print(angle)
-                    """
+                    # processing and capture test
                     elif event.code == "BTN_SOUTH":
                         if event.state == 1:
                             image = camera.quick_capture()
-                            plt.imshow(image)
+                            final_image = ip.lane_detection(image)
+                            edges = ip.edge_detector(image)
+                            cropped_edges = ip.region_of_interest(edges)
+                            line_segments = ip.detect_line_segments(cropped_edges)
+                            lane_lines = ip.average_slope_intercept(
+                                image, line_segments
+                            )
+                            num_lanes = len(lane_lines)
+                            line_image = ip.display_lines(image, lane_lines)
+                            steering_angle = ip.compute_steering_angle(
+                                line_image, lane_lines
+                            )
+                            steer.steer_by_angle(steering_angle)
+                            plt.imshow(final_image)
                             plt.show()
-                    """
                 if event.ev_type == "Absolute":
                     if event.code == "ABS_RX":
                         x = float(event.state) / 32767.0
@@ -71,16 +70,29 @@ def main():
             # auto-navigation code here
 
             # steer.steer(ip.steering_output(ip.measure_angles(camera.capture())))
+            image = camera.quick_capture()
             """
-            image = ip.image_changer(camera.capture())
-            steering_angle = ip.steering_output(ip.measure_angles(image))
-            print(steering_angle)
-            steer.steer(steering_angle)
-            time.sleep(1)
+            filtered = ip.image_changer(image)
+            angles = ip.measure_angles(filtered)
+            steer_angle = ip.steering_output(angles)
+            print(angles, ip.steering_output(angles))
+            steer.steer(steer_angle)
             """
+            # testing auto-navigation with houghlines
+            edges = ip.edge_detector(image)
+            cropped_edges = ip.region_of_interest(edges)
+            line_segments = ip.detect_line_segments(cropped_edges)
+            lane_lines = ip.average_slope_intercept(image, line_segments)
+            num_lanes = len(lane_lines)
+            line_image = ip.display_lines(image, lane_lines)
+            steering_angle = ip.compute_steering_angle(line_image, lane_lines)
+            stable_angle = steer.stabilize_steering_angle(steering_angle, num_lanes)
+            steer.steer_by_angle(stable_angle)
+            drive.drive(0.8)
+
             continue
-    stream.stop()
-    # camera.stop()
+    # stream.stop()
+    camera.stop()
     steer.stop()
     steer.cleanup()
 

@@ -16,6 +16,7 @@ class Steer:
         self.cal = cal
         self.pwm = GPIO.PWM(4, cal["freq"])
         self.pwm.start(cal["center"])
+        self.current_steering_angle = 90
 
     def stop(self):
         self.pwm.stop()
@@ -41,7 +42,8 @@ class Steer:
         self.set(dc)
 
     def steer_by_angle(self, angle):
-        normalized_angle = (90-angle)/90
+        cmd = (angle - 90) / 45 
+        print(angle, cmd)
         if cmd > 0:
             if cmd > 1:
                 cmd = 1
@@ -51,6 +53,31 @@ class Steer:
                 cmd = -1
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
         self.set(dc)
+
+    def stabilize_steering_angle(
+        self,
+        new_angle,
+        num_of_lane_lines,
+        max_angle_deviation_two_lines=10,
+        max_angle_deviation_one_line=2,
+    ):
+        if num_of_lane_lines == 2:
+            max_angle_deviation = max_angle_deviation_two_lines
+        else:
+            max_angle_deviation = max_angle_deviation_one_line
+
+        angle_deviation = new_angle - self.current_steering_angle
+        if abs(angle_deviation) > max_angle_deviation:
+            stabilized_steering_angle = int(
+                self.current_steering_angle
+                + max_angle_deviation * angle_deviation / abs(angle_deviation)
+            )
+        else:
+            stabilized_steering_angle = new_angle
+
+        self.current_steering_angle = stabilized_steering_angle
+        return stabilized_steering_angle
+
 
 def test_raw():
     steer = Steer()

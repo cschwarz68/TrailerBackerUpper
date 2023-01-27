@@ -25,9 +25,11 @@ class StreamCamera:
 
     def stop(self):
         self.camera.stop_preview()
+        self.camera.close()
 
 
 if __name__ == "__main__":
     camera = StreamCamera()
     plt.imshow(camera.capture())
+    camera.close()
     plt.show()
