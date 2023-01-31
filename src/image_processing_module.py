@@ -208,6 +208,8 @@ def plot_test():
     cropped_edges = region_of_interest(edges)
     line_segments = detect_line_segments(cropped_edges)
     lane_lines = average_slope_intercept(image, line_segments)
+    plt.imshow(edges)
+    plt.show()
     line_image = display_lines(image, lane_lines)
     steering_angle = compute_steering_angle(line_image, lane_lines)
     steering_image = display_heading_line(line_image, steering_angle)
