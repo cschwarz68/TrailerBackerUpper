@@ -11,25 +11,29 @@ from pathlib import Path
 
 print(cv2.__version__)
 
-camera = picamera.PiCamera()
+# camera = picamera.PiCamera()
 
 
 class Camera:
     def __init__(self):
         # initialize camera and filename
-        self.camera = picamera.PiCamera(resolution="VGA")
+        self.camera = picamera.PiCamera(resolution=(640, 480))
 
         # capture without warmup
 
     def quick_capture(self):
-        image = np.empty((640 * 480 * 3,), dtype=np.uint8)
+        image = np.empty((480, 640, 3,), dtype=np.uint8)
         self.camera.capture(image, "bgr")
-        np.save("captures/test", image)
         return image
+
+    def stop(self):
+        self.camera.stop_preview()
+        self.camera.close()
 
 
 # main loop to save video
 def image_test():
+    camera = picamera.PiCamera(resolution=(640, 480))
     camera.resolution = (1024, 768)
     camera.start_preview()
     # Camera warm-up time
@@ -54,6 +58,7 @@ def image_test():
     image = np.empty((640 * 480 * 3,), dtype=np.uint8)
     camera.capture(image, "bgr")
     camera.stop_preview()
+    camera.close()
     image = image.reshape((480, 640, 3))
     image = ip.image_changer(image)
     # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -63,18 +68,22 @@ def image_test():
 
 
 def video_test():
+    camera = picamera.PiCamera(resolution=(640, 480))
     date = "%Y%m%d-%H%M"
     filename = "pi_recording_" + date + ".h264"
     camera.resolution = (640, 480)
     camera.start_recording(filename)
     camera.wait_recording(30)
     camera.stop_recording()
+    camera.close()
 
 
 def preview_test():
+    camera = picamera.PiCamera(resolution=(640, 480))
     camera.start_preview(alpha=200)
     time.sleep(5)
     camera.stop_preview()
+    camera.close()
 
 
 # compute binary search time
