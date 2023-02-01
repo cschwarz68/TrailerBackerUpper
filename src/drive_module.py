@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import time
 
 # GPIO mode should be consistent across all modules
 GPIO.setmode(GPIO.BCM)
@@ -73,6 +74,14 @@ class Drive:
         self.set(dc)
 
 
+def constant_speed():
+    drive = Drive()
+    while True:
+        drive.drive(0.8)
+        time.sleep(3)
+        drive.drive(0.5)
+
+
 def test_raw():
     drive = Drive()
     cmd = str(0)
@@ -95,3 +104,4 @@ def test_cmd():
 
 if __name__ == "__main__":
     test_cmd()
+    # constant_speed()

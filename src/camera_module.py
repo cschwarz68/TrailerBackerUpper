@@ -17,12 +17,19 @@ print(cv2.__version__)
 class Camera:
     def __init__(self):
         # initialize camera and filename
-        self.camera = picamera.PiCamera(resolution=(640, 480))
+        self.camera = picamera.PiCamera(resolution=(320, 240))
 
         # capture without warmup
 
     def quick_capture(self):
-        image = np.empty((480, 640, 3,), dtype=np.uint8)
+        image = np.empty(
+            (
+                240,
+                320,
+                3,
+            ),
+            dtype=np.uint8,
+        )
         self.camera.capture(image, "bgr")
         return image
 
