@@ -19,12 +19,13 @@ def video_processing():
 
     while camera.isOpened():
         _, image = camera.read()
-        # cv2.imshow("original", image)
+        cv2.imshow("original", image)
         lane_lines, lane_image, steering_angle = get_steering_angle(image)
-        # cv2.imshow("lane_image", lane_image)
-        # print(steering_angle)
+        cv2.imshow("lane_image", lane_image)
+        print(steering_angle)
         stable_angle = steer.stabilize_steering_angle(steering_angle, lane_lines)
-        print(stable_angle)
+        steer.steer_by_angle(stable_angle)
+        drive.drive(0.79)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 

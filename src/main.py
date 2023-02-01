@@ -86,9 +86,16 @@ def main():
             num_lanes = len(lane_lines)
             line_image = ip.display_lines(image, lane_lines)
             steering_angle = ip.compute_steering_angle(line_image, lane_lines)
+            """
+            steering_image = ip.display_heading_line(line_image, steering_angle)
+            cv2.imshow("heading", steering_image)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+            """
             stable_angle = steer.stabilize_steering_angle(steering_angle, num_lanes)
+            # print(stable_angle)
             steer.steer_by_angle(stable_angle)
-            drive.drive(0.8)
+            drive.drive(0.78)
 
             continue
     # stream.stop()

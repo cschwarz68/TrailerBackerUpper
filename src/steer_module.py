@@ -42,7 +42,7 @@ class Steer:
         self.set(dc)
 
     def steer_by_angle(self, angle):
-        cmd = (angle - 90) / 45 
+        cmd = (angle - 90) / 45
         print(angle, cmd)
         if cmd > 0:
             if cmd > 1:
@@ -58,8 +58,8 @@ class Steer:
         self,
         new_angle,
         num_of_lane_lines,
-        max_angle_deviation_two_lines=10,
-        max_angle_deviation_one_line=2,
+        max_angle_deviation_two_lines=7.5,
+        max_angle_deviation_one_line=1.5,
     ):
         if num_of_lane_lines == 2:
             max_angle_deviation = max_angle_deviation_two_lines
