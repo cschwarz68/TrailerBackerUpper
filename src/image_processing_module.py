@@ -11,7 +11,7 @@ from skimage.util import img_as_float, crop
 from skimage.measure import regionprops, label
 from skimage.morphology import remove_small_objects
 from PIL import Image as im
-import picamera
+# import picamera
 import time
 import datetime
 
