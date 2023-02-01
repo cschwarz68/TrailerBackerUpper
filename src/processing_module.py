@@ -1,8 +1,10 @@
 # imports
 import picamera
+import picamera.array
 import cv2
 import numpy as np
 import math
+import time
 from matplotlib import pyplot as plt
 import steer_module as sr
 import drive_module as dr
@@ -11,14 +13,21 @@ import drive_module as dr
 def video_processing():
     steer = sr.Steer()
     drive = dr.Drive()
-    with picamera.PiCamera() as camera:
-        with picamera.array.PiRGBArray(camera) as stream:
-            camera.capture(stream, format='bgr')
-            image = stream.array
-            steering_angle, num_lanes = get_steering_angle(image)
-            stable_angle = steer.stabilize_steering_angle(steering_angle, num_lanes)
-            steer.steer_by_angle(stable_angle)
-            drive.drive(0.8)
+    camera = cv2.VideoCapture(-1)
+    camera.set(3, 640)
+    camera.set(4, 480)
+
+    while camera.isOpened():
+        _, image = camera.read()
+        # cv2.imshow("original", image)
+        lane_lines, lane_image, steering_angle = get_steering_angle(image)
+        # cv2.imshow("lane_image", lane_image)
+        # print(steering_angle)
+        stable_angle = steer.stabilize_steering_angle(steering_angle, lane_lines)
+        print(stable_angle)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
 
 def edge_detector(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -27,6 +36,7 @@ def edge_detector(img):
     ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
     edges = cv2.Canny(binary, 200, 400)
     return edges
+
 
 def region_of_interest(edges):
     height, width = edges.shape
@@ -49,6 +59,7 @@ def region_of_interest(edges):
     cropped_edges = cv2.bitwise_and(edges, mask)
     return cropped_edges
 
+
 def detect_line_segments(img):
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
@@ -57,6 +68,7 @@ def detect_line_segments(img):
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
     return line_segments
+
 
 def average_slope_intercept(frame, line_segments):
     lane_lines = []
@@ -99,6 +111,7 @@ def average_slope_intercept(frame, line_segments):
 
     return lane_lines
 
+
 def make_points(frame, line):
     height, width, _ = frame.shape
     slope, intercept = line
@@ -110,6 +123,7 @@ def make_points(frame, line):
     x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
     return [[x1, y1, x2, y2]]
 
+
 def display_lines(frame, lines, line_color=(0, 255, 0), line_width=2):
     line_image = np.zeros_like(frame)
     if lines is not None:
@@ -118,6 +132,7 @@ def display_lines(frame, lines, line_color=(0, 255, 0), line_width=2):
                 cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
+
 
 def compute_steering_angle(frame, lane_lines):
 
@@ -150,6 +165,7 @@ def compute_steering_angle(frame, lane_lines):
     )  # this is the steering angle needed by picar front wheel
     return steering_angle
 
+
 def get_steering_angle(img):
     edges = edge_detector(img)
     cropped_edges = region_of_interest(edges)
@@ -157,4 +173,8 @@ def get_steering_angle(img):
     lane_lines = average_slope_intercept(img, line_segments)
     line_image = display_lines(img, lane_lines)
     steering_angle = compute_steering_angle(line_image, lane_lines)
-    return steering_angle, lane_lines
+    return lane_lines, line_image, steering_angle
+
+
+if __name__ == "__main__":
+    video_processing()
