@@ -43,7 +43,7 @@ class Steer:
 
     def steer_by_angle(self, angle):
         cmd = (angle - 90) / 45
-        print(angle, cmd)
+        cmd = cmd * 0.8
         if cmd > 0:
             if cmd > 1:
                 cmd = 1
@@ -58,8 +58,8 @@ class Steer:
         self,
         new_angle,
         num_of_lane_lines,
-        max_angle_deviation_two_lines=7.5,
-        max_angle_deviation_one_line=1.5,
+        max_angle_deviation_two_lines=45,
+        max_angle_deviation_one_line=45,
     ):
         if num_of_lane_lines == 2:
             max_angle_deviation = max_angle_deviation_two_lines
@@ -89,6 +89,16 @@ def test_raw():
     steer.cleanup()
 
 
+def test_by_angle():
+    steer = Steer()
+    cmd = "90"
+    while cmd != "q":
+        steer.steer_by_angle(float(cmd))
+        cmd = input("Enter steering angle 0 - 180. q to quit: ")
+    steer.stop()
+    steer.cleanup()
+
+
 def test_cmd():
     steer = Steer()
     cmd = str(0)
@@ -100,4 +110,5 @@ def test_cmd():
 
 
 if __name__ == "__main__":
-    test_cmd()
+    # test_cmd()
+    test_by_angle()
