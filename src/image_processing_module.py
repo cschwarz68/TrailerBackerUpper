@@ -15,6 +15,7 @@ import logging
 import picamera
 import time
 import datetime
+import camera_module as cm
 
 
 def capture_test():
@@ -93,7 +94,7 @@ def average_slope_intercept(frame, line_segments):
     height, width, _ = frame.shape
     left_fit = []
     right_fit = []
-    horizontal_fit = []
+    # horizontal_fit = []
 
     boundary = 1 / 3
     left_region_boundary = width * (
@@ -279,6 +280,21 @@ def hough_processing_test():
     plt.show()
 
 
+def recording_test():
+    camera = cm.Camera()
+    fourcc = cv2.VideoWriter_fourcc(*"XVID")
+    out = cv2.VideoWriter("recording_test.avi", fourcc, 20.0, (320, 240))
+    while True:
+        image = camera.quick_capture()
+        # frame = cv2.cvtColor(np.array(image), cv2.COLOR_GRAY2BGR)
+        out.write(image)
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            break
+    out.release()
+    camera.stop()
+
+
 def processing_test():
     # initialize folder
     folder_dir = "test/assets"
@@ -322,4 +338,5 @@ def processing_test():
 if __name__ == "__main__":
     # processing_test()
     # plot_test()
-    hough_processing_test()
+    # hough_processing_test()
+    recording_test()

@@ -155,6 +155,10 @@ cython_debug/
 # Amol's virt folder
 /virt
 
+# Captures test folder
+/test_captures
+
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
