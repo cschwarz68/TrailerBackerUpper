@@ -35,6 +35,7 @@ class StreamCamera:
         with picamera.array.PiRGBArray(self.camera) as stream:
             self.camera.capture(stream, format="bgr", use_video_port=True)
             image = stream.array
+            print(image.shape)
         return image
 
     def stop(self):
@@ -61,3 +62,4 @@ if __name__ == "__main__":
         cv2.imshow("img", image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
+    camera.stop()
