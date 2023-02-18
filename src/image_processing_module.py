@@ -233,6 +233,16 @@ def steering_output(angles):
     return normalized_output
 
 
+def get_steering_angle(img):
+    edges = edge_detector(img)
+    cropped = region_of_interest(edges)
+    line_segments = detect_line_segments(cropped)
+    lane_lines = average_slope_intercept(img, line_segments)
+    line_image = display_lines(img, lane_lines)
+    steering_angle = compute_steering_angle(line_image, lane_lines)
+    return steering_angle
+
+
 def plot_test():
     image = cv2.imread("test/assets/ropes.jpg")
     image = cv2.resize(image, (640, 480))
