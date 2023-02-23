@@ -11,9 +11,10 @@ import time
 def save_video():
     camera = picamera.PiCamera()
     camera.resolution = (640, 480)
+    time.sleep(15)
 
     camera.start_recording("test_captures/video_test.h264", format="h264")
-    time.sleep(5)
+    time.sleep(10)
 
     camera.stop_recording()
     camera.close()
@@ -44,3 +45,4 @@ def modify_video():
 
 if __name__ == "__main__":
     modify_video()
+    # save_video()

@@ -155,8 +155,7 @@ cython_debug/
 # Amol's virt folder
 /virt
 
-# Captures test folder
-/test_captures
+
 
 
 # PyCharm
