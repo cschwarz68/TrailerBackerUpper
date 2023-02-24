@@ -8,8 +8,17 @@ import time
 from matplotlib import pyplot as plt
 import steer_module as sr
 import drive_module as dr
+from tensorflow.keras.models import load_model
 
+model = load_model('models/lane_navigation_final.h5')
+        
+def compute_steering_angle(self, frame):
+    preprocessed = img_preprocess(frame)
+    X = np.asarray([preprocessed])
+    steering_angle = model.predict(X)[0]
+    return steering_angle
 
+'''
 def video_processing():
     steer = sr.Steer()
     drive = dr.Drive()
@@ -175,7 +184,7 @@ def get_steering_angle(img):
     line_image = display_lines(img, lane_lines)
     steering_angle = compute_steering_angle(line_image, lane_lines)
     return lane_lines, line_image, steering_angle
-
+'''
 
 if __name__ == "__main__":
     video_processing()
