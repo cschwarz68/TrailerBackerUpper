@@ -5,10 +5,10 @@ import time
 import drive_module as dr
 import steer_module as sr
 import image_processing_module as ip
-import camera_module as cm
+# import camera_module as cm
 
 import quick_capture_module as qc
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 import cv2
 import logging
 import numpy as np
@@ -46,15 +46,14 @@ def main():
                         if event.state == 1:
                             pass
                             # image = camera.quick_capture()
+                            image = stream.capture()
                             # final_image = ip.lane_detection(image)
-                            # edges = ip.edge_detector(image)
-                            # cropped_edges = ip.region_of_interest(edges)
-                            # line_segments = ip.detect_line_segments(cropped_edges)
-                            # lane_lines = ip.average_slope_intercept(
-                            #     image, line_segments
-                            # )
-                            # num_lanes = len(lane_lines)
-                            # line_image = ip.display_lines(image, lane_lines)
+                            edges = ip.edge_detector(image)
+                            cropped_edges = ip.region_of_interest(edges)
+                            line_segments = ip.detect_line_segments(cropped_edges)
+                            lane_lines = ip.average_slope_intercept(image, line_segments)
+                            num_lanes = len(lane_lines)
+                            line_image = ip.display_lines(image, lane_lines)
 
                             # # recording
                             # fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -67,7 +66,7 @@ def main():
                             #     )
                             #     out.write(frame)
 
-                            # steering_angle = ip.compute_steering_angle(
+                            #steering_angle = ip.compute_steering_angle(
                             #     line_image, lane_lines
                             # )
                             # steer.steer_by_angle(steering_angle)
@@ -83,7 +82,7 @@ def main():
             # auto-navigation code here
 
             # steer.steer(ip.steering_output(ip.measure_angles(camera.capture())))
-            image = stream.stream_capture()
+            image = stream.capture()
             # cv2.imshow("heading", image)
             # if cv2.waitKey(1) & 0xFF == ord("q"):
             #     break

@@ -1,8 +1,8 @@
 # import the necessary packages
 import cv2
 import numpy as np
-import picamera
-from picamera.array import PiRGBArray
+from picamera2 import Picamera2
+from picamera2.array import PiRGBArray
 import time
 import image_processing_module as ip
 from matplotlib import pyplot as plt

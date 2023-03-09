@@ -2,44 +2,44 @@
 import cv2
 import numpy as np
 import os
-from matplotlib import pyplot as plt
-import matplotlib.image as mpimg
-import matplotlib.patches as mpatches
+# from matplotlib import pyplot as plt
+# import matplotlib.image as mpimg
+# import matplotlib.patches as mpatches
 import math
-import skimage
-from skimage.util import img_as_float, crop
-from skimage.measure import regionprops, label
-from skimage.morphology import remove_small_objects
-from PIL import Image as im
+# import skimage
+# from skimage.util import img_as_float, crop
+# from skimage.measure import regionprops, label
+# from skimage.morphology import remove_small_objects
+# from PIL import Image as im
 import logging
-import picamera
+#import picamera
 import time
 import datetime
-import camera_module as cm
+#import camera_module as cm
 
 
-def capture_test():
-    folder_dir = "captures"
-    for name in os.listdir(folder_dir):
-        string = folder_dir + "/" + name
-        array = np.fromstring(string)
-        print(array.shape)
+# def capture_test():
+#     folder_dir = "captures"
+#     for name in os.listdir(folder_dir):
+#         string = folder_dir + "/" + name
+#         array = np.fromstring(string)
+#         print(array.shape)
 
 
-# function to modify image
-def image_changer(img):
-    # crop to bottom half of image
-    crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])]
-    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    print(f"max value of gray is {max(gray[0])}")
-    thresh = int(max(gray[0]) * 0.8)
-    # thresh = 150
-    blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
-    float = img_as_float(binary)
-    labelFloat = label(float)
-    filtered = remove_small_objects(labelFloat, 1600, 1)
-    return filtered
+# # function to modify image
+# def image_changer(img):
+#     # crop to bottom half of image
+#     crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])]
+#     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+#     print(f"max value of gray is {max(gray[0])}")
+#     thresh = int(max(gray[0]) * 0.8)
+#     # thresh = 150
+#     blur = cv2.GaussianBlur(gray, (21, 21), 0)
+#     ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+#     float = img_as_float(binary)
+#     labelFloat = label(float)
+#     filtered = remove_small_objects(labelFloat, 1600, 1)
+#     return filtered
 
 
 def edge_detector(img):
@@ -212,12 +212,12 @@ def lane_detection(img):
     return final_image
 
 
-def measure_angles(img):
-    degrees = []
-    for region in regionprops(img):
-        majorAxisDegree = region.orientation * (180 / np.pi) + 90
-        degrees.append(majorAxisDegree)
-    return degrees
+# def measure_angles(img):
+#     degrees = []
+#     for region in regionprops(img):
+#         majorAxisDegree = region.orientation * (180 / np.pi) + 90
+#         degrees.append(majorAxisDegree)
+#     return degrees
 
 
 def steering_output(angles):
@@ -243,110 +243,112 @@ def get_steering_angle(img):
     return steering_angle
 
 
-def plot_test():
-    image = cv2.imread("test/assets/ropes.jpg")
-    image = cv2.resize(image, (640, 480))
-    edges = edge_detector(image)
-    cropped_edges = region_of_interest(edges)
-    line_segments = detect_line_segments(cropped_edges)
-    lane_lines = average_slope_intercept(image, line_segments)
-    plt.imshow(edges)
-    plt.show()
-    line_image = display_lines(image, lane_lines)
-    steering_angle = compute_steering_angle(line_image, lane_lines)
-    steering_image = display_heading_line(line_image, steering_angle)
-    plt.imshow(steering_image)
-    plt.show()
+# def plot_test():
+#     image = cv2.imread("test/assets/ropes.jpg")
+#     image = cv2.resize(image, (640, 480))
+#     edges = edge_detector(image)
+#     cropped_edges = region_of_interest(edges)
+#     line_segments = detect_line_segments(cropped_edges)
+#     lane_lines = average_slope_intercept(image, line_segments)
+#     plt.imshow(edges)
+#     plt.show()
+#     line_image = display_lines(image, lane_lines)
+#     steering_angle = compute_steering_angle(line_image, lane_lines)
+#     steering_image = display_heading_line(line_image, steering_angle)
+#     plt.imshow(steering_image)
+#     plt.show()
 
 
-def hough_processing_test():
-    folder_dir = "test/assets"
-    names = []
-    for image in os.listdir(folder_dir):
-        names.append(image)
-    files = []
-    for name in names:
-        image = mpimg.imread(folder_dir + "/" + name)
-        files.append(image)
-    fig = plt.figure(figsize=(10, 7))
-    rows = 3
-    columns = 4
-    for i in range(len(names)):
-        fig.add_subplot(rows, columns, i + 1)
-        plt.imshow(files[i])
-        plt.axis("off")
-        plt.title(names[i])
-    finalFig = plt.figure(figsize=(10, 7))
-    finalArray = []
-    for name in names:
-        image = mpimg.imread(folder_dir + "/" + name)
-        low_resolution = cv2.resize(image, (640, 480))
-        finalArray.append(lane_detection(low_resolution))
-    for i in range(len(finalArray)):
-        finalFig.add_subplot(rows, columns, i + 1)
-        plt.imshow(finalArray[i])
-        plt.axis("off")
-        plt.title(names[i])
-    plt.show()
+# def hough_processing_test():
+#     folder_dir = "test/assets"
+#     names = []
+#     for image in os.listdir(folder_dir):
+#         names.append(image)
+#     files = []
+#     for name in names:
+#         image = mpimg.imread(folder_dir + "/" + name)
+#         files.append(image)
+#     fig = plt.figure(figsize=(10, 7))
+#     rows = 3
+#     columns = 4
+#     for i in range(len(names)):
+#         fig.add_subplot(rows, columns, i + 1)
+#         plt.imshow(files[i])
+#         plt.axis("off")
+#         plt.title(names[i])
+#     finalFig = plt.figure(figsize=(10, 7))
+#     finalArray = []
+#     for name in names:
+#         image = mpimg.imread(folder_dir + "/" + name)
+#         low_resolution = cv2.resize(image, (640, 480))
+#         finalArray.append(lane_detection(low_resolution))
+#     for i in range(len(finalArray)):
+#         finalFig.add_subplot(rows, columns, i + 1)
+#         plt.imshow(finalArray[i])
+#         plt.axis("off")
+#         plt.title(names[i])
+#     plt.show()
 
 
-def recording_test():
-    camera = cm.Camera()
-    fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    out = cv2.VideoWriter("recording_test.avi", fourcc, 20.0, (320, 240))
-    while True:
-        image = camera.quick_capture()
-        # frame = cv2.cvtColor(np.array(image), cv2.COLOR_GRAY2BGR)
-        out.write(image)
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
-            break
-    out.release()
-    camera.stop()
+# def recording_test():
+#     camera = cm.Camera()
+#     fourcc = cv2.VideoWriter_fourcc(*"XVID")
+#     out = cv2.VideoWriter("recording_test.avi", fourcc, 20.0, (320, 240))
+#     while True:
+#         image = camera.quick_capture()
+#         # frame = cv2.cvtColor(np.array(image), cv2.COLOR_GRAY2BGR)
+#         out.write(image)
+#         key = cv2.waitKey(1) & 0xFF
+#         if key == ord("q"):
+#             break
+#     out.release()
+#     camera.stop()
 
 
-def processing_test():
-    # initialize folder
-    folder_dir = "test/assets"
-    # initialize image name array
-    names = []
-    for image in os.listdir(folder_dir):
-        names.append(image)
-    # initialize image files array
-    files = []
-    for name in names:
-        image = mpimg.imread(folder_dir + "/" + name)
-        files.append(image)
-    # initialize plot
-    fig = plt.figure(figsize=(10, 7))
-    rows = 3
-    columns = 4
-    # display initial images
-    for i in range(len(names)):
-        fig.add_subplot(rows, columns, i + 1)
-        plt.imshow(files[i])
-        plt.axis("off")
-        plt.title(names[i])
-    finalFig = plt.figure(figsize=(10, 7))
-    finalArray = []
-    for name in names:
-        image = mpimg.imread(folder_dir + "/" + name)
-        finalArray.append(image_changer(image))
-    for i in range(len(finalArray)):
-        finalFig.add_subplot(rows, columns, i + 1)
-        plt.imshow(finalArray[i])
-        print(
-            names[i],
-            measure_angles(finalArray[i]),
-            steering_output(measure_angles(finalArray[i])),
-        )
-        plt.axis("off")
-        plt.title(names[i])
-    plt.show()
+# def processing_test():
+#     # initialize folder
+#     folder_dir = "test/assets"
+#     # initialize image name array
+#     names = []
+#     for image in os.listdir(folder_dir):
+#         names.append(image)
+#     # initialize image files array
+#     files = []
+#     for name in names:
+#         image = mpimg.imread(folder_dir + "/" + name)
+#         files.append(image)
+#     # initialize plot
+#     fig = plt.figure(figsize=(10, 7))
+#     rows = 3
+#     columns = 4
+#     # display initial images
+#     for i in range(len(names)):
+#         fig.add_subplot(rows, columns, i + 1)
+#         plt.imshow(files[i])
+#         plt.axis("off")
+#         plt.title(names[i])
+#     finalFig = plt.figure(figsize=(10, 7))
+#     finalArray = []
+#     for name in names:
+#         image = mpimg.imread(folder_dir + "/" + name)
+#         finalArray.append(image_changer(image))
+#     for i in range(len(finalArray)):
+#         finalFig.add_subplot(rows, columns, i + 1)
+#         plt.imshow(finalArray[i])
+#         print(
+#             names[i],
+#             measure_angles(finalArray[i]),
+#             steering_output(measure_angles(finalArray[i])),
+#         )
+#         plt.axis("off")
+#         plt.title(names[i])
+#     plt.show()
 
 
 if __name__ == "__main__":
     # processing_test()
     # plot_test()
     # hough_processing_test()
-    recording_test()
+    #recording_test()
+
+    pass
