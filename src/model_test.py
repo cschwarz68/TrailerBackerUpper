@@ -3,7 +3,7 @@ import quick_capture_module as qc
 import cv2
 import numpy as np
 
-model = load_model('models/lane_navigation_final.h5')
+model = load_model('models/lane_navigation_final_2.h5')
 
 video_directory = "test_captures"
 video_file = video_directory + "/video_test"
@@ -31,6 +31,7 @@ try:
     i = 0
     while cap.isOpened():
         _, frame = cap.read() 
+        # expected = 
         angle = compute_steering_angle(frame)
         print(angle)
 finally:

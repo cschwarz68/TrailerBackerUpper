@@ -10,7 +10,7 @@ import drive_module as dr
 from keras.models import load_model
 import quick_capture_module as qc
 
-model = load_model('models/lane_navigation_final.h5')
+model = load_model('models/lane_navigation_final_2.h5')
 
 
 def img_preprocess(image):
@@ -37,7 +37,6 @@ def image_loop():
     
 
     while True:
-        #print('image?')
         image = camera.capture()
         steer_angle = compute_steering_angle(image)
         steer.steer_by_angle(steer_angle)

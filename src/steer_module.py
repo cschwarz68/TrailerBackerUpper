@@ -54,6 +54,18 @@ class Steer:
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
         self.set(dc)
 
+    def trailer_steering_test(self, angle):
+        cmd = (angle - 90) / 45
+        cmd = cmd * 1.5
+        if cmd > 0:
+            if cmd > 1:
+                cmd = 1
+            dc = self.cal["center"] + cmd * (self.cal["right"] - self.cal["center"])
+        else:
+            if cmd < -1:
+                cmd = -1
+            dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
+        self.set(dc)
     def stabilize_steering_angle(
         self,
         new_angle,
