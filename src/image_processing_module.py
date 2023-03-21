@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 import os
-# from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 # import matplotlib.image as mpimg
 # import matplotlib.patches as mpatches
 import math
@@ -243,6 +243,42 @@ def get_steering_angle(img):
     return steering_angle
 
 
+def get_reds(img):
+    invert = ~img
+    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
+    lower_cyan = np.array([80, 150, 40])
+    upper_cyan = np.array([100, 255, 200])
+    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
+    #res = cv2.bitwise_and(img, img, mask= mask)
+
+    return mask
+
+
+def get_angle(img):
+    
+    pass
+def get_reds_test():
+    video_directory = "test_captures"
+    video_file = video_directory + "/reverse_capture"
+    cap = cv2.VideoCapture(video_file + ".h264")
+
+    try:
+        i = 0
+        while cap.isOpened():
+            i+=1
+            if i >= 215:
+                break
+            _, frame = cap.read()
+            img = get_reds(frame)
+            #img = get_angle(img)
+
+            cv2.imshow(str(get_angle(img)), img)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
 # def plot_test():
 #     image = cv2.imread("test/assets/ropes.jpg")
 #     image = cv2.resize(image, (640, 480))
@@ -346,9 +382,4 @@ def get_steering_angle(img):
 
 
 if __name__ == "__main__":
-    # processing_test()
-    # plot_test()
-    # hough_processing_test()
-    #recording_test()
-
-    pass
+    get_reds_test()
