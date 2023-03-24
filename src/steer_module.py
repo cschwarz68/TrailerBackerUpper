@@ -8,7 +8,7 @@ GPIO.setwarnings(False)
 GPIO.setup(4, GPIO.OUT)
 
 # known calibration settings
-steer_cal_35 = {"freq": 35, "center": 4.2, "right": 5.5, "left": 2.2}
+steer_cal_35 = {"freq": 35, "center": 2.4, "right": 3.5, "left": 1.8}
 
 
 class Steer:
@@ -43,7 +43,7 @@ class Steer:
 
     def steer_by_angle(self, angle):
         cmd = (angle - 90) / 45
-        cmd = cmd * 0.8
+        cmd = cmd * 1
         if cmd > 0:
             if cmd > 1:
                 cmd = 1
@@ -122,5 +122,6 @@ def test_cmd():
 
 
 if __name__ == "__main__":
-    # test_cmd()
-    test_by_angle()
+    test_cmd()
+
+

@@ -1,5 +1,6 @@
 import picamera2
 from picamera2 import Picamera2, Preview
+from libcamera import Transform
 #import picamera2.array
 import time
 import numpy as np
@@ -26,6 +27,7 @@ class StreamCamera:
 
     def capture(self):
         array = self.camera.capture_array()
+        array=np.rot90(array,2)
         return array
 
     def test(self):
@@ -36,6 +38,7 @@ class StreamCamera:
         with picamera2.array.PiRGBArray(self.camera) as stream:
             self.camera.capture(stream, format="bgr", use_video_port=True)
             image = stream.array
+            image = cv2.flip(image,-1)
             print(image.shape)
         return image
 
