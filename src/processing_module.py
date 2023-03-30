@@ -40,7 +40,7 @@ def image_loop():
         image = camera.capture()
         steer_angle = compute_steering_angle(image)
         steer.steer_by_angle(steer_angle)
-        drive.drive(.81)
+        drive.drive(.7)
     camera.stop()
 
 if __name__ == "__main__":

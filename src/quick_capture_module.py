@@ -8,7 +8,7 @@ import cv2
 import io
 from io import BytesIO
 #from matplotlib import pyplot as plt
-#import image_processing_module as ip
+import image_processing_module as ip
 
 import numpy as np
 
@@ -28,6 +28,7 @@ class StreamCamera:
     def capture(self):
         array = self.camera.capture_array()
         array=np.rot90(array,2)
+        array = cv2.cvtColor(array, cv2.COLOR_BGR2RGB)
         return array
 
     def test(self):
@@ -38,6 +39,7 @@ class StreamCamera:
         with picamera2.array.PiRGBArray(self.camera) as stream:
             self.camera.capture(stream, format="bgr", use_video_port=True)
             image = stream.array
+
             image = cv2.flip(image,-1)
             print(image.shape)
         return image
@@ -55,6 +57,8 @@ if __name__ == "__main__":
         #print('image?')
         image = camera.capture()
         #print('image?')
+        image = ip.get_reds(image)
+        image = ip.get_angle(image)
         cv2.imshow("img", image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break

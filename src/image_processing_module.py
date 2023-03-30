@@ -2,7 +2,7 @@
 import cv2
 import numpy as np
 import os
-# from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 # import matplotlib.image as mpimg
 # import matplotlib.patches as mpatches
 import math
@@ -243,6 +243,57 @@ def get_steering_angle(img):
     return steering_angle
 
 
+def get_reds(img):
+    invert = ~img
+    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
+    lower_cyan = np.array([80, 150, 40])
+    upper_cyan = np.array([100, 255, 255])
+    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
+    #res = cv2.bitwise_and(img, img, mask= mask)
+
+    return mask
+
+
+def get_angle(img):
+    contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    big_contour = max(contours, key=cv2.contourArea)
+    M = cv2.moments(big_contour)
+    cx = int(M["m10"] / M["m00"])
+    cy = int(M["m01"] / M["m00"]) 
+    origin_x, origin_y = int(img.shape[1]/2), img.shape[0]
+    angle = math.atan2(origin_y - cy, origin_x - cx)
+    angle = abs(math.floor(math.degrees(angle)))
+    # image = cv2.circle(img, (cx, cy), radius=25, color=(255, 255, 255), thickness=-1)
+    image = cv2.line(img, (origin_x, origin_y), (cx, cy), color=(255, 255, 255), thickness=5)
+    image = cv2.putText(image, str(angle), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255), 2)
+    return image
+
+
+def get_reds_test():
+    video_directory = "test_captures"
+    video_file = video_directory + "/reverse_capture"
+    cap = cv2.VideoCapture(video_file + ".h264")
+
+    try:
+        i = 0
+        while cap.isOpened():
+            time.sleep(0.02)
+            i+=1
+            if i >= 215:
+                break
+            _, img = cap.read()
+            print(type(img))
+            # img = get_reds(img)
+            # img = get_angle(img)
+            #print(str(get_angle(img)))
+            cv2.imshow("image", img)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
 # def plot_test():
 #     image = cv2.imread("test/assets/ropes.jpg")
 #     image = cv2.resize(image, (640, 480))
@@ -346,9 +397,4 @@ def get_steering_angle(img):
 
 
 if __name__ == "__main__":
-    # processing_test()
-    # plot_test()
-    # hough_processing_test()
-    #recording_test()
-
-    pass
+    get_reds_test()
