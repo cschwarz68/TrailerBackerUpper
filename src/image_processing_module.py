@@ -139,7 +139,7 @@ def make_points(frame, line):
     return [[x1, y1, x2, y2]]
 
 
-def display_lines(frame, lines, line_color=(0, 255, 0), line_width=2):
+def display_lines(frame, lines, line_color=(255, 255, 255), line_width=2):
     line_image = np.zeros_like(frame)
     if lines is not None:
         for line in lines:
@@ -250,11 +250,10 @@ def get_reds(img):
     upper_cyan = np.array([100, 255, 255])
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     #res = cv2.bitwise_and(img, img, mask= mask)
-
     return mask
 
 
-def get_angle(img):
+def get_angle_image(img):
     contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     big_contour = max(contours, key=cv2.contourArea)
@@ -268,6 +267,36 @@ def get_angle(img):
     image = cv2.line(img, (origin_x, origin_y), (cx, cy), color=(255, 255, 255), thickness=5)
     image = cv2.putText(image, str(angle), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255), 2)
     return image
+
+def get_red_angle(img):
+    contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = contours[0] if len(contours) == 2 else contours[1]
+    big_contour = max(contours, key=cv2.contourArea)
+    M = cv2.moments(big_contour)
+    cx = int(M["m10"] / M["m00"])
+    cy = int(M["m01"] / M["m00"]) 
+    origin_x, origin_y = int(img.shape[1]/2), img.shape[0]
+    angle = math.atan2(origin_y - cy, origin_x - cx)
+    angle = abs(math.floor(math.degrees(angle)))
+    return angle
+
+
+def display_reds_and_lane(img):
+    red = get_reds(img)
+    red_angle_image = get_angle_image(red)
+    edges = edge_detector(img)
+    cropped_edges = region_of_interest(edges)
+    line_segments = detect_line_segments(cropped_edges)
+    lane_lines = average_slope_intercept(img, line_segments)
+    line_image = display_lines(red_angle_image, lane_lines)
+    return line_image
+
+
+def red_and_lane_angle(img):
+    red = get_reds(img)
+    red_angle = get_red_angle(red)
+    steering_angle = get_steering_angle(img)
+    return red_angle, steering_angle
 
 
 def get_reds_test():
@@ -283,10 +312,32 @@ def get_reds_test():
             if i >= 215:
                 break
             _, img = cap.read()
-            print(type(img))
+            img = get_reds(img)
+            img = get_angle_image(img)
+            cv2.imshow("image", img)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+
+
+def reds_and_lanes_test():
+    video_directory = "test_captures"
+    video_file = video_directory + "/reverse_capture"
+    cap = cv2.VideoCapture(video_file + ".h264")
+
+    try:
+        i = 0
+        while cap.isOpened():
+            time.sleep(0.02)
+            i+=1
+            if i >= 215:
+                break
+            _, img = cap.read()
             # img = get_reds(img)
             # img = get_angle(img)
-            #print(str(get_angle(img)))
+            img = display_reds_and_lane(img)
             cv2.imshow("image", img)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
@@ -397,4 +448,5 @@ def get_reds_test():
 
 
 if __name__ == "__main__":
-    get_reds_test()
+    #get_reds_test()
+    reds_and_lanes_test()
