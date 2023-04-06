@@ -330,7 +330,6 @@ def reds_and_lanes_test():
     try:
         i = 0
         while cap.isOpened():
-            time.sleep(0.02)
             i+=1
             if i >= 215:
                 break
@@ -344,6 +343,7 @@ def reds_and_lanes_test():
     finally:
         cap.release()
         cv2.destroyAllWindows()
+
 
 # def plot_test():
 #     image = cv2.imread("test/assets/ropes.jpg")
