@@ -77,7 +77,7 @@ def main():
                         steer.steer(x)
                     elif event.code == "ABS_Y":
                         y = float(event.state) / 32767.0
-                        drive.drive(y)
+                        drive.drive(-y)
         except:
             # auto-navigation code here
 
@@ -109,12 +109,11 @@ def main():
             #     break
             steering_angle = ip.compute_steering_angle(line_image, lane_lines)
 
-            # if abs(steering_angle - 90) > 7.5:
-            #     drive.drive(0.8)
-            # else:
-            #     drive.drive(0.79)
+            if abs(steering_angle - 90) > 7.5:
+                drive.drive(0.7)
+            else:
+                drive.drive(0.6)
 
-            drive.drive(0.805)
 
             # steering_image = ip.display_heading_line(line_image, steering_angle)
             # cv2.imshow("heading", steering_image)

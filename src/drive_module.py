@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import time
+import steer_module as sr
 
 # GPIO mode should be consistent across all modules
 GPIO.setmode(GPIO.BCM)
@@ -101,7 +102,15 @@ def test_cmd():
     drive.stop()
     drive.cleanup()
 
+def test_steer_and_drive():
+    drive = Drive()
+    steer = sr.Steer()
+    while True:
+        drive.drive(0.8)
+        steer.set(4.7)
+
 
 if __name__ == "__main__":
-    test_cmd()
+    # test_cmd()
     # constant_speed()
+    test_steer_and_drive()

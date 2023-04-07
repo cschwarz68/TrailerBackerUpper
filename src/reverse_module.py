@@ -15,21 +15,27 @@ def reverse():
 
     while True:
         image = camera.capture()
-        edges = ip.edge_detector(image)
+        # edges = ip.edge_detector(image)
+        red = ip.get_reds(image)
+        try:
+            steering_angle = ip.get_red_angle(red)
+        except:
+            steering_angle = 90
         # cv2.imshow("heading", edges)
         # if cv2.waitKey(1) & 0xFF == ord("q"):
         #     break
-        cropped_edges = ip.region_of_interest(edges)
-        line_segments = ip.detect_line_segments(cropped_edges)
-        lane_lines = ip.average_slope_intercept(image, line_segments)
-        num_lanes = len(lane_lines)
-        line_image = ip.display_lines(image, lane_lines)
-        cv2.imshow("heading", line_image)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-        steering_angle = ip.compute_steering_angle(line_image, lane_lines)
-        steer.trailer_steering_test(steering_angle)
-        drive.drive(-0.82)
+        # cropped_edges = ip.region_of_interest(edges)
+        # line_segments = ip.detect_line_segments(cropped_edges)
+        # lane_lines = ip.average_slope_intercept(image, line_segments)
+        # num_lanes = len(lane_lines)
+        # line_image = ip.display_lines(image, lane_lines)
+        # cv2.imshow("heading", line_image)
+        # if cv2.waitKey(1) & 0xFF == ord("q"):
+        #     break
+        # steering_angle = ip.compute_steering_angle(line_image, lane_lines)
+        #steer.trailer_steering_test(steering_angle)
+        steer.steer_by_angle(180-steering_angle)
+        drive.drive(-0.7)
 def save_video():
     camera = Picamera2()
     camera.resolution = (640, 480)
@@ -56,4 +62,4 @@ def modify_video():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-modify_video()
+reverse()
