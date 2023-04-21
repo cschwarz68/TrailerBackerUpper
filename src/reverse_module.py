@@ -18,9 +18,13 @@ def reverse():
         # edges = ip.edge_detector(image)
         red = ip.get_reds(image)
         try:
-            steering_angle = ip.get_red_angle(red)
+            red_angle = ip.get_red_angle(red)
         except:
-            steering_angle = 90
+            red_angle = 90
+
+        # lane_angle = ip.get_steering_angle(image)
+        # diff_in_angles = red_angle - lane_angle
+
         # cv2.imshow("heading", edges)
         # if cv2.waitKey(1) & 0xFF == ord("q"):
         #     break
@@ -34,8 +38,9 @@ def reverse():
         #     break
         # steering_angle = ip.compute_steering_angle(line_image, lane_lines)
         #steer.trailer_steering_test(steering_angle)
-        steer.steer_by_angle(180-steering_angle)
-        drive.drive(-0.7)
+        steer.steer_by_angle(180-red_angle - 6.5) # -6 to account for tendency to go to the left
+        #steer.steer_by_angle( 90 - diff_in_angles)
+        drive.drive(-0.62)
 def save_video():
     camera = Picamera2()
     camera.resolution = (640, 480)
@@ -62,4 +67,5 @@ def modify_video():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-reverse()
+if __name__ == "__main__":
+    reverse()

@@ -57,8 +57,9 @@ if __name__ == "__main__":
         #print('image?')
         image = camera.capture()
         #print('image?')
-        image = ip.get_reds(image)
-        image = ip.get_angle_image(image)
+        image = ip.display_reds_and_lane(image)
+        # image = ip.get_reds(image)
+        # image = ip.get_angle_image(image)
         cv2.imshow("img", image)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break

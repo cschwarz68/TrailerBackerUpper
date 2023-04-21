@@ -283,7 +283,10 @@ def get_red_angle(img):
 
 def display_reds_and_lane(img):
     red = get_reds(img)
-    red_angle_image = get_angle_image(red)
+    try:
+        red_angle_image = get_angle_image(red)
+    except:
+        red_angle_image = img
     edges = edge_detector(img)
     cropped_edges = region_of_interest(edges)
     line_segments = detect_line_segments(cropped_edges)
