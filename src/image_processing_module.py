@@ -1,50 +1,10 @@
 # imports
 import cv2
 import numpy as np
-import os
-#from matplotlib import pyplot as plt
-# import matplotlib.image as mpimg
-# import matplotlib.patches as mpatches
 import math
-# import skimage
-# from skimage.util import img_as_float, crop
-# from skimage.measure import regionprops, label
-# from skimage.morphology import remove_small_objects
-# from PIL import Image as im
-import logging
-#import picamera
-import time
-import datetime
-#import camera_module as cm
-
-
-# def capture_test():
-#     folder_dir = "captures"
-#     for name in os.listdir(folder_dir):
-#         string = folder_dir + "/" + name
-#         array = np.fromstring(string)
-#         print(array.shape)
-
-
-# # function to modify image
-# def image_changer(img):
-#     # crop to bottom half of image
-#     crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])]
-#     gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-#     print(f"max value of gray is {max(gray[0])}")
-#     thresh = int(max(gray[0]) * 0.8)
-#     # thresh = 150
-#     blur = cv2.GaussianBlur(gray, (21, 21), 0)
-#     ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
-#     float = img_as_float(binary)
-#     labelFloat = label(float)
-#     filtered = remove_small_objects(labelFloat, 1600, 1)
-#     return filtered
 
 
 def edge_detector(img):
-    # img = cv2.imread("test/assets/ropes.jpg")
-    # crop = img[int(img.shape[0] / 2) : int(img.shape[0]), 0 : int(img.shape[1])]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     thresh = int(max(gray[0]) * 0.8)
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
@@ -177,7 +137,7 @@ def compute_steering_angle(frame, lane_lines):
     )  # angle (in degrees) to center vertical line
     steering_angle = (
         angle_to_mid_deg + 90
-    )  # this is the steering angle needed by picar front wheel
+    )  # this is the steering angle 
     return steering_angle
 
 
@@ -197,7 +157,6 @@ def display_heading_line(
 
     cv2.line(heading_image, (x1, y1), (x2, y2), line_color, line_width)
     heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
-
     return heading_image
 
 
@@ -210,14 +169,6 @@ def lane_detection(img):
     steering_angle = compute_steering_angle(line_image, lane_lines)
     final_image = display_heading_line(line_image, steering_angle)
     return final_image
-
-
-# def measure_angles(img):
-#     degrees = []
-#     for region in regionprops(img):
-#         majorAxisDegree = region.orientation * (180 / np.pi) + 90
-#         degrees.append(majorAxisDegree)
-#     return degrees
 
 
 def steering_output(angles):
@@ -263,10 +214,10 @@ def get_angle_image(img):
     origin_x, origin_y = int(img.shape[1]/2), img.shape[0]
     angle = math.atan2(origin_y - cy, origin_x - cx)
     angle = abs(math.floor(math.degrees(angle)))
-    # image = cv2.circle(img, (cx, cy), radius=25, color=(255, 255, 255), thickness=-1)
     image = cv2.line(img, (origin_x, origin_y), (cx, cy), color=(255, 255, 255), thickness=5)
     image = cv2.putText(image, str(angle), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,255), 2)
     return image
+
 
 def get_red_angle(img):
     contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -300,156 +251,3 @@ def red_and_lane_angle(img):
     red_angle = get_red_angle(red)
     steering_angle = get_steering_angle(img)
     return red_angle, steering_angle
-
-
-def get_reds_test():
-    video_directory = "test_captures"
-    video_file = video_directory + "/reverse_capture"
-    cap = cv2.VideoCapture(video_file + ".h264")
-
-    try:
-        i = 0
-        while cap.isOpened():
-            time.sleep(0.02)
-            i+=1
-            if i >= 215:
-                break
-            _, img = cap.read()
-            img = get_reds(img)
-            img = get_angle_image(img)
-            cv2.imshow("image", img)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
-
-
-def reds_and_lanes_test():
-    video_directory = "test_captures"
-    video_file = video_directory + "/reverse_capture"
-    cap = cv2.VideoCapture(video_file + ".h264")
-
-    try:
-        i = 0
-        while cap.isOpened():
-            i+=1
-            if i >= 215:
-                break
-            _, img = cap.read()
-            # img = get_reds(img)
-            # img = get_angle(img)
-            img = display_reds_and_lane(img)
-            cv2.imshow("image", img)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-    finally:
-        cap.release()
-        cv2.destroyAllWindows()
-
-
-# def plot_test():
-#     image = cv2.imread("test/assets/ropes.jpg")
-#     image = cv2.resize(image, (640, 480))
-#     edges = edge_detector(image)
-#     cropped_edges = region_of_interest(edges)
-#     line_segments = detect_line_segments(cropped_edges)
-#     lane_lines = average_slope_intercept(image, line_segments)
-#     plt.imshow(edges)
-#     plt.show()
-#     line_image = display_lines(image, lane_lines)
-#     steering_angle = compute_steering_angle(line_image, lane_lines)
-#     steering_image = display_heading_line(line_image, steering_angle)
-#     plt.imshow(steering_image)
-#     plt.show()
-
-
-# def hough_processing_test():
-#     folder_dir = "test/assets"
-#     names = []
-#     for image in os.listdir(folder_dir):
-#         names.append(image)
-#     files = []
-#     for name in names:
-#         image = mpimg.imread(folder_dir + "/" + name)
-#         files.append(image)
-#     fig = plt.figure(figsize=(10, 7))
-#     rows = 3
-#     columns = 4
-#     for i in range(len(names)):
-#         fig.add_subplot(rows, columns, i + 1)
-#         plt.imshow(files[i])
-#         plt.axis("off")
-#         plt.title(names[i])
-#     finalFig = plt.figure(figsize=(10, 7))
-#     finalArray = []
-#     for name in names:
-#         image = mpimg.imread(folder_dir + "/" + name)
-#         low_resolution = cv2.resize(image, (640, 480))
-#         finalArray.append(lane_detection(low_resolution))
-#     for i in range(len(finalArray)):
-#         finalFig.add_subplot(rows, columns, i + 1)
-#         plt.imshow(finalArray[i])
-#         plt.axis("off")
-#         plt.title(names[i])
-#     plt.show()
-
-
-# def recording_test():
-#     camera = cm.Camera()
-#     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-#     out = cv2.VideoWriter("recording_test.avi", fourcc, 20.0, (320, 240))
-#     while True:
-#         image = camera.quick_capture()
-#         # frame = cv2.cvtColor(np.array(image), cv2.COLOR_GRAY2BGR)
-#         out.write(image)
-#         key = cv2.waitKey(1) & 0xFF
-#         if key == ord("q"):
-#             break
-#     out.release()
-#     camera.stop()
-
-
-# def processing_test():
-#     # initialize folder
-#     folder_dir = "test/assets"
-#     # initialize image name array
-#     names = []
-#     for image in os.listdir(folder_dir):
-#         names.append(image)
-#     # initialize image files array
-#     files = []
-#     for name in names:
-#         image = mpimg.imread(folder_dir + "/" + name)
-#         files.append(image)
-#     # initialize plot
-#     fig = plt.figure(figsize=(10, 7))
-#     rows = 3
-#     columns = 4
-#     # display initial images
-#     for i in range(len(names)):
-#         fig.add_subplot(rows, columns, i + 1)
-#         plt.imshow(files[i])
-#         plt.axis("off")
-#         plt.title(names[i])
-#     finalFig = plt.figure(figsize=(10, 7))
-#     finalArray = []
-#     for name in names:
-#         image = mpimg.imread(folder_dir + "/" + name)
-#         finalArray.append(image_changer(image))
-#     for i in range(len(finalArray)):
-#         finalFig.add_subplot(rows, columns, i + 1)
-#         plt.imshow(finalArray[i])
-#         print(
-#             names[i],
-#             measure_angles(finalArray[i]),
-#             steering_output(measure_angles(finalArray[i])),
-#         )
-#         plt.axis("off")
-#         plt.title(names[i])
-#     plt.show()
-
-
-if __name__ == "__main__":
-    #get_reds_test()
-    reds_and_lanes_test()
