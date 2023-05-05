@@ -1,3 +1,17 @@
+'''
+This code is for controlling a robot car with Raspberry Pi using RPi.GPIO library. 
+It defines a class called Drive which represents the car's driving motor and provides methods to control it. 
+The Drive class has methods to set the speed of the car, shift gears (park, drive, reverse), and to stop and cleanup the GPIO pins. 
+It uses PWM (pulse width modulation) to control the speed of the motor.
+
+The code also imports a module steer_module for controlling the car's steering servo motor. 
+It defines three test methods to test the car's raw drive command, normalized drive command, and steering and driving simultaneously.
+
+Finally, the code checks if it is being run as the main script and runs the test_steer_and_drive() method which tests both steering and driving 
+at the same time by setting the car to drive at a constant speed and turning the steering servo to the right.
+'''
+
+#imports
 import RPi.GPIO as GPIO
 import time
 import steer_module as sr
