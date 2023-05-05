@@ -5,6 +5,13 @@ import math
 
 
 def edge_detector(img):
+    """
+    @brief This function takes an image and returns it filtered for edges
+
+    @param img(numpy array): A numpy array representation of image
+
+    @return edges(numpy array): A numpy array representation of image with edges filtered
+    """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     thresh = int(max(gray[0]) * 0.8)
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
