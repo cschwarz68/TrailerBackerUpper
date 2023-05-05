@@ -41,9 +41,9 @@ class Steer:
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
         self.set(dc)
 
-    def steer_by_angle(self, angle):
+    def steer_by_angle(self, angle, scale=1.0):
         cmd = (angle - 90) / 45
-        cmd = cmd * 1
+        cmd = cmd * scale
         if cmd > 0:
             if cmd > 1:
                 cmd = 1
