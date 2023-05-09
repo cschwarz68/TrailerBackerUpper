@@ -21,6 +21,13 @@ def edge_detector(img):
 
 
 def region_of_interest(edges):
+    """
+    @brief crop the original image to focus image processing on bottom half of image
+    
+    @param edges(numpy array): A numpy array representation of image
+
+    @return cropped_edges(numpy array): A numpy array representation of bottom half of image
+    """
     height, width = edges.shape
     mask = np.zeros_like(edges)
 
@@ -43,6 +50,13 @@ def region_of_interest(edges):
 
 
 def detect_line_segments(img):
+    """
+    @brief Use HoughLinesP function to find line segements in image
+    
+    @param img(numpy array): numpy array representation of image filtered for edges
+    
+    @return line_segments(array): vectors of line segments detected in image in array representation
+    """
     rho = 1  # distance precision in pixel, i.e. 1 pixel
     angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
     min_threshold = 10  # minimal of votes
@@ -52,7 +66,37 @@ def detect_line_segments(img):
     return line_segments
 
 
+def make_points(frame, line):
+    """
+    @brief get points of ends of line for plotting of lane lines
+
+    @param frame(numpy array): numpy array representaion of original image
+
+    @param line(int, int): slope and intercept of line
+
+    @return (list): endpoints of line
+    """
+    height, width, _ = frame.shape
+    slope, intercept = line
+    y1 = height  # bottom of the frame
+    y2 = int(y1 * 1 / 2)  # make points from middle of the frame down
+
+    # bound the coordinates within the frame
+    x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
+    x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
+    return [[x1, y1, x2, y2]]
+
+
 def average_slope_intercept(frame, line_segments):
+    """
+    @brief Make lines of average of lines on the left side and right side
+    
+    @param frame(numpy array): numpy array representation of original image
+    
+    @param line_segments(array): vectors of line segments in array representation
+
+    @return lane_lines(list): list of 2 vectors of average line segments of left and right lines
+    """
     lane_lines = []
     if line_segments is None:
         return []
@@ -94,19 +138,16 @@ def average_slope_intercept(frame, line_segments):
     return lane_lines
 
 
-def make_points(frame, line):
-    height, width, _ = frame.shape
-    slope, intercept = line
-    y1 = height  # bottom of the frame
-    y2 = int(y1 * 1 / 2)  # make points from middle of the frame down
-
-    # bound the coordinates within the frame
-    x1 = max(-width, min(2 * width, int((y1 - intercept) / slope)))
-    x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
-    return [[x1, y1, x2, y2]]
-
-
 def display_lines(frame, lines, line_color=(255, 255, 255), line_width=2):
+    """
+    @brief plot lane lines on original image
+
+    @param frame(numpy array): numpy array representation of original array
+
+    @param lines(list): list of 2 vectors of average line segments of left and right lines
+
+    @return line_image (numpy array): numpy array with lane lines plotted
+    """
     line_image = np.zeros_like(frame)
     if lines is not None:
         for line in lines:
@@ -117,7 +158,15 @@ def display_lines(frame, lines, line_color=(255, 255, 255), line_width=2):
 
 
 def compute_steering_angle(frame, lane_lines):
+    """
+    @brief use lane lines to predict steering angle 0 is left, 90 is straight, 180 is right
 
+    @param frame(numpy array): numpy array representation of original image
+
+    @param lane_line(list): list of 2 vectors of average line segments of left and right lines
+
+    @return steering_angle(int): computed steering angle
+    """
     if len(lane_lines) == 0:
         # continue straight if no lines
         return 90
@@ -154,6 +203,15 @@ def display_heading_line(
     line_color=(0, 0, 255),
     line_width=5,
 ):
+    """
+    @brief plot steering path as a line on frame
+
+    @param frame(numpy array): numpy array representation of original image
+
+    @param steering_angle(int): computed steering angle
+
+    @return heading_image(numpy array): frame with path plotted as a line
+    """
     heading_image = np.zeros_like(frame)
     height, width = frame.shape[0], frame.shape[1]
     steering_angle_radian = steering_angle / 180.0 * math.pi
@@ -168,6 +226,12 @@ def display_heading_line(
 
 
 def lane_detection(img):
+    """
+    @brief plot lane lines and steering path on frame
+    
+    @param img(numpy array): A numpy array representation of original image
+    
+    @return final_image(numpy array): numpy array of img with lane lines and steering path plotted"""
     edges = edge_detector(img)
     cropped_edges = region_of_interest(edges)
     line_segments = detect_line_segments(cropped_edges)
@@ -192,6 +256,13 @@ def steering_output(angles):
 
 
 def get_steering_angle(img):
+    """
+    @brief get steering angle to keep car in middle of lane
+
+    @param img(numpy array): A numpy array representation of original image
+
+    @return steering_angle(int): steering angle to keep car in middle of lane
+    """
     edges = edge_detector(img)
     cropped = region_of_interest(edges)
     line_segments = detect_line_segments(cropped)
@@ -202,6 +273,13 @@ def get_steering_angle(img):
 
 
 def get_reds(img):
+    """
+    @brief filter image for red color to detect tape on trailer
+
+    @param img(numpy array): A numpy array representation of image
+
+    @return mask(Mat): image filtered for red
+    """
     invert = ~img
     hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
     lower_cyan = np.array([80, 150, 40])
@@ -212,6 +290,12 @@ def get_reds(img):
 
 
 def get_angle_image(img):
+    """
+    @brief calculate angle of largest shape in image and calculate
+    
+    @param img(Mat): matrix representation of image
+    
+    @return image(array): image with angle of largest shape plotted"""
     contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     big_contour = max(contours, key=cv2.contourArea)
@@ -227,6 +311,12 @@ def get_angle_image(img):
 
 
 def get_red_angle(img):
+    """
+    @brief calculate angle of largest shape detected in image
+    
+    @param img(Mat): matrix representation of image
+    
+    @return angle(int): angle of shape"""
     contours = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
     big_contour = max(contours, key=cv2.contourArea)
@@ -240,7 +330,15 @@ def get_red_angle(img):
 
 
 def display_reds_and_lane(img):
+    """
+    @brief detect and plot lane lines and line of red shape
+    
+    @param img(Mat): matrix representation of image
+    
+    @return line_image(numpy array): image with lane lines and red shape angle line
+    """
     red = get_reds(img)
+    # if no red detected use original image
     try:
         red_angle_image = get_angle_image(red)
     except:
@@ -254,7 +352,18 @@ def display_reds_and_lane(img):
 
 
 def red_and_lane_angle(img):
+    """
+    @brief calculate and return angle of red shape and steering angle from lane lines
+    
+    @param img(Mat): matrix representation of image
+    
+    @return red_angle, steering_angle (int, int): angle of red shape and steering angle from lane lines
+    """
     red = get_reds(img)
-    red_angle = get_red_angle(red)
+    #if no red detected default to 90 degrees
+    try:
+        red_angle = get_red_angle(red)
+    except:
+        red_angle = 90
     steering_angle = get_steering_angle(img)
     return red_angle, steering_angle
