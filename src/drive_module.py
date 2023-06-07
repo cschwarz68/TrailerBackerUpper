@@ -20,7 +20,7 @@ import steer_module as sr
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-# Steering servo connected to pin GPIO 4
+# Drive control wires
 GPIO.setup(5, GPIO.OUT)
 GPIO.setup(6, GPIO.OUT)
 GPIO.setup(25, GPIO.OUT)

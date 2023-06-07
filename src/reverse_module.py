@@ -1,3 +1,4 @@
+from inputs import get_gamepad
 import drive_module as dr
 import steer_module as sr
 import quick_capture_module as qc
@@ -8,7 +9,7 @@ from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
 
 
-def reverse():
+def reverse_straight():
     steer = sr.Steer()
     drive = dr.Drive()
     camera = qc.StreamCamera()
@@ -41,6 +42,123 @@ def reverse():
         steer.steer_by_angle(180-red_angle - 6.5) # -6 to account for tendency to go to the left
         #steer.steer_by_angle( 90 - diff_in_angles)
         drive.drive(-0.62)
+
+
+def reverse_and_lanes():
+    steer = sr.Steer()
+    drive = dr.Drive()
+    camera = qc.StreamCamera()
+
+    while True:
+        image = camera.capture()
+        red = ip.get_reds(image)
+        try:
+            red_angle = ip.get_red_angle(red)
+        except:
+            red_angle = 90
+
+        lane_angle = ip.get_steering_angle(image)
+        diff_in_angles = red_angle - lane_angle
+        #print(f"redang = {red_angle}, laneang = {lane_angle}")
+        steer.steer_by_angle( 90 - diff_in_angles, 1.8)
+        drive.drive(-0.62)
+
+
+def self_and_controller_reverse():
+    steer = sr.Steer()
+    drive = dr.Drive()
+    camera = qc.StreamCamera()
+    while True:
+        print(1)
+        events = get_gamepad()
+        print(2)
+        event = events[0]
+        image = camera.capture()
+        red = ip.get_reds(image)
+        try:
+            red_angle = ip.get_red_angle(red)
+        except:
+            red_angle = 90
+        print(event)
+        if event.ev_type == "Absolute":
+            if event.code == "ABS_RX":
+                x = float(event.state) / 32767.0
+                # print(x)
+                steer.steer(x)
+            elif event.code == "ABS_Y":
+                y = float(event.state) / 32767.0
+                drive.drive(-y)
+            elif event.code != "ABS_RX":
+                steer.steer_by_angle(180-red_angle - 6.5)
+        # for event in events:
+        #     print(type(events))
+        #     print(len(events))
+        #     # while :
+        #     #     image = camera.capture()
+        #     #     red = ip.get_reds(image)
+        #     try:
+        #         red_angle = ip.get_red_angle(red)
+        #     except:
+        #         red_angle = 90
+        #     if event.ev_type == "Absolute":
+        #         if event.code == "ABS_RX":
+        #             x = float(event.state) / 32767.0
+        #             print(x)
+        #             steer.steer(x)
+        #         elif event.code == "ABS_Y":
+        #             y = float(event.state) / 32767.0
+        #             drive.drive(-y)
+        #         elif event.code != "ABS_RX":
+        #             steer.steer_by_angle(180-red_angle - 6.5)
+
+
+def drive_tester():
+    drive = dr.Drive()
+    steer = sr.Steer()
+    while True:
+        events = get_gamepad()
+        for event in events:
+            if event.ev_type == "Key":
+                # if b pressed, fast loop
+                if event.code == "BTN_EAST":
+                    if event.state == 1:
+                        start_time = time.time()
+                        while time.time() < start_time + 3:
+                            drive.drive(1)
+                        drive.drive(0)
+                        print('done')
+
+                # if a pressed, slow loop
+                elif event.code == "BTN_SOUTH":
+                    if event.state == 1:
+                        start_time = time.time()
+                        while time.time() < start_time + 3:
+                            time.sleep(1)
+                            drive.drive(1)
+                        drive.drive(0)
+                        print('done')
+
+                # if x pressed, drive and steer test    
+                elif event.code == "BTN_NORTH":
+                    start_time = time.time()
+                    while time.time() < start_time + 3:
+                        drive.drive(0.7)
+                        steer.steer_by_angle(120)
+                    steer.steer_by_angle(90)
+                    drive.drive(0)
+
+            if event.ev_type == "Absolute":
+                    if event.code == "ABS_RX":
+                        x = float(event.state) / 32767.0
+                        # print(x)
+                        steer.steer(x)
+                    elif event.code == "ABS_Y":
+                        y = float(event.state) / 32767.0
+                        print(y)
+                        drive.drive(-y)
+    
+
+        
 def save_video():
     camera = Picamera2()
     camera.resolution = (640, 480)
@@ -68,4 +186,7 @@ def modify_video():
         cap.release()
         cv2.destroyAllWindows()
 if __name__ == "__main__":
-    reverse()
+    # reverse_straight()
+    # self_and_controller_reverse()
+    # reverse_and_lanes()
+    drive_tester()
