@@ -11,8 +11,6 @@ Reverse autonomous mode can be entrered by pressing (Y) and then (START).
 Exit manual mode / the program by pressing (B).
 """
 
-from typing import Any
-
 # Package Imports
 from inputs import get_gamepad
 import numpy as np
