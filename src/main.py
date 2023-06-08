@@ -161,7 +161,7 @@ def check_auto_exit():
 def main():
     print("STARTING MAIN")
 
-    global steer, drive, stream, done, mode
+    global steer, drive, stream, done, mode, controller_present
     steer = sr.Steer()
     drive = dr.Drive()
     stream = qc.StreamCamera()
@@ -180,6 +180,7 @@ def main():
             except:
                 mode = transition_mode
                 controller_present = False
+                print("Entered Mode:", transition_mode)
         
         if mode == Main_Mode.MANUAL:
             manual(events)
