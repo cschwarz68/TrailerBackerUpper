@@ -70,8 +70,16 @@ class Drive:
 
     def drive(self, power):
         # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
-       duty_cycle = 25 * power - 25
-       self.set(duty_cycle)
+              # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
+        duty_cycle = abs(power*50)
+        if power < 0:
+           self.reverse()
+        elif power > 0:
+           self.forward()
+        else:
+           self.park()
+
+        self.set(duty_cycle)
 
 
 def constant_speed():
