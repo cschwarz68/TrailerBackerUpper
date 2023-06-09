@@ -61,7 +61,7 @@ class Steer:
             if cmd < -1:
                 cmd = -1
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
-        print(dc)
+        # print(dc)
         self.set(dc)
 
    

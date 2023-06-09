@@ -11,6 +11,8 @@ Reverse autonomous mode can be entrered by pressing (Y) and then (START).
 Exit manual mode / the program by pressing (B).
 """
 
+from threading import Thread
+
 # Package Imports
 from inputs import get_gamepad
 import numpy as np
@@ -30,6 +32,8 @@ stream = None
 mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
 controller_present = True
+check_auto_exit_thread = None
+auto_exit = False
 # Loops until (b) is pressed.
 done = False
 
@@ -61,7 +65,7 @@ def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, 
     return ret
 
 def manual(events):
-    global done, steer, drive, mode, transition_mode
+    global done, steer, drive, mode, transition_mode, check_auto_exit_thread
     """
     This commented code uses the is_pressed function.
     Use in case get_pressed is buggy.
@@ -109,8 +113,10 @@ def manual(events):
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
     elif pressed["Key"]["BTN_START"] == 1:
-        print("Entered Mode:", transition_mode)
         mode = transition_mode
+        check_auto_exit_thread = Thread (target=check_auto_exit)
+        check_auto_exit_thread.start()
+        print("Entered Mode:", transition_mode)
     x = pressed["Absolute"]["ABS_RX"]
     y = pressed["Absolute"]["ABS_Y"]
     if x is not None:
@@ -119,9 +125,11 @@ def manual(events):
         drive.drive(-y / Drive_Params.JOYSTICK_MAX)
 
 def auto_forward():
-    global stream, steer, drive
-    if check_auto_exit():
+    global stream, steer, drive, auto_exit
+    if auto_exit:
+        neutral()
         return
+    print("running")
     image = stream.capture()
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
@@ -139,24 +147,31 @@ def auto_forward():
 
 def auto_reverse():
     # Not yet implemented.
-    if check_auto_exit():
+    if auto_exit:
+        neutral()
         return
     pass
 
 def check_auto_exit():
-    global controller_present, mode
-    if controller_present:
+    global controller_present, mode, auto_exit
+    if not controller_present:
+        return
+    while mode != Main_Mode.MANUAL:
         events = get_gamepad()
         pressed = get_pressed(events, [
             ("Key", "BTN_EAST")
         ])
         if pressed["Key"]["BTN_EAST"] == 1:
-            mode = Main_Mode.MANUAL
-            drive.drive(0)
-            steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
-            print("Returning To:", mode)
-            return True
-    return False
+            auto_exit = True
+            return
+
+def neutral():
+    global mode, drive, steer, check_auto_exit_thread
+    mode = Main_Mode.MANUAL
+    drive.drive(0)
+    steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
+    print("Returning To:", mode)
+    check_auto_exit_thread.join()
 
 def main():
     print("STARTING MAIN")
