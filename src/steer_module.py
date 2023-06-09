@@ -11,10 +11,13 @@ GPIO.setup(4, GPIO.OUT)
 #steer_cal_35 = {"freq": 35, "center": 2.4, "right": 4, "left": 1.2}
 steer_cal_35 = {"freq": 35, "center": 4.6, "right": 6.15, "left": 2.2}
 
+
+#I would really like to refactor this to allow passing an angle to some method, and having the wheels turn by that angle
+#also 0 degrees should be the middle like cmon
 class Steer:
     def __init__(self, cal=steer_cal_35):
         self.cal = cal
-        self.pwm = GPIO.PWM(4, cal["freq"])
+        self.pwm = GPIO.PWM(4, cal["freq"]) 
         self.pwm.start(cal["center"])
         self.current_steering_angle = 90
 
@@ -26,6 +29,7 @@ class Steer:
 
     def set(self, dc):
         self.pwm.ChangeDutyCycle(dc)
+
 
     def steer(self, cmd):
         """
@@ -41,6 +45,11 @@ class Steer:
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
         self.set(dc)
 
+    # id like to make some changes here
+    # namely, according to the test below, you can input steering angles in a range of 0-180, which is a wider range than the steering rack actually turns
+    # after we find out what the true angles of the rack are, id like steering angles to range from [-BOUND, BOUND], where BOUND is the absolute 
+    # value of the turning angle in either direction (45 degrees?). also 0 should correspond with driving straight.
+    # -Chris
     def steer_by_angle(self, angle, scale=1.0):
         cmd = (angle - 90) / 45
         cmd = cmd * scale
@@ -52,7 +61,11 @@ class Steer:
             if cmd < -1:
                 cmd = -1
             dc = self.cal["center"] - cmd * (self.cal["left"] - self.cal["center"])
+        print(dc)
         self.set(dc)
+
+   
+
 
     def trailer_steering_test(self, angle):
         cmd = (angle - 90) / 45
@@ -103,9 +116,12 @@ def test_raw():
 
 def test_by_angle():
     steer = Steer()
-    cmd = "90"
+    cmd = "90" #questionable choice of default pos 
     while cmd != "q":
         steer.steer_by_angle(float(cmd))
+
+        #TODO:
+        # 0-180 is actually a bad angle range. the rack cannot actually turn 90 degrees in each direction.
         cmd = input("Enter steering angle 0 - 180. q to quit: ")
     steer.stop()
     steer.cleanup()
@@ -122,7 +138,8 @@ def test_cmd():
 
 
 if __name__ == "__main__":
-    test_cmd()
+    #test_cmd()
+    test_by_angle()
     #test_raw()
 
 
