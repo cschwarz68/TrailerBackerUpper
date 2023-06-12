@@ -7,12 +7,33 @@ class DCMotor:
     FORWARD = 1
     REVERSE = -1
     def __init__(self, power: int, forward: int, reverse: int, duty_cycle: int = 50):
-        self.duty_cycle = duty_cycle
+        
+
+        self.power = power 
+        self.forward = forward
+        self.reverse = reverse 
+
         io.setup_output(power)
         io.setup_output(forward)
         io.setup_output(reverse)
 
+        self.duty_cycle = duty_cycle
+        self.pulse = io.start_pwm(power)
 
+    def forwards(self):
+        io.set_low(self.reverse)
+        io.set_high(self.forward)
+    
+    def backwards(self):
+        io.set_low(self.forward)
+        io.set_high(self.reverse)
+    
+    def stop_rotation(self):
+        io.set_low(self.forward)
+        io.set_low(self.reverse)
+
+    def stop(self):
+        self.pulse.stop()
 
 class Servo:
 
