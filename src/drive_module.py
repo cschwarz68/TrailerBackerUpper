@@ -68,21 +68,17 @@ class Drive:
     def park(self):
         self.shift(0)
 
-    def drive(self, cmd):
+    def drive(self, power):
         # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
-        if abs(cmd) < self.cal["tol"]:
-            self.park()
-            duty_cycle = 0
-        elif cmd > 0:
-            self.forward()
-            if cmd > 1:
-                cmd = 1
-            duty_cycle = 0 + cmd * (self.cal["full"])
+              # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
+        duty_cycle = abs(power*50)
+        if power < 0:
+           self.reverse()
+        elif power > 0:
+           self.forward()
         else:
-            self.reverse()
-            if cmd < -1:
-                cmd = -1
-            duty_cycle = 0 - cmd * (self.cal["full"])
+           self.park()
+
         self.set(duty_cycle)
 
 
