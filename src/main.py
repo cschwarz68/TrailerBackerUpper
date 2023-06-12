@@ -26,9 +26,9 @@ import quick_capture_module as qc
 from constants import Main_Mode, Drive_Params
 
 # Mutable
-steer = None
-drive = None
-stream = None
+steer = None  #
+drive = None  # Initialized in main.
+stream = None #
 mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
 controller_present = True
@@ -36,21 +36,6 @@ check_auto_exit_thread = None
 auto_exit = False
 # Loops until (b) is pressed.
 done = False
-
-"""
-This commented code is a replacement for get_pressed should the latter be buggy.
-"""
-# # Less efficient than the previous method of iterating though the events a single time 
-# # and using conditionals within the loop, but also more concise.
-# def is_pressed(events, type : str, code : str, state : int) -> tuple[bool, Any]:
-#     # There does not appear to be a better method for detecting button presses 
-#     # other than iterating through the entire list.
-#     for event in events:
-#         if (event.ev_type == type and 
-#             event.code == code and 
-#             state is None or event.state == state):
-#             return (True, event)
-#     return (False, None)
 
 def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, int]]:
     ret = dict()
@@ -66,23 +51,6 @@ def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, 
 
 def manual(events):
     global done, steer, drive, mode, transition_mode, check_auto_exit_thread
-    """
-    This commented code uses the is_pressed function.
-    Use in case get_pressed is buggy.
-    """
-    # if is_pressed(events, "Key", "BTN_EAST", 1)[0]:
-        # done = True
-    # elif is_pressed(events, "Key", "BTN_SOUTH", 1)[0]:
-        # pass # Bypassing functionality for now.
-        # video_capture()
-    # event_x = is_pressed(events, "Absolute", "ABS_RX", None)[1] # RX refers to the right joystick.
-    # event_y = is_pressed(events, "Absolute", "ABS_Y", None)[1]
-    # if event_x is not None:
-    #     x = float(event_x.state) / Drive_Params.TURN_MAX
-    #     steer.steer(x)
-    # if event_y is not None:
-    #     y = float(event_y.state) / Drive_Params.TURN_MAX
-    #     drive.drive(-y)
     """
     IMPORTANT
 
