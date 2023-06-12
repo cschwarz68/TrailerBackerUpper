@@ -1,5 +1,8 @@
 import RPi.GPIO as GPIO
 
+OUT = GPIO.OUT
+IN = GPIO.IN
+
 def cleanup():
     GPIO.cleanup()
 
@@ -16,11 +19,15 @@ class Servo:
     def stop(self):
         self.PWM.stop()
 
-    def set_duty_cycle(self, dc):
-        self.pwm.ChangeDutyCycle(dc)
+    def set_duty_cycle(self, duty_cycle):
+        self.pwm.ChangeDutyCycle(duty_cycle)
+    
+    def set_angle(self, theta):
+        duty_cycle = self.__degrees_to_duty_cycle(theta)
+        self.set_duty_cycle(duty_cycle)
 
     def __degrees_to_duty_cycle(self,theta):
-            #WARNING: the motor has 180 degree range of motion, but the steering rack does not. be careful.
+        #WARNING: the motor has 180 degree range of motion, but the steering rack does not. be careful.
 
 
         #duty cycle should range from 5% to 10%. ie, if f is the function from degrees to duty cycle (expressed as a percent),
@@ -31,7 +38,7 @@ class Servo:
         #generalized: f(x) = x/36 + 5
         
 
-        #TODO: this is currently only for frequence of 50 degrees; will generalize later
+        #TODO: this is currently only for frequencey of 50 degrees; will generalize later
         print(theta/36+5)
         return theta/36 + 5
 
