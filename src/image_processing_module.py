@@ -1,81 +1,56 @@
-# imports
+"""
+Processes images with OpenCV for autonomous navigation.
+
+All images are represented by matrices.
+"""
+
 import cv2
-import numpy as np
 import math
+import numpy as np
 
-
-def edge_detector(img):
-    """
-    @brief This function takes an image and returns it filtered for edges
-
-    @param img(numpy array): A numpy array representation of image
-
-    @return edges(numpy array): A numpy array representation of image with edges filtered
-    """
+# Returns an image filtered for edges.
+def edge_detector(img : cv2.Mat) -> cv2.Mat:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     thresh = int(max(gray[0]) * 0.8)
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    ret, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+    binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
     edges = cv2.Canny(binary, 200, 400)
     return edges
 
-
-def region_of_interest(edges):
-    """
-    @brief crop the original image to focus image processing on bottom half of image
-    
-    @param edges(numpy array): A numpy array representation of image
-
-    @return cropped_edges(numpy array): A numpy array representation of bottom half of image
-    """
+# Crops an image to focus on the bottom half.
+def region_of_interest(edges : cv2.Mat) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
-
-    # only focus bottom half of the screen
+    # Focus on bottom half.
     polygon = np.array(
         [
             [
-                (0, height * 1 / 2),
-                (width, height * 1 / 2),
-                (width, height),
-                (0, height),
+                (0, height * 1 / 2), 
+                (width, height * 1 / 2), 
+                (width, height), 
+                (0, height)
             ]
-        ],
-        np.int32,
+        ], 
+        np.int32
     )
-
     cv2.fillPoly(mask, polygon, 255)
     cropped_edges = cv2.bitwise_and(edges, mask)
     return cropped_edges
 
-
-def detect_line_segments(img):
-    """
-    @brief Use HoughLinesP function to find line segements in image
-    
-    @param img(numpy array): numpy array representation of image filtered for edges
-    
-    @return line_segments(array): vectors of line segments detected in image in array representation
-    """
-    rho = 1  # distance precision in pixel, i.e. 1 pixel
-    angle = np.pi / 180  # angular precision in radian, i.e. 1 degree
-    min_threshold = 10  # minimal of votes
+# Detect lines segments with hough lines using cropped image filtered for edges.
+# Returns an array of 4D arrays of the form (x1, y1, x2, y2) - the coordinates for each line.
+def detect_line_segments(img : cv2.Mat) -> np.ndarray:
+    rho = 1             # Distance precision in pixels, i.e. 1 pixel.
+    angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
+    min_threshold = 10  # Minimal of votes for a line to be counted.
     line_segments = cv2.HoughLinesP(
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
     return line_segments
 
-
-def make_points(frame, line):
-    """
-    @brief get points of ends of line for plotting of lane lines
-
-    @param frame(numpy array): numpy array representaion of original image
-
-    @param line(int, int): slope and intercept of line
-
-    @return (list): endpoints of line
-    """
+# Extrapolates a line to its endpoints at the edges of the image. y is maxed at half the height.
+# Used to determine deviation from lane.
+def make_points(frame : cv2.Mat, line : np.ndarray) -> list[int, int, int, int]:
     height, width, _ = frame.shape
     slope, intercept = line
     y1 = height  # bottom of the frame
@@ -86,17 +61,16 @@ def make_points(frame, line):
     x2 = max(-width, min(2 * width, int((y2 - intercept) / slope)))
     return [[x1, y1, x2, y2]]
 
+"""
+@brief Make lines of average of lines on the left side and right side
 
+@param frame(numpy array): numpy array representation of original image
+
+@param line_segments(array): vectors of line segments in array representation
+
+@return lane_lines(list): list of 2 vectors of average line segments of left and right lines
+"""
 def average_slope_intercept(frame, line_segments):
-    """
-    @brief Make lines of average of lines on the left side and right side
-    
-    @param frame(numpy array): numpy array representation of original image
-    
-    @param line_segments(array): vectors of line segments in array representation
-
-    @return lane_lines(list): list of 2 vectors of average line segments of left and right lines
-    """
     lane_lines = []
     if line_segments is None:
         return []

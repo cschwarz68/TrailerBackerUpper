@@ -19,7 +19,7 @@ import steer_module as sr
 
 # GPIO mode should be consistent across all modules.
 GPIO.setmode(GPIO.BCM) # Pin numbering system: Broadcom SOC
-# GPIO.setwarnings(False) # Disables warnings for pin configuration conflicts.
+GPIO.setwarnings(True) # Warnings for pin configuration conflicts.
 
 # Drive control wires
 GPIO.setup(5, GPIO.OUT)

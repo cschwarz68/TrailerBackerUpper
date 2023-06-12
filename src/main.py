@@ -11,6 +11,8 @@ Reverse autonomous mode can be entrered by pressing (Y) and then (START).
 Exit manual mode / the program by pressing (B).
 """
 
+from threading import Thread
+
 # Package Imports
 from inputs import get_gamepad
 import numpy as np
@@ -24,29 +26,16 @@ import quick_capture_module as qc
 from constants import Main_Mode, Drive_Params
 
 # Mutable
-steer = None
-drive = None
-stream = None
+steer = None  #
+drive = None  # Initialized in main.
+stream = None #
 mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
 controller_present = True
+check_auto_exit_thread = None
+auto_exit = False
 # Loops until (b) is pressed.
 done = False
-
-"""
-This commented code is a replacement for get_pressed should the latter be buggy.
-"""
-# # Less efficient than the previous method of iterating though the events a single time 
-# # and using conditionals within the loop, but also more concise.
-# def is_pressed(events, type : str, code : str, state : int) -> tuple[bool, Any]:
-#     # There does not appear to be a better method for detecting button presses 
-#     # other than iterating through the entire list.
-#     for event in events:
-#         if (event.ev_type == type and 
-#             event.code == code and 
-#             state is None or event.state == state):
-#             return (True, event)
-#     return (False, None)
 
 def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, int]]:
     ret = dict()
@@ -61,24 +50,7 @@ def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, 
     return ret
 
 def manual(events):
-    global done, steer, drive, mode, transition_mode
-    """
-    This commented code uses the is_pressed function.
-    Use in case get_pressed is buggy.
-    """
-    # if is_pressed(events, "Key", "BTN_EAST", 1)[0]:
-        # done = True
-    # elif is_pressed(events, "Key", "BTN_SOUTH", 1)[0]:
-        # pass # Bypassing functionality for now.
-        # video_capture()
-    # event_x = is_pressed(events, "Absolute", "ABS_RX", None)[1] # RX refers to the right joystick.
-    # event_y = is_pressed(events, "Absolute", "ABS_Y", None)[1]
-    # if event_x is not None:
-    #     x = float(event_x.state) / Drive_Params.TURN_MAX
-    #     steer.steer(x)
-    # if event_y is not None:
-    #     y = float(event_y.state) / Drive_Params.TURN_MAX
-    #     drive.drive(-y)
+    global done, steer, drive, mode, transition_mode, check_auto_exit_thread
     """
     IMPORTANT
 
@@ -99,9 +71,6 @@ def manual(events):
     ])
     if pressed["Key"]["BTN_EAST"] == 1:
         done = True
-    elif pressed["Key"]["BTN_SOUTH"] == 1:
-        pass # Bypassing functionality for now.
-        # video_capture()
     elif pressed["Key"]["BTN_NORTH"] == 1:
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
@@ -109,8 +78,10 @@ def manual(events):
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
     elif pressed["Key"]["BTN_START"] == 1:
-        print("Entered Mode:", transition_mode)
         mode = transition_mode
+        check_auto_exit_thread = Thread (target=check_auto_exit)
+        check_auto_exit_thread.start()
+        print("Entered Mode:", transition_mode)
     x = pressed["Absolute"]["ABS_RX"]
     y = pressed["Absolute"]["ABS_Y"]
     if x is not None:
@@ -119,8 +90,9 @@ def manual(events):
         drive.drive(-y / Drive_Params.JOYSTICK_MAX)
 
 def auto_forward():
-    global stream, steer, drive
-    if check_auto_exit():
+    global stream, steer, drive, auto_exit
+    if auto_exit:
+        exit_auto()
         return
     image = stream.capture()
     edges = ip.edge_detector(image)
@@ -139,24 +111,30 @@ def auto_forward():
 
 def auto_reverse():
     # Not yet implemented.
-    if check_auto_exit():
+    if auto_exit:
+        exit_auto()
         return
     pass
 
 def check_auto_exit():
-    global controller_present, mode
-    if controller_present:
+    global mode, auto_exit
+    while mode != Main_Mode.MANUAL:
         events = get_gamepad()
         pressed = get_pressed(events, [
             ("Key", "BTN_EAST")
         ])
         if pressed["Key"]["BTN_EAST"] == 1:
-            mode = Main_Mode.MANUAL
-            drive.drive(0)
-            steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
-            print("Returning To:", mode)
-            return True
-    return False
+            auto_exit = True
+            return
+
+def exit_auto():
+    global mode, drive, steer, check_auto_exit_thread, auto_exit
+    mode = Main_Mode.MANUAL
+    drive.drive(0)
+    steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
+    check_auto_exit_thread.join()
+    auto_exit = False
+    print("Returning To:", mode)
 
 def main():
     print("STARTING MAIN")
@@ -185,42 +163,14 @@ def main():
         if mode == Main_Mode.MANUAL:
             manual(events)
         elif mode == Main_Mode.AUTO_FORWARD:
+            # Need to move the camera to the front so it can see ahead. Take note of new and former positions!
             auto_forward()
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
 
     steer.stop()
+    stream.stop()
     steer.cleanup()
-
-    # Currently bypassed functionality.
-    # stream.stop()
-    # camera.stop()
-    # out.release()
-
-def video_capture(): # SEEMS TO BE CURRENTLY BROKEN
-    global stream, steer
-    # Processing and capture test.
-    image = stream.capture()
-    edges = ip.edge_detector(image)
-    cropped_edges = ip.region_of_interest(edges)
-    line_segments = ip.detect_line_segments(cropped_edges)
-    lane_lines = ip.average_slope_intercept(image, line_segments)
-    # num_lanes = len(lane_lines)
-    line_image = ip.display_lines(image, lane_lines)
-    # Recording.
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    out = cv2.VideoWriter(
-        "test_recording.mp4", fourcc, 20.0, (320, 240)
-    )
-    while True:
-        frame = cv2.cvtColor(
-            np.array(line_image), cv2.COLOR_GRAY2BGR
-        )
-        out.write(frame)
-        steering_angle = ip.compute_steering_angle(
-            line_image, lane_lines
-        )
-        steer.steer_by_angle(steering_angle)
 
 if __name__ == "__main__":
     main()
