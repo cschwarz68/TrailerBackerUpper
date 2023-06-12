@@ -1,62 +1,114 @@
 from inputs import get_gamepad
+from enum import Enum
 
-class Gamepad:
+_STICK_MAX_VALUE = 32768
+
+PRESSED = 1
+RELEASED = 0
+
+_INPUTS = [
+        ("Key", "BTN_EAST"), 
+        ("Key", "BTN_SOUTH"), 
+        ("Key", "BTN_WEST"), 
+        ("Key", "BTN_NORTH"), 
+        ("Key", "BTN_START"), 
+        ("Key","BTN_SELECT"),
+        ("Absolute", "ABS_RX"),
+        ("Absolute","ABS_RY"), 
+        ("Absolute", "ABS_Y"),
+        ("Absolute", "ABS_X")
+    ]
+
+class Key(Enum):
+    A = 1
+    B = 2
+    X = 3
+    Y=4
+    RY=5
+    RX=6
+    LY=7
+    LX=8
+    SYN_REPORT = 3
+
+keymap = {
+    "BTN_SOUTH": Key.A,
+    "BTN_EAST"  : Key.B,
+    "SYN_REPORT" : Key.SYN_REPORT,
+    "BTN_NORTH" : Key.X,
+    "BTN_WEST" : Key.Y,
+    "ABS_Y": Key.LY,
+    "ABS_X": Key.LX
+}
+
+
+
+def pressed() -> dict[str, dict[str, int]]:
     
-    def __init__(self):
-        self.events = get_gamepad()
-        self.pressed = self.get_pressed(self.events, [
-            ("Key", "BTN_EAST"), 
-            ("Key", "BTN_SOUTH"), 
-            ("Key", "BTN_WEST"), 
-            ("Key", "BTN_NORTH"), 
-            ("Key", "BTN_START"), 
-            ("Key","BTN_SELECT")
-            ("Absolute", "ABS_RX"),
-            ("Absolute","ABS_RY") 
-            ("Absolute", "ABS_Y"),
-            ("Absolute", "ABS_X")
-        ])
+    ret = dict()
+    events = get_gamepad()
+    for key in _INPUTS:
+        if key[0] not in ret:
+            ret[key[0]] = dict()
+        ret[key[0]][key[1]] = None
+    for event in events:
+        # print(event.ev_type, event.code, event.state) # For debugging.
+        if event.ev_type in ret and event.code in ret[event.ev_type]:
+            ret[event.ev_type][event.code] = event.state
+    return ret
 
-    def get_pressed(self, events, require : list[tuple[str, str]]) -> dict[str, dict[str, int]]:
-        ret = dict()
-        for key in require:
-            if key[0] not in ret:
-                ret[key[0]] = dict()
-            ret[key[0]][key[1]] = None
-        for event in events:
-            # print(event.ev_type, event.code, event.state) # For debugging.
-            if event.ev_type in ret and event.code in ret[event.ev_type]:
-                ret[event.ev_type][event.code] = event.state
-        return ret
+def input():
+    events = get_gamepad()
+    for event in events:
+        if(event.ev_type=="Key"):
+            return (keymap[event.code],event.state)
+        elif(event.ev_type=="Absolute"):
+            return (keymap[event.code],event.state)
+        
 
-    def a_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_SOUTH"] == 1
+def a_pressed() -> bool:
+    return pressed()["Key"]["BTN_SOUTH"] == 1
 
-    def b_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_EAST"] == 1
+def b_pressed() -> bool:
+    return pressed()["Key"]["BTN_EAST"] == 1
 
-    def x_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_NORTH"] == 1
-    
-    def y_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_WEST"] == 1
+def x_pressed() -> bool:
+    return pressed()["Key"]["BTN_NORTH"] == 1
 
-    def start_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_SOUTH"] == 1
-    
-    def a_pressed(self, pressed : dict[str, dict[str, int]]) -> bool:
-        return pressed["Key"]["BTN_SOUTH"] == 1
+def y_pressed() -> bool:
+    return pressed()["Key"]["BTN_WEST"] == 1
+
+def start_pressed() -> bool:
+    return pressed()["Key"]["BTN_SOUTH"] == 1
+
+def select_pressed() -> bool:
+    return pressed()["Key"]["BTN_SELECT"] == 1
+
+def get_RX():
+    return pressed()["Absolute"]["ABS_RX"]
+
+def normalize_stick_inputs(x):
+    if x is None:
+        return None
+    return x/_STICK_MAX_VALUE
+
 
 
 def main():
     """Just print out some event infomation when the gamepad is used."""
+   
+    while 1:
+      #val = get_RX()
+      print(input())
+      
+def print_back_inputs():
     while 1:
         events = get_gamepad()
         for event in events:
             print(event.ev_type, event.code, event.state)
 
 if __name__ == "__main__":
-    main()
+    print_back_inputs()
+    #main()
 
 
 

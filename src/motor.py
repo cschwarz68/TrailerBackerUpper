@@ -69,5 +69,5 @@ class Servo:
         
 
         #TODO: this is currently only for frequencey of 50 Hz (period 20 ms); will generalize later
-        print(theta/36+5)
+        #print(theta/36+5)
         return theta/36 + 5

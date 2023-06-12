@@ -150,6 +150,7 @@ def main():
         print("Plug in gamepad to start.")
         exit(1)
 
+    #main loop
     while not done:
         # Detect if controller is plugged in.
         if mode == Main_Mode.MANUAL:
