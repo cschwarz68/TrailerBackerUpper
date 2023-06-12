@@ -127,9 +127,8 @@ def manual(events):
 def auto_forward():
     global stream, steer, drive, auto_exit
     if auto_exit:
-        neutral()
+        exit_auto()
         return
-    print("running")
     image = stream.capture()
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
@@ -148,14 +147,12 @@ def auto_forward():
 def auto_reverse():
     # Not yet implemented.
     if auto_exit:
-        neutral()
+        exit_auto()
         return
     pass
 
 def check_auto_exit():
-    global controller_present, mode, auto_exit
-    if not controller_present:
-        return
+    global mode, auto_exit
     while mode != Main_Mode.MANUAL:
         events = get_gamepad()
         pressed = get_pressed(events, [
@@ -165,13 +162,14 @@ def check_auto_exit():
             auto_exit = True
             return
 
-def neutral():
-    global mode, drive, steer, check_auto_exit_thread
+def exit_auto():
+    global mode, drive, steer, check_auto_exit_thread, auto_exit
     mode = Main_Mode.MANUAL
     drive.drive(0)
     steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
-    print("Returning To:", mode)
     check_auto_exit_thread.join()
+    auto_exit = False
+    print("Returning To:", mode)
 
 def main():
     print("STARTING MAIN")
@@ -212,7 +210,7 @@ def main():
     # camera.stop()
     # out.release()
 
-def video_capture(): # SEEMS TO BE CURRENTLY BROKEN
+def video_capture():
     global stream, steer
     # Processing and capture test.
     image = stream.capture()
