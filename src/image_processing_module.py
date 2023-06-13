@@ -7,6 +7,7 @@ All images are represented by OpenCV matrices, which are aliases of numpy arrays
 """
 
 import math
+import warnings
 
 # Package Imports
 import cv2
@@ -14,6 +15,11 @@ import numpy as np
 
 # Local Imports
 from constants import Lane_Bounds_Ratio, Drive_Params, Image_Processing_Calibrations
+
+# Global Configuration
+warnings.simplefilter('ignore', np.RankWarning)
+# Ignoring Polyfit warning because it's bothersome.
+# Supposedly we can resolve it by decreasing the order (third argument), but it's already at 1 here...
 
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
@@ -90,7 +96,8 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
         return []
 
     _, width, _ = frame.shape
-    left_fit = right_fit = []
+    left_fit = []
+    right_fit = []
 
     for line_segment in line_segments:
         x1, y1, x2, y2 = line_segment[0]
@@ -115,17 +122,6 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 
     return lane_lines
 
-# Returns a black image with lane lines drawn on it.
-def display_lines(frame: cv2.Mat, lines: list[tuple[int, int, int, int]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
-    line_image = np.zeros_like(frame) # Create black image with the same dimensions.
-    if lines is None:
-        return line_image
-    for line in lines:
-        x1, y1, x2, y2 = line
-        cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
-    line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
-    return line_image
-
 # Use lane lines to predict the steering angle in degrees.
 # Arbitrary, maybe subject to change: 0 --> left, 90 --> straight, 180 --> right
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int, int]]) -> int:
@@ -144,7 +140,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int,
         # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
         _, _, left_x2, _ = lane_lines[0]
         _, _, right_x2, _ = lane_lines[1]
-        mid = int(width / 2 * (1 + Image_Processing_Calibrations.camera_mid_offset_percent))
+        mid = int(width / 2 * (1 + Image_Processing_Calibrations.CAMERA_MID_OFFSET_PERCENT))
         x_offset = (left_x2 + right_x2) / 2 - mid
 
     """
@@ -166,35 +162,40 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int,
     steering_angle = int(angle_to_mid_deg + Drive_Params.TURN_STRAIGHT)
     return steering_angle
 
-# 
-def display_heading_line(
-    frame,
-    steering_angle,
-    line_color=(0, 0, 255),
-    line_width=5,
-):
-    """
-    @brief plot steering path as a line on frame
+# Everything beneath this comment is for testing.
 
-    @param frame(numpy array): numpy array representation of original image
+# Returns a black image with lines drawn on it.
+def display_lines(frame: cv2.Mat, lines: list[tuple[int, int, int, int]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
+    line_image = np.zeros_like(frame) # Create black image with the same dimensions.
+    if lines is None:
+        return line_image
+    for line in lines:
+        x1, y1, x2, y2 = line
+        cv2.line(line_image, (x1, y1), (x2, y2), line_color, line_width)
+    # Might be useful for overlaying the raw image.
+    # line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
+    return line_image
 
-    @param steering_angle(int): computed steering angle
-
-    @return heading_image(numpy array): frame with path plotted as a line
-    """
-    heading_image = np.zeros_like(frame)
-    height, width = frame.shape[0], frame.shape[1]
-    steering_angle_radian = steering_angle / 180.0 * math.pi
+# Makes a black image containing lane lines and the calculated path. 
+def display_lanes_and_path(img: cv2.Mat):
+    edges = edge_detector(img)
+    cropped_edges = region_of_interest(edges)
+    line_segments = detect_line_segments(cropped_edges)
+    lane_lines = average_slope_intercept(img, line_segments)
+    steering_angle_deg = compute_steering_angle(img, lane_lines)
+    height, width = img.shape[0], img.shape[1]
+    steering_angle_radian = math.radians(steering_angle_deg)
     x1 = int(width / 2)
     y1 = height
     x2 = int(x1 - height / 2 / math.tan(steering_angle_radian))
     y2 = int(height / 2)
 
-    cv2.line(heading_image, (x1, y1), (x2, y2), line_color, line_width)
-    heading_image = cv2.addWeighted(frame, 0.8, heading_image, 1, 1)
-    return heading_image
+    final_image = display_lines(img, lane_lines)
+    cv2.line(final_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
+    return final_image
 
+# R
 def lane_detection(img):
     """
     @brief plot lane lines and steering path on frame
@@ -211,6 +212,7 @@ def lane_detection(img):
     final_image = display_heading_line(line_image, steering_angle)
     return final_image
 
+# Everything beneath this comment has not been refactored.
 
 def steering_output(angles):
     normalized_output = 0
