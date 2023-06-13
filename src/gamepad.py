@@ -3,8 +3,7 @@ from enum import Enum
 
 _STICK_MAX_VALUE = 32768
 
-PRESSED = 1
-RELEASED = 0
+
 
 _INPUTS = [
         ("Key", "BTN_EAST"), 
@@ -19,7 +18,9 @@ _INPUTS = [
         ("Absolute", "ABS_X")
     ]
 
-class Key(Enum):
+class Gamepad():
+    #enum part
+    SYN_REPORT=0
     A = 1
     B = 2
     X = 3
@@ -28,16 +29,50 @@ class Key(Enum):
     RX=6
     LY=7
     LX=8
-    SYN_REPORT = 3
+    R_BUMPER=10
+    L_BUMPER=11
+    START = 12
+    SELECT=13
+    R_TRIGGER=14
+    L_TRIGGER = 15
+    D_PAD_Y = 16
+    D_PAD_X = 17
 
-keymap = {
-    "BTN_SOUTH": Key.A,
-    "BTN_EAST"  : Key.B,
-    "SYN_REPORT" : Key.SYN_REPORT,
-    "BTN_NORTH" : Key.X,
-    "BTN_WEST" : Key.Y,
-    "ABS_Y": Key.LY,
-    "ABS_X": Key.LX
+class State:
+    #constants for input state
+    PRESSED = 1
+    RELEASED = 0
+
+    LEFT = -1
+    UP = -1
+    DOWN = 1
+    RIGHT = 1
+
+   
+
+    
+
+
+
+_keymap = {
+    "BTN_SOUTH": Gamepad.A,
+    "BTN_EAST"  : Gamepad.B,
+    "SYN_REPORT" : Gamepad.SYN_REPORT,
+    "BTN_NORTH" : Gamepad.X,
+    "BTN_WEST" : Gamepad.Y,
+    "BTN_START" : Gamepad.START,
+    "BTN_SELECT": Gamepad.SELECT,
+    "BTN_TR": Gamepad.R_BUMPER,
+    "BTN_LR": Gamepad.L_BUMPER,
+    "ABS_RZ": Gamepad.R_TRIGGER,
+    "ABS_Z": Gamepad.L_TRIGGER,
+    "ABS_RX": Gamepad.RX,
+    "ABS_RY": Gamepad.RY,
+    "ABS_Y": Gamepad.LY,
+    "ABS_X": Gamepad.LX,
+    "ABS_HAT0Y": Gamepad.D_PAD_Y,
+    "ABS_HAT0X":Gamepad.D_PAD_X
+    
 }
 
 
@@ -60,31 +95,33 @@ def input():
     events = get_gamepad()
     for event in events:
         if(event.ev_type=="Key"):
-            return (keymap[event.code],event.state)
+            return (_keymap[event.code],event.state)
         elif(event.ev_type=="Absolute"):
-            return (keymap[event.code],event.state)
+            return (_keymap[event.code],event.state)#why did I write this as two separate conditions???
         
 
-def a_pressed() -> bool:
-    return pressed()["Key"]["BTN_SOUTH"] == 1
+#this idea was stupid
 
-def b_pressed() -> bool:
-    return pressed()["Key"]["BTN_EAST"] == 1
+# def a_pressed() -> bool:
+#     return pressed()["Key"]["BTN_SOUTH"] == 1
 
-def x_pressed() -> bool:
-    return pressed()["Key"]["BTN_NORTH"] == 1
+# def b_pressed() -> bool:
+#     return pressed()["Key"]["BTN_EAST"] == 1
 
-def y_pressed() -> bool:
-    return pressed()["Key"]["BTN_WEST"] == 1
+# def x_pressed() -> bool:
+#     return pressed()["Key"]["BTN_NORTH"] == 1
 
-def start_pressed() -> bool:
-    return pressed()["Key"]["BTN_SOUTH"] == 1
+# def y_pressed() -> bool:
+#     return pressed()["Key"]["BTN_WEST"] == 1
 
-def select_pressed() -> bool:
-    return pressed()["Key"]["BTN_SELECT"] == 1
+# def start_pressed() -> bool:
+#     return pressed()["Key"]["BTN_SOUTH"] == 1
 
-def get_RX():
-    return pressed()["Absolute"]["ABS_RX"]
+# def select_pressed() -> bool:
+#     return pressed()["Key"]["BTN_SELECT"] == 1
+
+# def get_RX():
+#     return pressed()["Absolute"]["ABS_RX"]
 
 def normalize_stick_inputs(x):
     if x is None:
@@ -94,7 +131,7 @@ def normalize_stick_inputs(x):
 
 
 def main():
-    """Just print out some event infomation when the gamepad is used."""
+    
    
     while 1:
       #val = get_RX()
