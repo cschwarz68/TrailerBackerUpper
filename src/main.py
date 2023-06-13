@@ -25,10 +25,11 @@ import image_processing_module as ip
 import quick_capture_module as qc
 from constants import Main_Mode, Drive_Params
 
+# Module Components
+steer = sr.Steer()
+drive = dr.Drive()
+stream = qc.StreamCamera()
 # Mutable
-steer = None  #
-drive = None  # Initialized in main.
-stream = None #
 mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
 controller_present = True
@@ -132,17 +133,15 @@ def exit_auto():
     mode = Main_Mode.MANUAL
     drive.drive(0)
     steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
-    check_auto_exit_thread.join()
+    if check_auto_exit_thread is not None:
+        check_auto_exit_thread.join()
     auto_exit = False
     print("Returning To:", mode)
 
 def main():
     print("STARTING MAIN")
 
-    global steer, drive, stream, done, mode, controller_present
-    steer = sr.Steer()
-    drive = dr.Drive()
-    stream = qc.StreamCamera()
+    global steer, stream, done, mode, controller_present
 
     try:
         get_gamepad()
@@ -152,6 +151,7 @@ def main():
 
     while not done:
         # Detect if controller is plugged in.
+        events = None
         if mode == Main_Mode.MANUAL:
             try:
                 events = get_gamepad()
