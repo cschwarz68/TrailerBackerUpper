@@ -2,6 +2,7 @@ from motor import Servo
 from motor import DCMotor
 from motor import cleanup
 from gamepad import input, Gamepad as g, State
+from constants import Drive_Params
 
 
 
@@ -29,13 +30,13 @@ def set_center_pos(angle: int):
 def drive(power):
         # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
               # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
-        duty_cycle = abs(power*50)
+        duty_cycle = abs(power*100)
         if power < 0:
-           drive_motor.reverse()
+           drive_motor.backwards()
         elif power > 0:
-           drive_motor.forward()
+           drive_motor.forwards()
         else:
-           drive_motor.park()
+           drive_motor.stop_rotation()
 
         drive_motor.set(duty_cycle)
 
@@ -45,7 +46,7 @@ def main():
     pulse = 90
     while 1:
         try:
-            
+            print(pulse)
             current_input = input()
             if current_input is not None:
                 non_null_input = current_input
@@ -61,26 +62,46 @@ def main():
                 pulse = pulse + 0.3
             if non_null_input[0]==g.L_TRIGGER:
                 pulse = pulse - 0.3
+
+            if non_null_input[0]==g.LY:
+                stick_val = non_null_input[1]
+                drive(-stick_val/Drive_Params.JOYSTICK_MAX)
             
             
 
-            if pulse <=0:
-                    pulse = 0
-            if pulse >= 180:
-                pulse = 180
-
-            print(pulse)
-            steer_motor.set_angle(pulse)
+            steer(pulse)
             
            
             
         except KeyboardInterrupt:
             steer_motor.set_angle(90)
             return
+        
+def clamp_steering_angle(angle):
+    angle = Drive_Params.STEERING_RACK_RIGHT if angle >= Drive_Params.STEERING_RACK_RIGHT else angle
+    angle = Drive_Params.STEERING_RACK_LEFT if angle <= Drive_Params.STEERING_RACK_LEFT else angle
+    return angle
 
-#steering normalized from [-1,1]
-def steer(normalized_val: float):
-    pass
+#steering normalized such that 0 is center, negative values go left, positive values go right
+#exact bounds can be found in constants.Drive_Params
+def steer(angle: float):
+    angle = angle + Drive_Params.STEERING_RACK_CENTER
+    angle = clamp_steering_angle(angle)
+    steer_motor.set_angle(angle)
+    
+
+def drive(power):
+ # Normalized driving. 1 is full speed forward, -1 is full speed reverse.
+             
+        duty_cycle = abs(power*100)
+        if power < 0:
+           drive_motor.backwards()
+        elif power > 0:
+           drive_motor.forwards()
+        else:
+           drive_motor.stop_rotation()
+
+        drive_motor.set(duty_cycle)
 
 
 if __name__ == "__main__":

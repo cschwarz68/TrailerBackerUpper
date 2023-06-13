@@ -51,6 +51,9 @@ class DCMotor:
     def stop(self):
         io.set_PWM_dutycycle(0)
 
+    def set(self, duty_cycle):
+        io.set_PWM_dutycycle(self.power,duty_cycle)
+
 class Servo:
 
     def __init__(self, pin:int,freq: int=FREQ):
