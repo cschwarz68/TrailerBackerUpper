@@ -1,7 +1,9 @@
 """
 Processes images with OpenCV for autonomous navigation.
 
-All images are represented by matrices.
+IMPORTANT
+
+All images are represented by OpenCV matrices, which are aliases of numpy arrays.
 """
 
 import math
@@ -11,19 +13,19 @@ import cv2
 import numpy as np
 
 # Local Imports
-from constants import Lane_Bounds_Ratio
+from constants import Lane_Bounds_Ratio, Drive_Params, Image_Processing_Calibrations
 
 # Returns an image filtered for edges.
-def edge_detector(img : cv2.Mat) -> cv2.Mat:
+def edge_detector(img: cv2.Mat) -> cv2.Mat:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     thresh = int(max(gray[0]) * 0.8)
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
     edges = cv2.Canny(binary, 200, 400)
     return edges
 
 # Crops an image to focus on the bottom half.
-def region_of_interest(edges : cv2.Mat) -> cv2.Mat:
+def region_of_interest(edges: cv2.Mat) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
@@ -43,8 +45,22 @@ def region_of_interest(edges : cv2.Mat) -> cv2.Mat:
     return cropped_edges
 
 # Detect lines segments with hough lines using cropped image filtered for edges.
-# Returns an array of 4D arrays of the form (x1, y1, x2, y2) - the coordinates for each line.
-def detect_line_segments(img : cv2.Mat) -> np.ndarray:
+# (x1, y1, x2, y2) - the coordinates for each line segment.
+"""
+IMPORTANT
+
+Return an array of the form:
+line_segments [
+    [[x1, y1, x2, y2]], 
+    [[x1, y1, x2, y2]], 
+    [[x1, y1, x2, y2]], 
+    [[x1, y1, x2, y2]], 
+    ...
+]
+
+"Singleton" arrays.
+"""
+def detect_line_segments(img: cv2.Mat) -> np.ndarray:
     rho = 1             # Distance precision in pixels, i.e. 1 pixel.
     angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
     min_threshold = 10  # Minimal of votes for a line to be counted.
@@ -55,7 +71,7 @@ def detect_line_segments(img : cv2.Mat) -> np.ndarray:
 
 # Extrapolates a line to its endpoints at the edges of the image. y is maxed at half the height.
 # Used to determine deviation from lane.
-def make_points(frame : cv2.Mat, line : np.ndarray) -> list[int, int, int, int]:
+def make_points(frame: cv2.Mat, line: np.ndarray) -> tuple[int, int, int, int]:
     height, width, _ = frame.shape
     slope, intercept = line
     y1 = height      # Bottom of the frame / image.
@@ -69,7 +85,7 @@ def make_points(frame : cv2.Mat, line : np.ndarray) -> list[int, int, int, int]:
 # Approximates the slope and intercept of each line segment, determines which side of the image it's on, 
 # and then computes the average line for each side. Returns array of length 0 - 2 from `make_points`.
 # The frame is the uncropped image.
-def average_slope_intercept(frame, line_segments) -> list[tuple[int, int, int, int]]:
+def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[tuple[int, int, int, int]]:
     if line_segments is None:
         return []
 
@@ -77,7 +93,7 @@ def average_slope_intercept(frame, line_segments) -> list[tuple[int, int, int, i
     left_fit = right_fit = []
 
     for line_segment in line_segments:
-        x1, y1, x2, y2 = line_segment
+        x1, y1, x2, y2 = line_segment[0]
         fit = np.polyfit((x1, x2), (y1, y2), 1)
         slope, intercept = fit
         if ((slope < 0) and 
@@ -100,7 +116,7 @@ def average_slope_intercept(frame, line_segments) -> list[tuple[int, int, int, i
     return lane_lines
 
 # Returns a black image with lane lines drawn on it.
-def display_lines(frame : cv2.Mat, lines : list[tuple[int, int, int, int]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
+def display_lines(frame: cv2.Mat, lines: list[tuple[int, int, int, int]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
     line_image = np.zeros_like(frame) # Create black image with the same dimensions.
     if lines is None:
         return line_image
@@ -110,47 +126,47 @@ def display_lines(frame : cv2.Mat, lines : list[tuple[int, int, int, int]], line
     line_image = cv2.addWeighted(frame, 0.8, line_image, 1, 1)
     return line_image
 
-
-def compute_steering_angle(frame, lane_lines):
-    """
-    @brief use lane lines to predict steering angle 0 is left, 90 is straight, 180 is right
-
-    @param frame(numpy array): numpy array representation of original image
-
-    @param lane_line(list): list of 2 vectors of average line segments of left and right lines
-
-    @return steering_angle(int): computed steering angle
-    """
+# Use lane lines to predict the steering angle in degrees.
+# Arbitrary, maybe subject to change: 0 --> left, 90 --> straight, 180 --> right
+def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int, int]]) -> int:
     if len(lane_lines) == 0:
-        # continue straight if no lines
-        return 90
+        # Continue straight if no lines are present...
+        return Drive_Params.TURN_STRAIGHT
 
     height, width = frame.shape[0], frame.shape[1]
     if len(lane_lines) == 1:
+        # In the event only a left lane or right lane was detected, 
+        # we calculate the x-offset based on the difference between the extrapolated x coordinates.
         x1, _, x2, _ = lane_lines[0]
         x_offset = x2 - x1
     else:
+        # Otherwise, the offset is based on the average between the topmost (as in the y-coordinate is at the middle of the frame) 
+        # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
         _, _, left_x2, _ = lane_lines[0]
         _, _, right_x2, _ = lane_lines[1]
-        camera_mid_offset_percent = 0.02  # 0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right
-        mid = int(width / 2 * (1 + camera_mid_offset_percent))
+        mid = int(width / 2 * (1 + Image_Processing_Calibrations.camera_mid_offset_percent))
         x_offset = (left_x2 + right_x2) / 2 - mid
 
-    # find the steering angle, which is angle between navigation direction to end of center line
-    y_offset = int(height / 2)
+    """
+    IMPORTANT
 
-    angle_to_mid_radian = math.atan(
-        x_offset / y_offset
-    )  # angle (in radian) to center vertical line
-    angle_to_mid_deg = int(
-        angle_to_mid_radian * 180.0 / math.pi
-    )  # angle (in degrees) to center vertical line
-    steering_angle = (
-        angle_to_mid_deg + 90
-    )  # this is the steering angle 
+    How the steering angle is calculated:
+    
+      Car Front
+        /| --> angle_to_mid_radian
+       / |                       |
+      /  | }--> y_offset         V
+     /   |                       Convert to degrees and add turn straight angle.
+    /____|
+   x_offset
+    """
+    y_offset = int(height / 2)
+    angle_to_mid_radian = math.atan(x_offset / y_offset)
+    angle_to_mid_deg = math.degrees(angle_to_mid_radian)
+    steering_angle = int(angle_to_mid_deg + Drive_Params.TURN_STRAIGHT)
     return steering_angle
 
-
+# 
 def display_heading_line(
     frame,
     steering_angle,
