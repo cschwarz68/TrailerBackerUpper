@@ -76,7 +76,9 @@ class Car:
         self.current_steering_angle = stabilized_steering_angle
         return stabilized_steering_angle -90 #subtracting 90 because this is old code from the system where angle range was [0,180]; it is now [-90,90] 
 
-
+    def stop(self):
+        self.steer_motor.stop()
+        self.drive_motor.stop()
 
 
 

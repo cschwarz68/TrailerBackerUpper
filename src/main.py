@@ -17,75 +17,50 @@ from threading import Thread
 from inputs import get_gamepad
 
 # Local Imports
-import drive_module as dr
-import steer_module as sr
+from gamepad import Gamepad, Inputs as inputs
+from car import Car
 import image_processing_module as ip
 import quick_capture_module as qc
 from constants import Main_Mode, Drive_Params
+from motor import cleanup as GPIO_cleanup
 
 # Mutable
-steer = None  #
-drive = None  # Initialized in main.
 stream = None #
 mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
 controller_present = True
 check_auto_exit_thread = None
 auto_exit = False
+
+car = Car()
+g = Gamepad()
+
 # Loops until (b) is pressed.
 done = False
 
-def get_pressed(events, require: list[tuple[str, str]]) -> dict[str, dict[str, int]]:
-    ret = dict()
-    for key in require:
-        if key[0] not in ret:
-            ret[key[0]] = dict()
-        ret[key[0]][key[1]] = None
-    for event in events:
-        # print(event.ev_type, event.code, event.state) # For debugging.
-        if event.ev_type in ret and event.code in ret[event.ev_type]:
-            ret[event.ev_type][event.code] = event.state
-    return ret
 
-def manual(events):
-    global done, steer, drive, mode, transition_mode, check_auto_exit_thread
-    """
-    IMPORTANT
-
-    On the controller:
-
-            Y                  West
-          X + B    -->    North + East
-            A                 South
-    """
-    pressed = get_pressed(events, [
-        ("Key", "BTN_EAST"), 
-        ("Key", "BTN_SOUTH"), 
-        ("Key", "BTN_WEST"), 
-        ("Key", "BTN_NORTH"), 
-        ("Key", "BTN_START"), 
-        ("Absolute", "ABS_RX"), 
-        ("Absolute", "ABS_Y")
-    ])
-    if pressed["Key"]["BTN_EAST"] == 1:
+def manual():
+    global done, mode, transition_mode, check_auto_exit_thread
+   
+    if g.was_pressed(inputs.B):
         done = True
-    elif pressed["Key"]["BTN_NORTH"] == 1:
+    elif g.was_pressed(inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
-    elif pressed["Key"]["BTN_WEST"] == 1:
+    elif g.was_pressed(inputs.Y):
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
-    elif pressed["Key"]["BTN_START"] == 1:
+    elif g.was_pressed(inputs.START):
         mode = transition_mode
         check_auto_exit_thread = Thread (target=check_auto_exit)
         check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
-    x = pressed["Absolute"]["ABS_RX"]
-    y = pressed["Absolute"]["ABS_Y"]
-    if x is not None:
-        steer.steer(x / Drive_Params.JOYSTICK_MAX)
-    if y is not None:
-        drive.drive(-y / Drive_Params.JOYSTICK_MAX)
+    steer_value = g.get_stick_value(inputs.LX)
+    drive_value = g.get_trigger_value()
+    if steer_value is not None:
+        car.steer(steer_value)
+    if drive_value is not None:
+        car.drive(drive_value)
 
 def auto_forward():
     global stream, steer, drive, auto_exit
@@ -118,33 +93,28 @@ def auto_reverse():
 def check_auto_exit():
     global mode, auto_exit
     while mode != Main_Mode.MANUAL:
-        events = get_gamepad()
-        pressed = get_pressed(events, [
-            ("Key", "BTN_EAST")
-        ])
-        if pressed["Key"]["BTN_EAST"] == 1:
+        if g.was_pressed(inputs.B):
             auto_exit = True
             return
 
 def exit_auto():
-    global mode, drive, steer, check_auto_exit_thread, auto_exit
+    global mode, check_auto_exit_thread, auto_exit
     mode = Main_Mode.MANUAL
-    drive.drive(0)
-    steer.steer_by_angle(Drive_Params.TURN_STRAIGHT)
+    car.drive(0)
+    car.steer(Drive_Params.)
     check_auto_exit_thread.join()
     auto_exit = False
     print("Returning To:", mode)
 
 def main():
     print("STARTING MAIN")
+    
 
     global steer, drive, stream, done, mode, controller_present
-    steer = sr.Steer()
-    drive = dr.Drive()
     stream = qc.StreamCamera()
 
     try:
-        get_gamepad()
+        g.update_input()
     except:
         print("Plug in gamepad to start.")
         exit(1)
@@ -154,23 +124,24 @@ def main():
         # Detect if controller is plugged in.
         if mode == Main_Mode.MANUAL:
             try:
-                events = get_gamepad()
+                g.update_input()
             except:
                 mode = transition_mode
                 controller_present = False
                 print("Entered Mode:", transition_mode)
         
         if mode == Main_Mode.MANUAL:
-            manual(events)
+            manual()
         elif mode == Main_Mode.AUTO_FORWARD:
             # Need to move the camera to the front so it can see ahead. Take note of new and former positions!
             auto_forward()
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
 
-    steer.stop()
+    
     stream.stop()
-    steer.cleanup()
+    car.stop()
+    GPIO_cleanup()
 
 if __name__ == "__main__":
     main()

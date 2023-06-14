@@ -49,7 +49,7 @@ class DCMotor:
         io.set_low(self.reverse)
 
     def stop(self):
-        io.set_PWM_dutycycle(0)
+        io.set_PWM_dutycycle(self.power,0)
 
     def set(self, duty_cycle):
         io.set_PWM_dutycycle(self.power,duty_cycle)
@@ -66,11 +66,8 @@ class Servo:
         self.pulse.start(0)
     
     def stop(self):
-        self.pulse.stop()
+        self.set_pulse_width(0)
 
-    def set_duty_cycle(self, duty_cycle):
-        self.pulse.ChangeDutyCycle(duty_cycle)
-    
     def set_angle(self, theta: float):
         width = self.degrees_to_pulse_width(theta)
         self.set_pulse_width(width)
@@ -88,21 +85,7 @@ class Servo:
     def set_pulse_width(self,width: int):
         io.set_servo_pulsewidth(self.pin,width)
 
-    def __degrees_to_duty_cycle(self,theta: float) -> float:
-        #WARNING: the motor has 180 degree range of motion, but the steering rack does not. be careful.
-
-
-        #duty cycle should range from 5% to 10%. ie, if f is the function from degrees to duty cycle (expressed as a percent),
-        #f(0) = 5
-        #f(90) = 7.5 
-        #f(180) = 10
-
-        #generalized: f(x) = x/36 + 5
-        
-
-        #TODO: this is currently only for frequencey of 50 Hz (period 20 ms); will generalize later
-        #print(theta/36+5)
-        return theta/36 + 5
+    
 if __name__ == "__main__":
     print("dadsadawda")
     servo = Servo(4)
