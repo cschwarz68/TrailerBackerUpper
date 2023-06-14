@@ -4,7 +4,7 @@ import cv2
 import time
 
 #local imports
-import drive_module as dr
+import archive.drive_module as dr
 import steer_module as sr
 import image_processing_module as ip
 import quick_capture_module as qc

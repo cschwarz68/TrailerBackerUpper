@@ -128,7 +128,7 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int, int]]) -> int:
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...
-        return Drive_Params.TURN_STRAIGHT
+        return Drive_Params.STEERING_RACK_CENTER
 
     height, width, _ = frame.shape
     if len(lane_lines) == 1:
@@ -160,7 +160,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int,
     y_offset = int(height / 2)
     angle_to_mid_radian = math.atan(x_offset / y_offset)
     angle_to_mid_deg = math.degrees(angle_to_mid_radian)
-    steering_angle = int(angle_to_mid_deg + Drive_Params.TURN_STRAIGHT)
+    steering_angle = int(angle_to_mid_deg + Drive_Params.STEERING_RACK_CENTER)
     return steering_angle
 
 """
@@ -221,7 +221,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: int, lane_lines: li
     final_image = display_lines(final_image, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg - Drive_Params.TURN_STRAIGHT), 
+    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg - Drive_Params.STEERING_RACK_CENTER), 
                               (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image

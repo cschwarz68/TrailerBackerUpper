@@ -13,35 +13,31 @@ Exit manual mode / the program by pressing (B).
 
 from threading import Thread
 
-# Package Imports
-from inputs import get_gamepad
-
 # Local Imports
+from constants import Main_Mode, Drive_Params
 from gamepad import Gamepad, Inputs as inputs
-from car import Car
+from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
 import quick_capture_module as qc
-from constants import Main_Mode, Drive_Params
-from motor import cleanup as GPIO_cleanup
+from car import Car
 
 # Mutable
-stream = None #
-mode = Main_Mode.MANUAL
 transition_mode = Main_Mode.AUTO_FORWARD
-controller_present = True
 check_auto_exit_thread = None
+controller_present = True
+mode = Main_Mode.MANUAL
 auto_exit = False
 
-car = Car()
+stream = qc.StreamCamera()
 g = Gamepad()
+car = Car()
 
 # Loops until (b) is pressed.
 done = False
 
-
 def manual():
     global done, mode, transition_mode, check_auto_exit_thread
-   
+
     if g.was_pressed(inputs.B):
         done = True
     elif g.was_pressed(inputs.X):
@@ -63,7 +59,7 @@ def manual():
         car.drive(drive_value)
 
 def auto_forward():
-    global stream, steer, drive, auto_exit
+    global stream, auto_exit
     if auto_exit:
         exit_auto()
         return
@@ -75,13 +71,14 @@ def auto_forward():
     num_lanes = len(lane_lines)
     steering_angle = ip.compute_steering_angle(image, lane_lines)
 
-    # Go faster on sharper turns? ¯\_(ツ)_/¯
-    if abs(steering_angle - Drive_Params.TURN_STRAIGHT) > Drive_Params.SHARP_TURN_DEGREES:
-        drive.drive(0.7)
+    # Go faster on sharper turns?
+    if abs(steering_angle - Drive_Params.STEERING_RACK_CENTER) > Drive_Params.SHARP_TURN_DEGREES:
+        car.drive(0.7)
     else:
-        drive.drive(0.6)
-    stable_angle = steer.stabilize_steering_angle(steering_angle, num_lanes)
-    steer.steer_by_angle(stable_angle)
+        car.drive(0.6)
+    stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
+    print(steering_angle, stable_angle)
+    car.steer(stable_angle)
 
 def auto_reverse():
     # Not yet implemented.
@@ -93,6 +90,7 @@ def auto_reverse():
 def check_auto_exit():
     global mode, auto_exit
     while mode != Main_Mode.MANUAL:
+        g.update_input()
         if g.was_pressed(inputs.B):
             auto_exit = True
             return
@@ -108,10 +106,8 @@ def exit_auto():
 
 def main():
     print("STARTING MAIN")
-    
 
-    global tream, done, mode, controller_present
-    stream = qc.StreamCamera()
+    global stream, done, mode, controller_present
 
     try:
         g.update_input()
@@ -119,7 +115,7 @@ def main():
         print("Plug in gamepad to start.")
         exit(1)
 
-    #main loop
+    # Main loop.
     while not done:
         # Detect if controller is plugged in.
         if mode == Main_Mode.MANUAL:
@@ -138,9 +134,9 @@ def main():
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
 
-    
     stream.stop()
     car.stop()
+
     GPIO_cleanup()
 
 if __name__ == "__main__":
