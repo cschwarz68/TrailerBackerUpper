@@ -54,9 +54,9 @@ def manual():
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
     if steer_value is not None:
-        car.steer(steer_value)
+        car.gamepad_steer(steer_value)
     if drive_value is not None:
-        car.drive(drive_value)
+        car.gamepad_drive(drive_value)
 
 def auto_forward():
     global stream, auto_exit
@@ -98,8 +98,8 @@ def check_auto_exit():
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
     mode = Main_Mode.MANUAL
-    car.drive(0)
-    car.steer(Drive_Params.STEERING_RACK_CENTER)
+    car.gamepad_drive(0)
+    car.gamepad_steer(Drive_Params.STEERING_RACK_CENTER)
     check_auto_exit_thread.join()
     auto_exit = False
     print("Returning To:", mode)

@@ -28,8 +28,11 @@ class Car:
 
     #Input to this function must range from [-255,255] where -255 is full reverse, 0 is stop, and 255 is full forward
     #This is the range of values provided by gamepad analog trigger input
-    def drive(self,power):
-        power = power/255
+    def gamepad_drive(self,trigger_val):
+        self.set_drive_power(trigger_val/255)
+        
+    
+    def set_drive_power(self,power):
         duty_cycle = abs(power*100)
         if power < 0:
             self.drive_motor.backwards()
@@ -37,18 +40,23 @@ class Car:
             drive_motor.forwards()
         else:
             drive_motor.stop_rotation()
-
-        drive_motor.set(duty_cycle)
+        self.drive_motor.set(duty_cycle)
 
     #Input to this function must range from [-32768, 32767] where -32768 corresponds to full left, 0 to center, and 32767 to full right
     #This is the range of values provided by gamepad analog stick input
-    def steer(self,stick_val: float):
+    def gamepad_steer(self,stick_val: float):
         ANGLE_NORMALIZATION_CONSTANT = Drive_Params.JOYSTICK_MAX/90 #ensures steering angle ranges from [-90,90]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
+        self.set_steering_angle(stick_val)
+        
+    
+    def set_steering_angle(self, angle):
         angle = angle + Drive_Params.STEERING_RACK_CENTER
         angle = clamp_steering_angle(angle) #angle clamped to smaller bound than [-90,90] to ensure motor safety
         self.current_steering_angle = angle
-        steer_motor.set_angle(angle)
+        self.steer_motor.set_angle(angle)
+
+
     
 
     #legacy code, will document once i feel like reading it all
@@ -123,8 +131,8 @@ def main():
                 trigger_val = -l_trigger_val
 
             
-            car.drive(trigger_val)
-            car.steer(steering_angle)
+            car.gamepad_drive(trigger_val)
+            car.gamepad_steer(steering_angle)
             
            
             
