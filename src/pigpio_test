@@ -1,0 +1,7 @@
+import pigpio
+import subprocess
+
+pigpio.exceptions=False
+pi = pigpio.pi()
+pi.set_servo_pulsewidth(4,1500)
+pi.stop()

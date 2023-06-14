@@ -7,7 +7,10 @@ class Main_Mode(Enum):
 
 class Drive_Params():
     JOYSTICK_MAX = 32767.0
-    TURN_STRAIGHT = 90
+    STEERING_RACK_CENTER = 82.5
+
+    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + 40
+    STEERING_RACK_LEFT = STEERING_RACK_CENTER - 40
     SHARP_TURN_DEGREES = 7.5
 
 class Lane_Bounds_Ratio():
