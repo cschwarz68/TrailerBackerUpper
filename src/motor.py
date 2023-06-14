@@ -21,8 +21,8 @@ class DCMotor:
         
 
         self.power = power_pin 
-        self.forward = forward_pin
-        self.reverse = reverse_pin 
+        self.forward_pin = forward_pin
+        self.reverse_pin = reverse_pin 
 
         io.set_output(power_pin)
         io.set_output(forward_pin)
@@ -36,16 +36,16 @@ class DCMotor:
     
 
     def forward(self):
-        io.set_low(self.reverse)
-        io.set_high(self.forward)
+        io.set_low(self.reverse_pin)
+        io.set_high(self.forward_pin)
     
     def reverse(self):
-        io.set_low(self.forward)
-        io.set_high(self.reverse)
+        io.set_low(self.forward_pin)
+        io.set_high(self.reverse_pin)
     
     def stop_rotation(self):
-        io.set_low(self.forward)
-        io.set_low(self.reverse)
+        io.set_low(self.forward_pin)
+        io.set_low(self.reverse_pin)
 
     def stop(self):
         io.set_PWM_dutycycle(self.power,0)

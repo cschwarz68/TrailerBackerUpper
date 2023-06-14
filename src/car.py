@@ -20,9 +20,9 @@ drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_
 
 
 class Car:
-    """The car class is a singleton class which controls driving and steering of the car."""
+    """The car class controls driving and steering of the car. Should only instantiate once."""
     
-    def __new__(self):
+    def __init__(self):
         """create instance of car with initial steering angle at center position. Instantiates steering motor and drive motor at appropriate pins. Uses BCM pin numbering system."""
 
         self.current_steering_angle=0
