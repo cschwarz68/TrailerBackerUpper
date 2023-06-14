@@ -73,8 +73,8 @@ _keymap = {
     "ABS_Y": Inputs.LY,
     "ABS_X": Inputs.LX,
     "ABS_HAT0Y": Inputs.D_PAD_Y,
-    "ABS_HAT0X":Inputs.D_PAD_X
-    
+    "ABS_HAT0X":Inputs.D_PAD_X,
+    "SYN_REPORT":Inputs.SYN_REPORT
 }
 
 
@@ -100,11 +100,8 @@ class Gamepad:
     def update_input(self):
         events = get_gamepad()
         for event in events:
-            if(event.ev_type=="Sync"):
-                pass
-            else:
-                self.input =(_keymap[event.code],event.state)
-                return self.input
+            self.input =(_keymap[event.code],event.state)
+            return self.input
            
                 
             
@@ -117,7 +114,7 @@ class Gamepad:
         if button not in range(1,9): #appropriate range of buttons in Gamepad class above
             raise Exception("Invalid button! See gamepad.Gamepad!")
         elif self.input is not None:
-            return self.input[0]==button and self.input[1]==State.PRESSED
+            return (self.input[0]==button) and (self.input[1]==State.PRESSED)
 
     def get_stick_value(self, stick_axis: int):
         if stick_axis not in range (9,13):
