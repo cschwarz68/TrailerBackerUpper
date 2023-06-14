@@ -17,30 +17,29 @@ class DCMotor:
     REVERSE = -1
     
 
-    def __init__(self, power: int, forward: int, reverse: int, duty_cycle: int = 50):
+    def __init__(self, power_pin: int, forward_pin: int, reverse_pin: int, duty_cycle: int = 50):
         
 
-        self.power = power 
-        self.forward = forward
-        self.reverse = reverse 
+        self.power = power_pin 
+        self.forward = forward_pin
+        self.reverse = reverse_pin 
 
-        io.set_PWM_frequency(power,FREQ)
-        io.set_PWM_frequency(forward, FREQ)
-        io.set_PWM_frequency(reverse, FREQ)
+        io.set_output(power_pin)
+        io.set_output(forward_pin)
+        io.set_output(reverse_pin)
 
-        io.set_output(power)
-        io.set_output(forward)
-        io.set_output(reverse)
+        io.set_PWM_frequency(power_pin,FREQ)
+        io.set_PWM_frequency(forward_pin, FREQ)
+        io.set_PWM_frequency(reverse_pin, FREQ)
 
         self.duty_cycle = duty_cycle
-        #self.pulse = io.start_pwm(power)
-        #io.set_PWM_dutycycle(duty_cycle)
+    
 
-    def forwards(self):
+    def forward(self):
         io.set_low(self.reverse)
         io.set_high(self.forward)
     
-    def backwards(self):
+    def reverse(self):
         io.set_low(self.forward)
         io.set_high(self.reverse)
     
@@ -51,7 +50,7 @@ class DCMotor:
     def stop(self):
         io.set_PWM_dutycycle(self.power,0)
 
-    def set(self, duty_cycle):
+    def set_power(self, duty_cycle):
         io.set_PWM_dutycycle(self.power,duty_cycle)
 
 class Servo:
@@ -61,10 +60,6 @@ class Servo:
         self.pin: int = pin #may not be used
         self.freq = freq
 
-
-    def start(self):
-        self.pulse.start(0)
-    
     def stop(self):
         self.set_pulse_width(0)
 
@@ -86,10 +81,3 @@ class Servo:
         io.set_servo_pulsewidth(self.pin,width)
 
     
-if __name__ == "__main__":
-    print("dadsadawda")
-    servo = Servo(4)
-    theta = 50
-    #servo.set_pulse_width(1500)
-    print(servo.degrees_to_pulse_width(theta))
-    io.stop()    

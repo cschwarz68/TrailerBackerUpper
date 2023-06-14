@@ -158,81 +158,13 @@ def normalize_stick_inputs(x):
 
 
 
-def main():
-    
-   
-    while 1:
-      #val = get_RX()
-      print(input())
-      
-def print_back_inputs():
+
+
+
+if __name__ == "__main__":
     while 1:
         events = get_gamepad()
         for event in events:
             print(event.ev_type, event.code, event.state)
 
-if __name__ == "__main__":
-    print_back_inputs()
-    #main()
 
-
-
-
-
-def manual(events):
-    global done, steer, drive, mode, transition_mode
-    """
-    This commented code uses the is_pressed function.
-    Use in case get_pressed is buggy.
-    """
-    # if is_pressed(events, "Key", "BTN_EAST", 1)[0]:
-        # done = True
-    # elif is_pressed(events, "Key", "BTN_SOUTH", 1)[0]:
-        # pass # Bypassing functionality for now.
-        # video_capture()
-    # event_x = is_pressed(events, "Absolute", "ABS_RX", None)[1] # RX refers to the right joystick.
-    # event_y = is_pressed(events, "Absolute", "ABS_Y", None)[1]
-    # if event_x is not None:
-    #     x = float(event_x.state) / Drive_Params.TURN_MAX
-    #     steer.steer(x)
-    # if event_y is not None:
-    #     y = float(event_y.state) / Drive_Params.TURN_MAX
-    #     drive.drive(-y)
-    """
-    IMPORTANT
-
-    On the controller:
-
-            Y                  West
-          X + B    -->    North + East
-            A                 South
-    """
-    # pressed = get_pressed(events, [
-    #     ("Key", "BTN_EAST"), 
-    #     ("Key", "BTN_SOUTH"), 
-    #     ("Key", "BTN_WEST"), 
-    #     ("Key", "BTN_NORTH"), 
-    #     ("Key", "BTN_START"), 
-    #     ("Absolute", "ABS_RX"), 
-    #     ("Absolute", "ABS_Y")
-    # ])
-    # if pressed["Key"]["BTN_EAST"] == 1:
-    #     done = True
-    # elif pressed["Key"]["BTN_SOUTH"] == 1:
-    #     pass # Bypassing functionality for now.
-    #     # video_capture()
-    # elif pressed["Key"]["BTN_NORTH"] == 1:
-    #     transition_mode = Main_Mode.AUTO_FORWARD
-    #     print("Transitioned to auto FORWARD. Press START to init.")
-    # elif pressed["Key"]["BTN_WEST"] == 1:
-    #     transition_mode = Main_Mode.AUTO_REVERSE
-    #     print("Transitioned to auto REVERESE. Press START to init.")
-    # elif pressed["Key"]["BTN_START"] == 1:
-    #     print("Entered Mode:", transition_mode)
-    #     mode = transition_mode
-    # x = pressed["Absolute"]["ABS_RX"]
-    # y = pressed["Absolute"]["ABS_Y"]
-    # if x is not None:
-    #     steer.steer(x / Drive_Params.JOYSTICK_MAX)
-    # if y is not None:
-    #     drive.drive(-y / Drive_Params.JOYSTICK_MAX)

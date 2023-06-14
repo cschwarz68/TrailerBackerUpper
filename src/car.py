@@ -43,12 +43,12 @@ class Car:
 
         duty_cycle = abs(power*100)
         if power < 0:
-            self.drive_motor.backwards()
+            self.drive_motor.reverse()
         elif power > 0:
-            drive_motor.forwards()
+            drive_motor.forward()
         else:
             drive_motor.stop_rotation()
-        self.drive_motor.set(duty_cycle)
+        self.drive_motor.set_power(duty_cycle)
 
     
     def gamepad_steer(self,stick_val: float):
