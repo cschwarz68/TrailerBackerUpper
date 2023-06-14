@@ -47,7 +47,7 @@ class Car:
     def gamepad_steer(self,stick_val: float):
         ANGLE_NORMALIZATION_CONSTANT = Drive_Params.JOYSTICK_MAX/90 #ensures steering angle ranges from [-90,90]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
-        self.set_steering_angle(stick_val)
+        self.set_steering_angle(angle)
         
     
     def set_steering_angle(self, angle):

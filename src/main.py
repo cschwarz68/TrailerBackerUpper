@@ -73,12 +73,11 @@ def auto_forward():
 
     # Go faster on sharper turns?
     if abs(steering_angle - Drive_Params.STEERING_RACK_CENTER) > Drive_Params.SHARP_TURN_DEGREES:
-        car.drive(0.7)
+        car.set_drive_power(0.7)
     else:
-        car.drive(0.6)
+        car.set_drive_power(0.6)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
-    print(steering_angle, stable_angle)
-    car.steer(stable_angle)
+    car.set_steering_angle(stable_angle)
 
 def auto_reverse():
     # Not yet implemented.

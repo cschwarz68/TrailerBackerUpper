@@ -65,7 +65,7 @@ _keymap = {
     "BTN_START" : Inputs.START,
     "BTN_SELECT": Inputs.SELECT,
     "BTN_TR": Inputs.R_BUMPER,
-    "BTN_LR": Inputs.L_BUMPER,
+    "BTN_TL": Inputs.L_BUMPER,
     "ABS_RZ": Inputs.R_TRIGGER,
     "ABS_Z": Inputs.L_TRIGGER,
     "ABS_RX": Inputs.RX,
