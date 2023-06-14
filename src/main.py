@@ -15,8 +15,6 @@ from threading import Thread
 
 # Package Imports
 from inputs import get_gamepad
-import numpy as np
-import cv2
 
 # Local Imports
 import drive_module as dr
@@ -37,7 +35,7 @@ auto_exit = False
 # Loops until (b) is pressed.
 done = False
 
-def get_pressed(events, require : list[tuple[str, str]]) -> dict[str, dict[str, int]]:
+def get_pressed(events, require: list[tuple[str, str]]) -> dict[str, dict[str, int]]:
     ret = dict()
     for key in require:
         if key[0] not in ret:
@@ -100,9 +98,10 @@ def auto_forward():
     line_segments = ip.detect_line_segments(cropped_edges)
     lane_lines = ip.average_slope_intercept(image, line_segments)
     num_lanes = len(lane_lines)
-    line_image = ip.display_lines(image, lane_lines)
-    steering_angle = ip.compute_steering_angle(line_image, lane_lines)
-    if abs(steering_angle - Drive_Params.TURN_STRAIGHT) > 7.5:
+    steering_angle = ip.compute_steering_angle(image, lane_lines)
+
+    # Go faster on sharper turns? ¯\_(ツ)_/¯
+    if abs(steering_angle - Drive_Params.TURN_STRAIGHT) > Drive_Params.SHARP_TURN_DEGREES:
         drive.drive(0.7)
     else:
         drive.drive(0.6)

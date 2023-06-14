@@ -1,87 +1,90 @@
-'''
-GENERAL SUMMARY
-This is a Python script that uses the Raspberry Pi camera module (specifically the picamera2 library) to capture and process images in real-time. 
-It defines a StreamCamera class that initializes and controls the camera. 
-The capture method captures an image from the camera and returns a numpy array representing the image, after rotating and converting it to RGB format. 
-The stream_capture method is similar, but captures and returns a continuous stream of images. The test method captures a single image and saves it to disk.
+"""
+This is a Python script that uses the Raspberry Pi camera module (specifically the picamera2 library) to capture and process images in real-time.
+It defines a StreamCamera class that initializes and controls the camera.
+The `capture` method captures an image from the camera and returns a OpenCV matrix / numpy array representing the image, after rotating and converting it to RGB format.
+The `stream_capture` method is similar, but captures and returns a continuous stream of images. The `test` method captures a single image and saves it to disk.
 
-The main script creates an instance of the StreamCamera class, captures an image in a loop, applies some image processing techniques from an external module 
-(image_processing_module), displays the resulting image using the OpenCV library, and exits when the 'q' key is pressed. Finally, it calls the stop method to stop the 
-camera preview and close the camera.
+The main script creates an instance of the StreamCamera class, captures an image in a loop, applies some image processing techniques from the image_processing_module, 
+displays the resulting image using the OpenCV library, and exits when the 'q' key is pressed.
+Finally, it calls the stop method to stop the camera preview and close the camera.
 
-ANYTHING WITH TABS ARE COMMENTS THAT MIGHT BE HELPFUL FOR FUTURE EXPANSION OF THE MODULE
-'''
+Note: If the images change to fast or an extreme angle is detected, numpy will emit a RuntimeWarning. This is okay.
+"""
 
-#imports
-import picamera2
-from picamera2 import Picamera2, Preview
-from libcamera import Transform
-    #import picamera2.array
-import time
+# Package Imports
+import picamera2 # Using version 0.3.9!
+from picamera2 import Picamera2 # Need to import both here. Not redundant.
 import numpy as np
 import cv2
-import io
-from io import BytesIO
-    #from matplotlib import pyplot as plt
-import image_processing_module as ip
-import numpy as np
 
-#initialize the StreamCamera class
+# Local Imports
+import image_processing_module as ip
+from constants import Drive_Params #, Camera_Settings # Uncomment for additional configurations.
 class StreamCamera:
     def __init__(self):
-        #initialize Picamera2 to self.camera
         self.camera = Picamera2()
-            # self.camera.preview_configuration.main.format = "YUV420"
-        self.camera.start()
-        time.sleep(1)
-            # self.camera.resolution = (640, 480)
-            # self.camera.framerate = 60
-            # self.camera.start_preview(alpha=20)
+        # Adjust camera parameters. Using defaults.
 
-    #method to take an image input and applies a 90 degree rotation twice and color change from BGR to RGB
+        # self.camera.preview_configuration.main.format = Camera_Settings.PREVIEW_CONFIG_FORMAT
+        # self.camera.resolution = Camera_Settings.RESOLUTION
+        # self.camera.framerate = Camera_Settings.FRAMERATE
+        # self.camera.start_preview(alpha=Camera_Settings.ALPHA)
+
+        self.camera.start()
+
+    # Takes an image input and applies a 90 degree rotation twice and color change from BGR to RGB.
     def capture(self):
         array = self.camera.capture_array()
-        array=np.rot90(array,2)
+        array = np.rot90(array, 2)
         array = cv2.cvtColor(array, cv2.COLOR_BGR2RGB)
         return array
 
-    #method tests if the camera is working by taking an image and saving it to test_image.png
+    """
+
+    Everything beneath this comment is for testing.
+
+    """
+
+    # Tests if the camera is working by taking an image and saving it to disk.
     def test(self):
         self.camera.capture("test_image.png", format="bgr", use_video_port=True)
         self.camera.stop()
 
-    #method captures and returns an array in BGR format
+    # Captures and returns an array in BGR format.
     def stream_capture(self):
         with picamera2.array.PiRGBArray(self.camera) as stream:
             self.camera.capture(stream, format="bgr", use_video_port=True)
             image = stream.array
-
             image = cv2.flip(image,-1)
-                # print(image.shape)
         return image
 
-    #method to stop the camera
     def stop(self):
         self.camera.stop_preview()
         self.camera.close()
 
-#main method
+# Unit Test
 if __name__ == "__main__":
-    #initialize the camera
     camera = StreamCamera()
+    debug_output = []
 
-    #while loop to continuously capture images
     while True:
-            #print('image?')
-        #captures an image
         image = camera.capture()
-            #print('image?')
-        #method in image_proccessing
-        image = ip.display_reds_and_lane(image)
-            # image = ip.get_reds(image)
-            # image = ip.get_angle_image(image)
-        cv2.imshow("img", image)
-        #
+        steering_angle_deg, lane_lines = ip.steering_info(image)
+        image = ip.display_lanes_and_path(image, steering_angle_deg, lane_lines)
+        cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
+        lane_lines_len = len(lane_lines)
+
+        # Print debugging while the camera is running decreases performance likely due to stdout buffering.
+        # Print the entire thing on exit.
+        debug_output.append("Angle: " + str(steering_angle_deg - Drive_Params.TURN_STRAIGHT) + "\t" + 
+            "No Lanes" if lane_lines_len == 0 
+            else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
+            else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
+        )
+
+        # Exit upon pressing (q). Make sure the preview window is focused.
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
     camera.stop()
+    for msg in debug_output:
+        print(msg)
