@@ -1,8 +1,9 @@
 from motor import Servo 
 from motor import DCMotor
 from motor import cleanup
-from gamepad import input, Gamepad as g, State
+from gamepad import Inputs as i, State, Gamepad
 from constants import Drive_Params
+
 
 
 
@@ -88,15 +89,18 @@ def clamp_steering_angle(angle):
 def main():
     #steer_motor.start()
     car = Car()
+    g = Gamepad()
+
     car.drive_motor.stop_rotation()
     steering_angle = 0
     trigger_val = 0
     while 1:
         try:
+            g.update_input()
             print(steering_angle)
-            current_input = input()
-            if current_input is not None:
-                non_null_input = current_input
+            # current_input = input()
+            # if current_input is not None:
+            #     non_null_input = current_input
 
             
            
@@ -104,16 +108,18 @@ def main():
 
             
                 
-               
-            if non_null_input[0]==g.LX:
-                steering_angle = non_null_input[1]
+            stick_val = g.get_abs_value(i.LX)
+            if stick_val is not None:
+                steering_angle = stick_val
          
-
-            if non_null_input[0]==g.R_TRIGGER:
-                trigger_val = non_null_input[1]
+            r_trigger_val = g.get_abs_value(i.R_TRIGGER)
+            if r_trigger_val is not None:
+                trigger_val = r_trigger_val
                 
-            if non_null_input[0]==g.L_TRIGGER:
-                trigger_val = -non_null_input[1]
+            l_trigger_val = g.get_abs_value(i.L_TRIGGER)
+            if l_trigger_val is not None:
+                trigger_val = -l_trigger_val
+
             
             car.drive(trigger_val)
             car.steer(steering_angle)
