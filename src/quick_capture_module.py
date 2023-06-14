@@ -76,11 +76,11 @@ if __name__ == "__main__":
 
         # Print debugging while the camera is running decreases performance likely due to stdout buffering.
         # Print the entire thing on exit.
-        debug_output.append("Angle: " + str(steering_angle_deg - Drive_Params.TURN_STRAIGHT) + "\t" + 
+        debug_output.append("Angle: " + str(steering_angle_deg - Drive_Params.TURN_STRAIGHT) + "\t" + (
             "No Lanes" if lane_lines_len == 0 
             else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
             else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
-        )
+        ))
 
         # Exit upon pressing (q). Make sure the preview window is focused.
         if cv2.waitKey(1) & 0xFF == ord("q"):
