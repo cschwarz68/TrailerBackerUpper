@@ -101,7 +101,7 @@ def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
     mode = Main_Mode.MANUAL
     car.drive(0)
-    car.steer(Drive_Params.)
+    car.steer(Drive_Params.STEERING_RACK_CENTER)
     check_auto_exit_thread.join()
     auto_exit = False
     print("Returning To:", mode)
@@ -110,7 +110,7 @@ def main():
     print("STARTING MAIN")
     
 
-    global steer, drive, stream, done, mode, controller_present
+    global tream, done, mode, controller_present
     stream = qc.StreamCamera()
 
     try:
