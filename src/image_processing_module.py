@@ -206,17 +206,15 @@ def steering_info(img: cv2.Mat) -> tuple[int, list[tuple[int, int, int, int]]]:
 
 # Makes a black image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: int, lane_lines: list[tuple[int, int, int, int]]) -> cv2.Mat:
-    height, width = img.shape[0], img.shape[1]
-    steering_angle_radian = math.radians(steering_angle_deg)
+    height, width, _ = img.shape
+    steering_angle_radians = math.radians(steering_angle_deg)
 
     # Calculations for the center path.
     x1 = int(width / 2)
     y1 = height
-    x2 = int(x1 - height / 2 / math.tan(steering_angle_radian))
+    x2 = int(x1 - height / 2 / math.tan(steering_angle_radians))
     y2 = int(height / 2)
 
-    # final_image = display_lines(img, lane_lines)
-    # cv2.line(final_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
     final_image = combine_images([(img, 0.25)]) # Reduce opacity of base image.
     final_image = display_lines(final_image, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))

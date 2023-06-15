@@ -12,14 +12,13 @@ Note: If the images change to fast or an extreme angle is detected, numpy will e
 """
 
 # Package Imports
-import picamera2 # Using version 0.3.9!
-from picamera2 import Picamera2 # Need to import both here. Not redundant.
+from picamera2 import Picamera2 # Using version 0.3.9!
 import numpy as np
 import cv2
 
 # Local Imports
 import image_processing_module as ip
-from constants import Drive_Params #, Camera_Settings # Uncomment for additional configurations.
+from constants import Drive_Params, Camera_Settings
 class StreamCamera:
     def __init__(self):
         self.camera = Picamera2()
@@ -39,36 +38,35 @@ class StreamCamera:
         array = cv2.cvtColor(array, cv2.COLOR_BGR2RGB)
         return array
 
+    def stop(self):
+        self.camera.stop_preview()
+        self.camera.close()
+
     """
 
     Everything beneath this comment is for testing.
 
     """
 
-    # Tests if the camera is working by taking an image and saving it to disk.
-    def test(self):
-        self.camera.capture("test_image.png", format="bgr", use_video_port=True)
-        self.camera.stop()
-
-    # Captures and returns an array in BGR format.
-    def stream_capture(self):
-        with picamera2.array.PiRGBArray(self.camera) as stream:
-            self.camera.capture(stream, format="bgr", use_video_port=True)
-            image = stream.array
-            image = cv2.flip(image,-1)
-        return image
-
-    def stop(self):
-        self.camera.stop_preview()
-        self.camera.close()
-
 # Unit Test
 if __name__ == "__main__":
     camera = StreamCamera()
     debug_output = []
 
+    """
+    IMPORTANT
+
+    VSCode's video player thinks the video is corrupt. Use VLC Media Player.
+    """
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    base_height, base_width, _ = camera.capture().shape
+    video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, Camera_Settings.FRAMERATE, (base_width, base_height), isColor=True)
+    print(f"Recording with dimensions {base_width}x{base_height} with FPS {Camera_Settings.FRAMERATE}.")
+
     while True:
         image = camera.capture()
+
+        # Normal lane detection.
         steering_angle_deg, lane_lines = ip.steering_info(image)
         image = ip.display_lanes_and_path(image, steering_angle_deg, lane_lines)
         cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
@@ -82,9 +80,17 @@ if __name__ == "__main__":
             else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
         ))
 
+        # Video
+        image = cv2.resize(image, (base_width, base_height))
+        video.write(image)
+
         # Exit upon pressing (q). Make sure the preview window is focused.
-        if cv2.waitKey(1) & 0xFF == ord("q"):
+        # The 0xFF is a bitmask which makes it work with NumLock on.
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
     camera.stop()
+    video.release()
+    cv2.destroyAllWindows()
     for msg in debug_output:
         print(msg)

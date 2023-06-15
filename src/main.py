@@ -12,6 +12,7 @@ Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
+import signal
 
 # Local Imports
 from constants import Main_Mode, Drive_Params
@@ -34,6 +35,16 @@ car = Car()
 
 # Loops until (b) is pressed.
 done = False
+
+# Trigger cleanup upon keyboard interrupt.
+def handler(signum: signal.Signals, stack_frame):
+    print("Keyboard interrupt detected. Cleaning up.")
+    print(signum, signal.Signals(signum).name, stack_frame)
+    car.gamepad_drive(0)
+    car.gamepad_steer(Drive_Params.STEERING_RACK_CENTER)
+    cleanup()
+    exit(1)
+signal.signal(signal.SIGINT, handler)
 
 def manual():
     global done, mode, transition_mode, check_auto_exit_thread
@@ -133,9 +144,11 @@ def main():
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
 
+    cleanup()
+
+def cleanup():
     stream.stop()
     car.stop()
-
     GPIO_cleanup()
 
 if __name__ == "__main__":
