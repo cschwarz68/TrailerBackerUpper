@@ -12,8 +12,7 @@ Note: If the images change to fast or an extreme angle is detected, numpy will e
 """
 
 # Package Imports
-import picamera2 # Using version 0.3.9!
-from picamera2 import Picamera2 # Need to import both here. Not redundant.
+from picamera2 import Picamera2 # Using version 0.3.9!
 import numpy as np
 import cv2
 
