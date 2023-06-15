@@ -1,7 +1,9 @@
 import gpio as io
-
+import os
 
 #This module provides abstractions of servos and DC motors
+
+os.system("systemctl start pigpiod")
 
 io = io.IO()
 io.set_PWM_range(9,100) #makes it so 50 = 50% duty cycle
@@ -10,6 +12,7 @@ FREQ = 50 #default PWM frequency
 
 def cleanup():
     io.stop()
+    os.system("systemctl stop pigpiod")
 
 class DCMotor:
     STOP = 0

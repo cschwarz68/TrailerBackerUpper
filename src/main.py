@@ -13,9 +13,13 @@ Exit manual mode / the program by pressing (B).
 
 from threading import Thread
 import signal
+import time
+
+# Package Imports
+import cv2
 
 # Local Imports
-from constants import Main_Mode, Drive_Params
+from constants import Main_Mode, Drive_Params, Camera_Settings
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
@@ -28,10 +32,19 @@ check_auto_exit_thread = None
 controller_present = True
 mode = Main_Mode.MANUAL
 auto_exit = False
+recording = False
 
 stream = qc.StreamCamera()
 g = Gamepad()
 car = Car()
+
+# Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+base_height, base_width, _ = stream.capture().shape
+video = cv2.VideoWriter("main_video.mp4", 
+                        fourcc, Camera_Settings.FRAMERATE, 
+                        (base_width, base_height), 
+                        isColor=True)
 
 # Loops until (b) is pressed.
 done = False
@@ -43,11 +56,10 @@ def handler(signum: signal.Signals, stack_frame):
     car.gamepad_drive(0)
     car.gamepad_steer(Drive_Params.STEERING_RACK_CENTER)
     cleanup()
-    exit(1)
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread
+    global done, mode, transition_mode, check_auto_exit_thread, recording
 
     if g.was_pressed(inputs.B):
         done = True
@@ -62,6 +74,14 @@ def manual():
         check_auto_exit_thread = Thread (target=check_auto_exit)
         check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
+    elif g.was_pressed(inputs.A):
+        if not recording:
+            recording = True
+            print("Started Recording")
+        else:
+            recording = False
+            print("Stopped Recording")
+
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
     if steer_value is not None:
@@ -70,7 +90,7 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit
+    global stream, auto_exit, recording
     if auto_exit:
         exit_auto()
         return
@@ -89,6 +109,10 @@ def auto_forward():
         car.set_drive_power(0.6)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(stable_angle)
+
+    # Video
+    if recording:
+        video.write(ip.display_lanes_and_path(image, steering_angle, lane_lines))
 
 def auto_reverse():
     # Not yet implemented.
@@ -132,6 +156,7 @@ def main():
             try:
                 g.update_input()
             except:
+                print("CONTROLLER DISCONNECTED")
                 mode = transition_mode
                 controller_present = False
                 print("Entered Mode:", transition_mode)
@@ -150,6 +175,9 @@ def cleanup():
     stream.stop()
     car.stop()
     GPIO_cleanup()
+
+    # Video
+    video.release()
 
 if __name__ == "__main__":
     main()
