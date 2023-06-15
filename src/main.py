@@ -13,7 +13,6 @@ Exit manual mode / the program by pressing (B).
 
 from threading import Thread
 import signal
-import time
 
 # Package Imports
 import cv2
