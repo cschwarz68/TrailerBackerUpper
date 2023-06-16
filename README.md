@@ -29,3 +29,4 @@ This repo may eventually also be used to hold simulation software and visual ass
 
 
 ## Acknowledgements
+* [Live Video Streaming with Flask and OpenCV](https://github.com/NakulLakhotia/Live-Streaming-using-OpenCV-Flask)
