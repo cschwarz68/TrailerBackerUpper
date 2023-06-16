@@ -13,11 +13,12 @@ Press (A) to enable recording for autonomous mode.
 Exit manual mode / the program by pressing (B).
 """
 
+from multiprocessing import Process
 from threading import Thread
 import signal
 
 # Package Imports
-# from flask import Response, render_template
+from flask import Response, render_template
 import cv2
 
 # Local Imports
@@ -26,7 +27,7 @@ from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
 import quick_capture_module as qc
-# from streaming import Streamer
+from streaming import Streamer
 from car import Car
 
 # Mutable
@@ -88,6 +89,13 @@ def manual():
         else:
             recording = False
             print("Disabled Recording for Autonomous")
+    elif g.was_pressed(inputs.SELECT):
+        if not streaming:
+            streaming = True
+            print("Started streaming.")
+        else:
+            streaming = False
+            print("Stopped streaming.")
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -117,22 +125,27 @@ def auto_forward():
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(stable_angle)
 
-    # Video
+    # Extra
+    if recording or streaming:
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
     if recording:
-        video.write(ip.display_lanes_and_path(image, steering_angle, lane_lines))
-
-    # Streaming
-    # to_server_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+        video.write(visual_image)
+    if streaming:
+        to_server_image = visual_image
 
 def auto_reverse():
     # Not yet implemented.
     if auto_exit:
         exit_auto()
         return
-    
-    # # Video
+
+    # # Extra
+    # if recording or streaming:
+    #     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
     # if recording:
-    #     video.write(ip.display_lanes_and_path(image, steering_angle, lane_lines))
+    #     video.write(visual_image)
+    # if streaming:
+    #     to_server_image = visual_image
 
 def check_auto_exit():
     global mode, auto_exit
@@ -193,25 +206,24 @@ def cleanup():
     video.release()
 
 # Streaming
-# stream_server = Streamer()
-# app = stream_server.app
+stream_server = Streamer()
+app = stream_server.app
 
-# @app.route('/video_feed')
-# def video_feed():
-#     global to_server_image
-#     if to_server_image is None:
-#         to_server_image = ip.zero_image(stream.capture())
-#     return Response(stream_server.gen_frames(to_server_image), mimetype='multipart/x-mixed-replace; boundary=frame')
+@app.route('/video_feed')
+def video_feed():
+    global to_server_image
+    return Response(stream_server.gen_frames(to_server_image), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# @app.route('/')
-# def index():
-#     return render_template('index.html')
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# def server_main():
-#     app.run(host='192.168.2.208', port=3000, debug=False, threaded=True)
+def server_main():
+    app.run(host='192.168.2.208', port=3000, debug=False, threaded=True)
 
 if __name__ == "__main__":
-    # server_thread = Thread(target=server_main)
-    # server_thread.start()
+    server_child = Process(target=server_main)
+    server_child.start()
     main()
-    # server_thread.join()
+    server_child.kill()
+    server_child.join()
