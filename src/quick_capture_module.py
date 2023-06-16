@@ -2,7 +2,6 @@
 This is a Python script that uses the Raspberry Pi camera module (specifically the picamera2 library) to capture and process images in real-time.
 It defines a StreamCamera class that initializes and controls the camera.
 The `capture` method captures an image from the camera and returns a OpenCV matrix / numpy array representing the image, after rotating and converting it to RGB format.
-The `stream_capture` method is similar, but captures and returns a continuous stream of images. The `test` method captures a single image and saves it to disk.
 
 The main script creates an instance of the StreamCamera class, captures an image in a loop, applies some image processing techniques from the image_processing_module, 
 displays the resulting image using the OpenCV library, and exits when the 'q' key is pressed.
@@ -17,8 +16,8 @@ import numpy as np
 import cv2
 
 # Local Imports
+from constants import OpenCV_Settings
 import image_processing_module as ip
-from constants import Drive_Params, Camera_Settings
 class StreamCamera:
     def __init__(self):
         self.camera = Picamera2()
@@ -60,8 +59,8 @@ if __name__ == "__main__":
     """
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     base_height, base_width, _ = camera.capture().shape
-    video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, Camera_Settings.FRAMERATE, (base_width, base_height), isColor=True)
-    print(f"Recording with dimensions {base_width}x{base_height} with FPS {Camera_Settings.FRAMERATE}.")
+    video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, OpenCV_Settings.RECORDING_FRAMERATE, (base_width, base_height), isColor=True)
+    print(f"Recording with dimensions {base_width}x{base_height} with FPS {OpenCV_Settings.RECORDING_FRAMERATE}.")
 
     while True:
         image = camera.capture()
@@ -74,7 +73,7 @@ if __name__ == "__main__":
 
         # Print debugging while the camera is running decreases performance likely due to stdout buffering.
         # Print the entire thing on exit.
-        debug_output.append("Angle: " + str(steering_angle_deg - Drive_Params.STEERING_RACK_CENTER) + "\t" + (
+        debug_output.append("Angle: " + str(steering_angle_deg) + "\t" + (
             "No Lanes" if lane_lines_len == 0 
             else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
             else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])

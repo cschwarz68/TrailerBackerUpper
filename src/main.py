@@ -8,6 +8,8 @@ Forward autonomous mode can be entered by pressing (X) and then (START).
 Reverse autonomous mode can be entrered by pressing (Y) and then (START).
     Return to manual mode by pressing (B).
 
+Press (A) to enable recording for autonomous mode.
+
 Exit manual mode / the program by pressing (B).
 """
 
@@ -18,7 +20,7 @@ import signal
 import cv2
 
 # Local Imports
-from constants import Main_Mode, Drive_Params, Camera_Settings
+from constants import Main_Mode, Drive_Params, OpenCV_Settings
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
@@ -34,14 +36,14 @@ auto_exit = False
 recording = False
 
 stream = qc.StreamCamera()
-g = Gamepad()
-car = Car()
+g      = Gamepad()
+car    = Car()
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 base_height, base_width, _ = stream.capture().shape
 video = cv2.VideoWriter("main_video.mp4", 
-                        fourcc, Camera_Settings.FRAMERATE, 
+                        fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
                         (base_width, base_height), 
                         isColor=True)
 
@@ -52,8 +54,8 @@ done = False
 def handler(signum: signal.Signals, stack_frame):
     print("Keyboard interrupt detected. Cleaning up.")
     print(signum, signal.Signals(signum).name, stack_frame)
-    car.gamepad_drive(0)
-    car.gamepad_steer(Drive_Params.STEERING_RACK_CENTER)
+    car.set_drive_power(0)
+    car.set_steering_angle(0)
     cleanup()
 signal.signal(signal.SIGINT, handler)
 
@@ -76,10 +78,10 @@ def manual():
     elif g.was_pressed(inputs.A):
         if not recording:
             recording = True
-            print("Started Recording")
+            print("Enabled Recording for Autonomous")
         else:
             recording = False
-            print("Stopped Recording")
+            print("Disabled Recording for Autonomous")
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -101,8 +103,8 @@ def auto_forward():
     num_lanes = len(lane_lines)
     steering_angle = ip.compute_steering_angle(image, lane_lines)
 
-    # Go faster on sharper turns?
-    if abs(steering_angle - Drive_Params.STEERING_RACK_CENTER) > Drive_Params.SHARP_TURN_DEGREES:
+    # Go faster on sharper turns.
+    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
         car.set_drive_power(0.7)
     else:
         car.set_drive_power(0.6)
@@ -118,7 +120,10 @@ def auto_reverse():
     if auto_exit:
         exit_auto()
         return
-    pass
+    
+    # # Video
+    # if recording:
+    #     video.write(ip.display_lanes_and_path(image, steering_angle, lane_lines))
 
 def check_auto_exit():
     global mode, auto_exit
@@ -131,8 +136,8 @@ def check_auto_exit():
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
     mode = Main_Mode.MANUAL
-    car.gamepad_drive(0)
-    car.gamepad_steer(Drive_Params.STEERING_RACK_CENTER)
+    car.set_drive_power(0)
+    car.set_steering_angle(0)
     check_auto_exit_thread.join()
     auto_exit = False
     print("Returning To:", mode)

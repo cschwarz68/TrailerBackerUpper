@@ -36,5 +36,8 @@ class Camera_Settings():
     # It is used to determine how a pixel is rendered when blended with another."
     PREVIEW_CONFIG_FORMAT = "YUV420" # This is a color model different from RGB.
     RESOLUTION            = (640, 480)
-    FRAMERATE             = 15
+    FRAMERATE             = 60
     ALPHA                 = 20
+
+class OpenCV_Settings():
+    RECORDING_FRAMERATE = 15 # Arbitrary

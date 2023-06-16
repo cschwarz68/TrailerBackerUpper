@@ -6,15 +6,15 @@ IMPORTANT
 All images are represented by OpenCV matrices, which are aliases of numpy arrays.
 """
 
-import math
 import warnings
+import math
 
 # Package Imports
-import cv2
 import numpy as np
+import cv2
 
 # Local Imports
-from constants import Lane_Bounds_Ratio, Drive_Params, Image_Processing_Calibrations
+from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
 
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)
@@ -128,7 +128,7 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int, int]]) -> int:
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...
-        return Drive_Params.STEERING_RACK_CENTER
+        return 0
 
     height, width, _ = frame.shape
     if len(lane_lines) == 1:
@@ -160,8 +160,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int,
     y_offset = int(height / 2)
     angle_to_mid_radian = math.atan(x_offset / y_offset)
     angle_to_mid_deg = math.degrees(angle_to_mid_radian)
-    steering_angle = int(angle_to_mid_deg + Drive_Params.STEERING_RACK_CENTER)
-    return steering_angle
+    return angle_to_mid_deg
 
 """
 
@@ -207,7 +206,7 @@ def steering_info(img: cv2.Mat) -> tuple[int, list[tuple[int, int, int, int]]]:
 # Makes a black image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: int, lane_lines: list[tuple[int, int, int, int]]) -> cv2.Mat:
     height, width, _ = img.shape
-    steering_angle_radians = math.radians(steering_angle_deg)
+    steering_angle_radians = math.radians(steering_angle_deg + 90)
 
     # Calculations for the center path.
     x1 = int(width / 2)
@@ -219,7 +218,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: int, lane_lines: li
     final_image = display_lines(final_image, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg - Drive_Params.STEERING_RACK_CENTER), 
+    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg), 
                               (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
