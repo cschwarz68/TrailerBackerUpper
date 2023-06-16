@@ -70,15 +70,14 @@ class Car:
 
         angle = angle + Drive_Params.STEERING_RACK_CENTER
         angle = clamp_steering_angle(angle) # Angle clamped to smaller bound than [-90, 90] to ensure motor safety.
-        self.current_steering_angle = angle
         self.steer_motor.set_angle(angle)
     
     def stabilize_steering_angle(
-        self,
-        new_angle,
-        num_of_lane_lines,
-        max_angle_deviation_two_lines=45,
-        max_angle_deviation_one_line=45,
+        self, 
+        new_angle, 
+        num_of_lane_lines, 
+        max_angle_deviation_two_lines=40, 
+        max_angle_deviation_one_line=40, 
     ):
         if num_of_lane_lines == 2:
             max_angle_deviation = max_angle_deviation_two_lines
@@ -88,15 +87,15 @@ class Car:
         angle_deviation = new_angle - self.current_steering_angle
         if abs(angle_deviation) > max_angle_deviation:
             stabilized_steering_angle = int(
-                self.current_steering_angle
-                + max_angle_deviation * angle_deviation / abs(angle_deviation)
+                self.current_steering_angle + 
+                max_angle_deviation * angle_deviation / abs(angle_deviation)
             )
         else:
             stabilized_steering_angle = new_angle
 
         self.current_steering_angle = stabilized_steering_angle
-        return stabilized_steering_angle -90 # Subtracting 90 because this is old code from the system where angle range was [0, 180]; it is now [-90, 90].
-    
+        return stabilized_steering_angle
+
     def stop(self):
         """
         Stop steering and drive motors.

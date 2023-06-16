@@ -3,12 +3,14 @@ This module provides abstractions of servos and DC motors.
 """
 
 import gpio as io
+import time
 import os
 
 os.system("systemctl start pigpiod")
+time.sleep(1) # Daemon needs a second to warm up.
 
 io = io.IO()
-io.set_PWM_range(9,100) # Makes it so 50 = 50% duty cycle.
+io.set_PWM_range(9, 100) # Makes it so 50 = 50% duty cycle.
 
 FREQ = 50 # Default PWM frequency.
 

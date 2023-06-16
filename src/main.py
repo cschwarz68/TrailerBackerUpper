@@ -17,6 +17,7 @@ from threading import Thread
 import signal
 
 # Package Imports
+# from flask import Response, render_template
 import cv2
 
 # Local Imports
@@ -25,6 +26,7 @@ from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
 import quick_capture_module as qc
+# from streaming import Streamer
 from car import Car
 
 # Mutable
@@ -47,6 +49,10 @@ video = cv2.VideoWriter("main_video.mp4",
                         (base_width, base_height), 
                         isColor=True)
 
+# Streaming
+streaming = False
+to_server_image = None
+
 # Loops until (b) is pressed.
 done = False
 
@@ -60,7 +66,7 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording
+    global done, mode, transition_mode, check_auto_exit_thread, recording, streaming
 
     if g.was_pressed(inputs.B):
         done = True
@@ -72,7 +78,7 @@ def manual():
         print("Transitioned to auto REVERESE. Press START to init.")
     elif g.was_pressed(inputs.START):
         mode = transition_mode
-        check_auto_exit_thread = Thread (target=check_auto_exit)
+        check_auto_exit_thread = Thread(target=check_auto_exit)
         check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
     elif g.was_pressed(inputs.A):
@@ -91,7 +97,7 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit, recording
+    global stream, auto_exit, recording, streaming, to_server_image
     if auto_exit:
         exit_auto()
         return
@@ -114,6 +120,9 @@ def auto_forward():
     # Video
     if recording:
         video.write(ip.display_lanes_and_path(image, steering_angle, lane_lines))
+
+    # Streaming
+    # to_server_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
 
 def auto_reverse():
     # Not yet implemented.
@@ -183,5 +192,26 @@ def cleanup():
     # Video
     video.release()
 
+# Streaming
+# stream_server = Streamer()
+# app = stream_server.app
+
+# @app.route('/video_feed')
+# def video_feed():
+#     global to_server_image
+#     if to_server_image is None:
+#         to_server_image = ip.zero_image(stream.capture())
+#     return Response(stream_server.gen_frames(to_server_image), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# @app.route('/')
+# def index():
+#     return render_template('index.html')
+
+# def server_main():
+#     app.run(host='192.168.2.208', port=3000, debug=False, threaded=True)
+
 if __name__ == "__main__":
+    # server_thread = Thread(target=server_main)
+    # server_thread.start()
     main()
+    # server_thread.join()
