@@ -64,22 +64,29 @@ if __name__ == "__main__":
     video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, OpenCV_Settings.RECORDING_FRAMERATE, (base_width, base_height), isColor=True)
     print(f"Recording with dimensions {base_width}x{base_height} with FPS {OpenCV_Settings.RECORDING_FRAMERATE}.")
 
+    go = input("Mode. 1 --> forward, 2 --> reverse: ")
+
     while True:
         image = camera.capture()
 
-        # Normal lane detection.
-        steering_angle_deg, lane_lines = ip.steering_info(image)
-        image = ip.display_lanes_and_path(image, steering_angle_deg, lane_lines)
-        cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
-        lane_lines_len = len(lane_lines)
+        if go == "1":
+            # Normal lane detection.
+            steering_angle_deg, lane_lines = ip.steering_info(image)
+            image = ip.display_lanes_and_path(image, steering_angle_deg, lane_lines)
+            cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
+            lane_lines_len = len(lane_lines)
 
-        # Print debugging while the camera is running decreases performance likely due to stdout buffering.
-        # Print the entire thing on exit.
-        debug_output.append("Angle: " + str(steering_angle_deg) + "\t" + (
-            "No Lanes" if lane_lines_len == 0 
-            else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
-            else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
-        ))
+            # Print debugging while the camera is running decreases performance likely due to stdout buffering.
+            # Print the entire thing on exit.
+            debug_output.append("Angle: " + str(steering_angle_deg) + "\t" + (
+                "No Lanes" if lane_lines_len == 0 
+                else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
+                else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
+            ))
+        elif go == "2":
+            pass
+        else:
+            break
 
         # Video
         image = cv2.resize(image, (base_width, base_height))

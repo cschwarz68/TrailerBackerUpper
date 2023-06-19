@@ -152,8 +152,8 @@ def main():
     try:
         g.update_input()
     except:
-        go = input("Are you sure you want to start without gamepad? Will automatically enter autonomous mode: ")
-        if go.casefold() == "Y" or go.casefold() == "yes":
+        go = input("Are you sure you want to start without gamepad? Will automatically enter autonomous mode: ").casefold()
+        if go == "Y" or go == "yes":
             go_mode = input("Autonomous Mode. 1 for forward, 2 for reverse: ")
             if go_mode == "1":
                 mode = Main_Mode.AUTO_FORWARD
