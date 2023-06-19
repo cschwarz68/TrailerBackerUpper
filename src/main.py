@@ -105,12 +105,13 @@ def auto_forward():
 
     # Go faster on sharper turns.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
-        car.set_drive_power(0.7)
+        car.set_drive_power(0.9)
     else:
-        car.set_drive_power(0.6)
+        car.set_drive_power(1.0)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(stable_angle)
 
+    # Video
     if recording:
         visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
         video.write(visual_image)
@@ -121,9 +122,10 @@ def auto_reverse():
         exit_auto()
         return
 
-    if recording:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        video.write(visual_image)
+    # Video
+    # if recording:
+    #     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+    #     video.write(visual_image)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -176,6 +178,7 @@ def main():
     cleanup()
 
 def cleanup():
+    global stream, car, video
     stream.stop()
     car.stop()
     GPIO_cleanup()
