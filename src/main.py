@@ -13,12 +13,10 @@ Press (A) to enable recording for autonomous mode.
 Exit manual mode / the program by pressing (B).
 """
 
-from multiprocessing import Process
 from threading import Thread
 import signal
 
 # Package Imports
-from flask import Response, render_template
 import cv2
 
 # Local Imports
@@ -27,7 +25,6 @@ from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
 import quick_capture_module as qc
-from streaming import Streamer
 from car import Car
 
 # Mutable
@@ -50,10 +47,6 @@ video = cv2.VideoWriter("main_video.mp4",
                         (base_width, base_height), 
                         isColor=True)
 
-# Streaming
-streaming = False
-to_server_image = None
-
 # Loops until (b) is pressed.
 done = False
 
@@ -67,7 +60,7 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording, streaming
+    global done, mode, transition_mode, check_auto_exit_thread, recording
 
     if g.was_pressed(inputs.B):
         done = True
@@ -89,13 +82,6 @@ def manual():
         else:
             recording = False
             print("Disabled Recording for Autonomous")
-    elif g.was_pressed(inputs.SELECT):
-        if not streaming:
-            streaming = True
-            print("Started streaming.")
-        else:
-            streaming = False
-            print("Stopped streaming.")
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -105,7 +91,7 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit, recording, streaming, to_server_image
+    global stream, auto_exit, recording
     if auto_exit:
         exit_auto()
         return
@@ -125,13 +111,9 @@ def auto_forward():
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(stable_angle)
 
-    # Extra
-    if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
     if recording:
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
         video.write(visual_image)
-    if streaming:
-        to_server_image = visual_image
 
 def auto_reverse():
     # Not yet implemented.
@@ -139,13 +121,9 @@ def auto_reverse():
         exit_auto()
         return
 
-    # # Extra
-    # if recording or streaming:
-    #     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-    # if recording:
-    #     video.write(visual_image)
-    # if streaming:
-    #     to_server_image = visual_image
+    if recording:
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+        video.write(visual_image)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -204,22 +182,6 @@ def cleanup():
 
     # Video
     video.release()
-
-# Streaming
-stream_server = Streamer()
-app = stream_server.app
-
-@app.route('/video_feed')
-def video_feed():
-    global to_server_image
-    return Response(stream_server.gen_frames(to_server_image), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-def server_main():
-    app.run(host='192.168.2.208', port=3000, debug=False, threaded=True)
 
 if __name__ == "__main__":
     #server_child = Thread(target=server_main)

@@ -124,7 +124,7 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
     return lane_lines
 
 # Use lane lines to predict the steering angle in degrees.
-# Arbitrary, maybe subject to change: -90 --> left, 0 --> straight, 90 --> right
+# -90 --> left, 0 --> straight, 90 --> right
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[int, int, int, int]]) -> int:
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...

@@ -18,6 +18,7 @@ import cv2
 # Local Imports
 from constants import OpenCV_Settings
 import image_processing_module as ip
+
 class StreamCamera:
     def __init__(self):
         self.camera = Picamera2()
@@ -31,6 +32,7 @@ class StreamCamera:
         self.camera.start()
 
     # Takes an image input and applies a 90 degree rotation twice and color change from BGR to RGB.
+    # The rotation is necessary because the camera is mounted upside down.
     def capture(self):
         array = self.camera.capture_array()
         array = np.rot90(array, 2)
