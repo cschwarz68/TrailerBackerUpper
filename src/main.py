@@ -222,8 +222,8 @@ def server_main():
     app.run(host='192.168.2.208', port=3000, debug=False, threaded=True)
 
 if __name__ == "__main__":
-    server_child = Process(target=server_main)
-    server_child.start()
+    #server_child = Thread(target=server_main)
+    #server_child.start()
     main()
-    server_child.kill()
-    server_child.join()
+    #server_child.kill()
+    #server_child.join()
