@@ -1,15 +1,3 @@
-#ignore everything
-*
-
-#unignore all files with extensions
-!*.*
-
-#unignore all directories
-!*/
-
-#collectively, the three rules above ignore all files without extensions 
-
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

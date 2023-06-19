@@ -1,11 +1,11 @@
 """
-This module functions as an abstraction for the car via the singleton class Car. It provides control over drive and steering rack motors, 
+This module functions as an abstraction for the car via. the singleton class Car. It provides control over drive and steering rack motors, 
 as well as some autonomous driving functionality.
 """
 
 from constants import Drive_Params
 from motor import DCMotor
-from motor import Servo 
+from motor import Servo
 
 _SERVO_MOTOR_PIN         = 4
 _DRIVE_MOTOR_POWER_PIN   = 25
