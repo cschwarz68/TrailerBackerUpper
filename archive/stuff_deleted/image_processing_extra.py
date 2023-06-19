@@ -1,3 +1,5 @@
+import cv2
+import math
 
 # Everything beneath this comment has not been refactored.
 
