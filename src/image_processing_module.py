@@ -184,6 +184,8 @@ def center_red(img: cv2.Mat) -> tuple[float, float]:
     big_contour = max(contours, key=cv2.contourArea)
     # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
     moments = cv2.moments(big_contour)
+    if (moments["m00"] == 0) or (moments["m00"] == 0):
+        return(img.shape[1] / 2, img.shape[0] / 2)
     cx = moments["m10"] / moments["m00"]
     cy = moments["m01"] / moments["m00"]
     return (cx, cy)
