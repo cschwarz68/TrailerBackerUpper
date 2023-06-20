@@ -169,8 +169,8 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     # Bitwise complement operator. Flips each bit for each element in the matrix.
     invert = ~img
     hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([80, 150, 40])
-    upper_cyan = np.array([100, 255, 255])
+    lower_cyan = np.array([85, 150, 40])
+    upper_cyan = np.array([95, 255, 255])
     # Clamp to certain cyan shades.
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
@@ -237,7 +237,7 @@ def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, 
     steering_angle_deg = compute_steering_angle(img, lane_lines)
     return (steering_angle_deg, lane_lines)
 
-# Makes a black image containing lane lines and the calculated path. 
+# Makes a reduced opacity image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[tuple[float, float, float, float]]) -> cv2.Mat:
     height, width, _ = img.shape
     steering_angle_radians = math.radians(steering_angle_deg + 90)
@@ -252,7 +252,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     final_image = display_lines(final_image, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg), 
+    final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
                               (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
@@ -261,8 +261,18 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
 # Should be identical to the steps in main, but separate for testing.
 def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, float, float]]:
     origin_x, origin_y = img.shape[1] / 2, img.shape[0]
-    cx, cy = center_red(img)
+    filtered = filter_red(img)
+    filtered = region_of_interest(filtered)
+    cx, cy = center_red(filtered)
     angle = trailer_angle(img, cx, cy)
     return (angle, (origin_x, origin_y, cx, cy))
 
-# def display_lanes_and_path_red(img: cv2.Mat, )
+# To be used in conjunction with `display_lanes_and_path`.
+def display_trailer_info(img: cv2.Mat, 
+                         trailer_angle: float, 
+                         trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
+    final_image = combine_images([(img, 0.25)]) # Reduce opacity of base image.
+    final_image = display_lines(img, [trailer_points], (0, 0, 255))
+    final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
+                              (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+    return final_image
