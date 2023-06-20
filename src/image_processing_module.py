@@ -181,7 +181,11 @@ def center_red(img: cv2.Mat) -> tuple[float, float]:
     # Contour: structural outlines.
     # Ignoring hierarchy (second return value).
     contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    big_contour = max(contours, key=cv2.contourArea)
+    if len(contours)>0:
+        big_contour = max(contours, key=cv2.contourArea)
+    else:
+        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
+
     # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
     moments = cv2.moments(big_contour)
     if (moments["m00"] == 0) or (moments["m00"] == 0):
