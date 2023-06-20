@@ -84,7 +84,7 @@ if __name__ == "__main__":
                 else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
             ))
         elif go == "2":
-            pass
+            
         else:
             break
 

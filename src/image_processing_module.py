@@ -175,8 +175,9 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
 
-# Finds the angle between the bottom center point and middle of the detected red zone / tape.
-def trailer_angle(img: cv2.Mat) -> float:
+# Finds the center of the red tape.
+def center_red(img: cv2.Mat) -> tuple[float, float]:
+
     # Contour: structural outlines.
     # Ignoring hierarchy (second return value).
     contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -185,7 +186,11 @@ def trailer_angle(img: cv2.Mat) -> float:
     moments = cv2.moments(big_contour)
     cx = moments["m10"] / moments["m00"]
     cy = moments["m01"] / moments["m00"]
-    origin_x, origin_y = img.shape[1] / 2, img.shape[0]
+    return (cx, cy)
+
+# Finds the angle between the bottom center point and middle of the detected red zone / tape.
+def trailer_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
+    origin_x, origin_y = frame.shape[1] / 2, frame.shape[0]
     x_offset, y_offset = cx - origin_x, origin_y - cy
     angle = math.atan(x_offset / y_offset)
     angle = math.degrees(angle)
@@ -251,3 +256,13 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
                               (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
+
+# `steering_info` but with the red angle and coordinates.
+# Should be identical to the steps in main, but separate for testing.
+def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, float, float]]:
+    origin_x, origin_y = img.shape[1] / 2, img.shape[0]
+    cx, cy = center_red(img)
+    angle = trailer_angle(img, cx, cy)
+    return (angle, (origin_x, origin_y, cx, cy))
+
+# def display_lanes_and_path_red(img: cv2.Mat, )
