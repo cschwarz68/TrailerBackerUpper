@@ -64,6 +64,7 @@ def manual():
 
     if g.was_pressed(inputs.B):
         done = True
+        print("Shutting down...")
     elif g.was_pressed(inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
@@ -117,6 +118,7 @@ def auto_forward():
         video.write(visual_image)
 
 def auto_reverse():
+
     # Not yet implemented.
     if auto_exit:
         exit_auto()
@@ -196,6 +198,7 @@ def cleanup():
 
     # Video
     video.release()
+    print("released video")
 
 if __name__ == "__main__":
     #server_child = Thread(target=server_main)
