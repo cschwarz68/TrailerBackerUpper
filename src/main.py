@@ -64,6 +64,7 @@ def manual():
 
     if g.was_pressed(inputs.B):
         done = True
+        print("Shutting down...")
     elif g.was_pressed(inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
@@ -116,14 +117,16 @@ def auto_forward():
         video.write(visual_image)
 
 def auto_reverse():
+
     # Not yet implemented.
     if auto_exit:
         exit_auto()
         return
 
     if recording:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        video.write(visual_image)
+        pass
+        #visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+        #video.write(visual_image)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -182,6 +185,7 @@ def cleanup():
 
     # Video
     video.release()
+    print("released video")
 
 if __name__ == "__main__":
     #server_child = Thread(target=server_main)
