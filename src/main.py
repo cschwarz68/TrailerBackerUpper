@@ -105,12 +105,13 @@ def auto_forward():
 
     # Go faster on sharper turns.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
-        car.set_drive_power(0.7)
+        car.set_drive_power(0.9)
     else:
-        car.set_drive_power(0.6)
+        car.set_drive_power(1.0)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(stable_angle)
 
+    # Video
     if recording:
         visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
         video.write(visual_image)
@@ -121,9 +122,10 @@ def auto_reverse():
         exit_auto()
         return
 
-    if recording:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        video.write(visual_image)
+    # Video
+    # if recording:
+    #     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+    #     video.write(visual_image)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -150,8 +152,19 @@ def main():
     try:
         g.update_input()
     except:
-        print("Plug in gamepad to start.")
-        exit(1)
+        go = input("Are you sure you want to start without gamepad? Will automatically enter autonomous mode: ").casefold()
+        if go == "Y" or go == "yes":
+            go_mode = input("Autonomous Mode. 1 for forward, 2 for reverse: ")
+            if go_mode == "1":
+                mode = Main_Mode.AUTO_FORWARD
+            elif go_mode == "2":
+                mode = Main_Mode.AUTO_REVERSE
+            else:
+                print("Invalid mode.")
+                exit(0)
+        else:
+            print("Plug in gamepad to start.")
+            exit(0)
 
     # Main loop.
     while not done:
@@ -176,6 +189,7 @@ def main():
     cleanup()
 
 def cleanup():
+    global stream, car, video
     stream.stop()
     car.stop()
     GPIO_cleanup()
