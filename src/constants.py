@@ -9,9 +9,10 @@ class Drive_Params:
     JOYSTICK_MAX = 32767.0
     STEERING_RACK_CENTER = 86
 
-    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + 40
+    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + 30
     STEERING_RACK_LEFT = STEERING_RACK_CENTER - 40
     SHARP_TURN_DEGREES = 7.5
+    SHARP_TURN_DEGREES_REVERSE = 20
 
 class Lane_Bounds_Ratio:
     LEFT  = 3 / 4
@@ -41,3 +42,8 @@ class Camera_Settings():
 
 class OpenCV_Settings:
     RECORDING_FRAMERATE = 15 # Arbitrary
+
+class Reverse_Calibrations:
+    POSITION_THRESHOLD = 1 / 32
+    ANGLE_THRESHOLD = 1
+    TURN_RATIO = 2.5
