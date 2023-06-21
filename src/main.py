@@ -20,7 +20,7 @@ import signal
 import cv2
 
 # Local Imports
-from constants import Main_Mode, Drive_Params, OpenCV_Settings, Trailer_Calibrations
+from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
@@ -53,9 +53,7 @@ done = False
 # Trigger cleanup upon keyboard interrupt.
 def handler(signum: signal.Signals, stack_frame):
     print("Keyboard interrupt detected. Cleaning up.")
-    print(signum, signal.Signals(signum).name, stack_frame)
-    car.set_drive_power(0)
-    car.set_steering_angle(0)
+    print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
 signal.signal(signal.SIGINT, handler)
 
@@ -132,11 +130,11 @@ def auto_reverse():
     steering_angle_lanes = ip.compute_steering_angle(image, lane_lines)
 
     # Trailer
-    trailer_points = image.shape[1] / 2, image.shape[0]
     filtered = ip.filter_red(image)
     cropped = ip.region_of_interest(filtered)
     cx, cy = ip.center_red(cropped)
-    trailer_angle = ip.compute_trailer_angle(image, cx, cy)
+    trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
+    trailer_angle = ip.compute_trailer_angle(image, cx, cy) - steering_angle_lanes
 
     # Calculations
     """
@@ -154,27 +152,31 @@ def auto_reverse():
     
     Collapse down this logic later.
     """
-    lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
-    trailer_deviation = cx - lane_center_x
-    _, width, _ = image.shape
-    if trailer_deviation < width * Trailer_Calibrations.THRESHOLD * -1:
-        if trailer_angle < 0:
-            steering_angle = trailer_angle * Trailer_Calibrations.TURN_RATIO * -1
-        else:
-            steering_angle = trailer_angle * Trailer_Calibrations.TURN_RATIO
-    elif trailer_deviation > width * Trailer_Calibrations.THRESHOLD:
-        if trailer_angle > 0:
-            steering_angle = trailer_angle * Trailer_Calibrations.TURN_RATIO * -1
-        else:
-            steering_angle = trailer_angle * Trailer_Calibrations.TURN_RATIO
+    steering_angle = 0
+    if num_lanes == 2:
+        lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
+        trailer_deviation = cx - lane_center_x
+        _, width, _ = image.shape
+        if trailer_deviation < width * Reverse_Calibrations.POSITION_THRESHOLD * -1:
+            if trailer_angle < Reverse_Calibrations.ANGLE_THRESHOLD:
+                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            else:
+                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
+        elif trailer_deviation > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            if trailer_angle > Reverse_Calibrations.ANGLE_THRESHOLD:
+                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            else:
+                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
+        # else:
+        #     steering_angle = 0
     else:
         steering_angle = 0
 
     # Go slower on sharper turns.
-    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
-        car.set_drive_power(-0.55)
+    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
+        car.set_drive_power(-0.8)
     else:
-        car.set_drive_power(-0.6)
+        car.set_drive_power(-0.8)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(-stable_angle)
 
@@ -254,6 +256,8 @@ def cleanup():
 
     # Video
     video.release()
+
+    print("Cleaned up.")
 
 if __name__ == "__main__":
     main()

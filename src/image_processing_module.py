@@ -31,21 +31,34 @@ def edge_detector(img: cv2.Mat) -> cv2.Mat:
     return edges
 
 # Crops an image to focus on the bottom half.
-def region_of_interest(edges: cv2.Mat) -> cv2.Mat:
+def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
-    polygon = np.array(
-        [
+    if not reverse:
+        polygon = np.array(
             [
-                (0, height / 2), 
-                (width, height / 2), 
-                (width, height), 
-                (0, height)
-            ]
-        ], 
-        np.int32
-    )
+                [
+                    (0, height / 2), 
+                    (width, height / 2), 
+                    (width, height), 
+                    (0, height)
+                ]
+            ], 
+            np.int32
+        )
+    else:
+        polygon = np.array(
+            [
+                [
+                    (0, height / 2), 
+                    (width, height / 2), 
+                    (width, height), 
+                    (0, height)
+                ]
+            ], 
+            np.int32
+        )
     cv2.fillPoly(mask, polygon, 255)
     cropped_edges = cv2.bitwise_and(edges, mask)
     return cropped_edges
@@ -254,7 +267,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     x2 = x1 - height / 2 / math.tan(steering_angle_radians)
     y2 = height / 2
 
-    final_image = display_lines(img, lane_lines)
+    final_image = display_lines(img, lane_lines, (255, 0, 0))
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
     final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 

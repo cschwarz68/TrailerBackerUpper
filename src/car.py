@@ -100,7 +100,7 @@ class Car:
         """
         Stop steering and drive motors.
         """
-
+        self.set_steering_angle(0)
         self.steer_motor.stop()
         self.drive_motor.stop()
 
