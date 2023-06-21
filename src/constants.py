@@ -41,3 +41,7 @@ class Camera_Settings():
 
 class OpenCV_Settings:
     RECORDING_FRAMERATE = 15 # Arbitrary
+
+class Trailer_Calibrations:
+    THRESHOLD = 1 / 8
+    TURN_RATIO = 1 / 2
