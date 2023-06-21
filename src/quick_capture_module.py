@@ -84,7 +84,11 @@ if __name__ == "__main__":
                 else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
             ))
         elif go == "2":
-            pass
+            # Trailer detection.
+            # image = ip.filter_red(image)
+            trailer_angle, trailer_points = ip.steering_info_reverse(image)
+            image = ip.display_trailer_info(image, trailer_angle, trailer_points)
+            #cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
         else:
             break
 

@@ -5,7 +5,7 @@ class Main_Mode(Enum):
     AUTO_FORWARD = 1
     AUTO_REVERSE = 2
 
-class Drive_Params():
+class Drive_Params:
     JOYSTICK_MAX = 32767.0
     STEERING_RACK_CENTER = 86
 
@@ -13,11 +13,11 @@ class Drive_Params():
     STEERING_RACK_LEFT = STEERING_RACK_CENTER - 40
     SHARP_TURN_DEGREES = 7.5
 
-class Lane_Bounds_Ratio():
-    LEFT  = 2 / 3
-    RIGHT = 1 / 3
+class Lane_Bounds_Ratio:
+    LEFT  = 3 / 4
+    RIGHT = 1 / 4
 
-class Image_Processing_Calibrations():
+class Image_Processing_Calibrations:
     """
     IMPORTANT
 
@@ -39,5 +39,5 @@ class Camera_Settings():
     FRAMERATE             = 60
     ALPHA                 = 20
 
-class OpenCV_Settings():
+class OpenCV_Settings:
     RECORDING_FRAMERATE = 15 # Arbitrary

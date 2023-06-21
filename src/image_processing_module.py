@@ -169,23 +169,34 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     # Bitwise complement operator. Flips each bit for each element in the matrix.
     invert = ~img
     hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([80, 150, 40])
-    upper_cyan = np.array([100, 255, 255])
+    lower_cyan = np.array([85, 150, 40])
+    upper_cyan = np.array([95, 255, 255])
     # Clamp to certain cyan shades.
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
 
-# Finds the angle between the bottom center point and middle of the detected red zone / tape.
-def trailer_angle(img: cv2.Mat) -> float:
+# Finds the center of the red tape.
+def center_red(img: cv2.Mat) -> tuple[float, float]:
+
     # Contour: structural outlines.
     # Ignoring hierarchy (second return value).
     contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    big_contour = max(contours, key=cv2.contourArea)
+    if len(contours)>0:
+        big_contour = max(contours, key=cv2.contourArea)
+    else:
+        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
+
     # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
     moments = cv2.moments(big_contour)
+    if (moments["m00"] == 0) or (moments["m00"] == 0):
+        return(img.shape[1] / 2, img.shape[0] / 2)
     cx = moments["m10"] / moments["m00"]
     cy = moments["m01"] / moments["m00"]
-    origin_x, origin_y = img.shape[1] / 2, img.shape[0]
+    return (cx, cy)
+
+# Finds the angle between the bottom center point and middle of the detected red zone / tape.
+def trailer_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
+    origin_x, origin_y = frame.shape[1] / 2, frame.shape[0]
     x_offset, y_offset = cx - origin_x, origin_y - cy
     angle = math.atan(x_offset / y_offset)
     angle = math.degrees(angle)
@@ -232,7 +243,7 @@ def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, 
     steering_angle_deg = compute_steering_angle(img, lane_lines)
     return (steering_angle_deg, lane_lines)
 
-# Makes a black image containing lane lines and the calculated path. 
+# Makes a reduced opacity image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[tuple[float, float, float, float]]) -> cv2.Mat:
     height, width, _ = img.shape
     steering_angle_radians = math.radians(steering_angle_deg + 90)
@@ -247,7 +258,27 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     final_image = display_lines(final_image, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, "Steering Angle from Straight: " + str(steering_angle_deg), 
+    final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
                               (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
+    return final_image
+
+# `steering_info` but with the red angle and coordinates.
+# Should be identical to the steps in main, but separate for testing.
+def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, float, float]]:
+    origin_x, origin_y = img.shape[1] / 2, img.shape[0]
+    filtered = filter_red(img)
+    filtered = region_of_interest(filtered)
+    cx, cy = center_red(filtered)
+    angle = trailer_angle(img, cx, cy)
+    return (angle, (origin_x, origin_y, cx, cy))
+
+# To be used in conjunction with `display_lanes_and_path`.
+def display_trailer_info(img: cv2.Mat, 
+                         trailer_angle: float, 
+                         trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
+    final_image = combine_images([(img, 0.25)]) # Reduce opacity of base image.
+    final_image = display_lines(img, [trailer_points], (0, 0, 255))
+    final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
+                              (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
