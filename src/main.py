@@ -133,7 +133,7 @@ def auto_reverse():
     # trailer_angle *-1
 
 
-    steering_angle_raw = ip.compute_steering_angle(image, lane_lines) * -1
+    #steering_angle_raw = ip.compute_steering_angle(image, lane_lines) * -1
 
     #steering_angle = (trailer_angle * 0.5 + steering_angle_raw)/2
     steering_angle = trailer_angle 
@@ -144,8 +144,8 @@ def auto_reverse():
         car.set_drive_power(-0.6)
     else:
         car.set_drive_power(-0.6)
-    stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
-    car.set_steering_angle(-stable_angle)
+    #stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
+    car.set_steering_angle(-steering_angle)
 
     # Video
     if recording:

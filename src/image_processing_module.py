@@ -282,3 +282,4 @@ def display_trailer_info(img: cv2.Mat,
     final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
                               (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
+

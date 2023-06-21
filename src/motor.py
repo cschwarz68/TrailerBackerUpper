@@ -36,7 +36,7 @@ class DCMotor:
         io.set_output(forward_pin)
         io.set_output(reverse_pin)
 
-        io.set_PWM_frequency(power_pin,FREQ)
+        io.set_PWM_frequency(power_pin, FREQ)
         io.set_PWM_frequency(forward_pin, FREQ)
         io.set_PWM_frequency(reverse_pin, FREQ)
 

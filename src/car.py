@@ -33,7 +33,7 @@ class Car:
     def gamepad_drive(self, trigger_val: int):
         """
         Input to this function must range from [-255, 255] where -255 is full reverse, 0 is stop, and 255 is full forward.
-        Note that trigger input values from the inputs module range from [0, 255] for each trigger.
+        Note that src.gamepad.get_trigger_values() maps [-255, 0] to left trigger, and [0,255] to right trigger
         """
 
         self.set_drive_power(trigger_val / 255)
