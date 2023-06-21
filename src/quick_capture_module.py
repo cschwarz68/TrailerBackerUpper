@@ -68,27 +68,32 @@ if __name__ == "__main__":
 
     while True:
         image = camera.capture()
+        reduced = ip.combine_images([(image, 0.25)]) # Reduce opacity of base image.
 
         if go == "1":
             # Normal lane detection.
             steering_angle_deg, lane_lines = ip.steering_info(image)
-            image = ip.display_lanes_and_path(image, steering_angle_deg, lane_lines)
+            image = ip.display_lanes_and_path(reduced, steering_angle_deg, lane_lines)
             cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
             lane_lines_len = len(lane_lines)
 
             # Print debugging while the camera is running decreases performance likely due to stdout buffering.
             # Print the entire thing on exit.
-            debug_output.append("Angle: " + str(steering_angle_deg) + "\t" + (
+            debug_output.append(f"Angle: {steering_angle_deg}\t" + (
                 "No Lanes" if lane_lines_len == 0 
                 else "One Lane: " + str(lane_lines[0]) if lane_lines_len == 1 
                 else "Left Lane: " + str(lane_lines[0]) + " | Right Lane: " + str(lane_lines[1])
             ))
         elif go == "2":
             # Trailer detection.
-            # image = ip.filter_red(image)
+            steering_angle_deg, lane_lines = ip.steering_info(image)
             trailer_angle, trailer_points = ip.steering_info_reverse(image)
+            image = ip.display_lanes_and_path(reduced, steering_angle_deg * -1, lane_lines)
             image = ip.display_trailer_info(image, trailer_angle, trailer_points)
-            #cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path", image)
+            cv2.imshow("Quick Capture Module Unit Test - Auto Forward Lanes and Path with Trailer", image)
+
+            # See comment above.
+            debug_output.append(f"Trailer Angle: {trailer_angle}")
         else:
             break
 
