@@ -195,7 +195,7 @@ def center_red(img: cv2.Mat) -> tuple[float, float]:
     return (cx, cy)
 
 # Finds the angle between the bottom center point and middle of the detected red zone / tape.
-def trailer_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
+def compute_trailer_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
     origin_x, origin_y = frame.shape[1] / 2, frame.shape[0]
     x_offset, y_offset = cx - origin_x, origin_y - cy
     angle = math.atan(x_offset / y_offset)
@@ -254,12 +254,11 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     x2 = x1 - height / 2 / math.tan(steering_angle_radians)
     y2 = height / 2
 
-    final_image = combine_images([(img, 0.25)]) # Reduce opacity of base image.
-    final_image = display_lines(final_image, lane_lines)
+    final_image = display_lines(img, lane_lines)
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
     final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
-                              (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                              (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
 
@@ -268,17 +267,16 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
 def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, float, float]]:
     origin_x, origin_y = img.shape[1] / 2, img.shape[0]
     filtered = filter_red(img)
-    filtered = region_of_interest(filtered)
-    cx, cy = center_red(filtered)
-    angle = trailer_angle(img, cx, cy)
+    cropped = region_of_interest(filtered)
+    cx, cy = center_red(cropped)
+    angle = compute_trailer_angle(img, cx, cy)
     return (angle, (origin_x, origin_y, cx, cy))
 
 # To be used in conjunction with `display_lanes_and_path`.
 def display_trailer_info(img: cv2.Mat, 
                          trailer_angle: float, 
                          trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
-    final_image = combine_images([(img, 0.25)]) # Reduce opacity of base image.
     final_image = display_lines(img, [trailer_points], (0, 0, 255))
     final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
-                              (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                              (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image

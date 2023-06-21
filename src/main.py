@@ -122,23 +122,26 @@ def auto_reverse():
         exit_auto()
         return
     image = stream.capture()
+
+    # Lanes
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
     line_segments = ip.detect_line_segments(cropped_edges)
     lane_lines = ip.average_slope_intercept(image, line_segments)
     num_lanes = len(lane_lines)
-    trailer_angle, trailer_points = ip.steering_info_reverse(image)
+    steering_angle_lanes = ip.compute_steering_angle(image, lane_lines) * -1 # Invert for reverse driving.
 
-    # trailer_angle *-1
+    # Trailer
+    trailer_points = image.shape[1] / 2, image.shape[0]
+    filtered = ip.filter_red(image)
+    cropped = ip.region_of_interest(filtered)
+    cx, cy = ip.center_red(cropped)
+    trailer_angle = ip.compute_trailer_angle(image, cx, cy) * -1
 
+    # Calculations
+    
 
-    steering_angle_raw = ip.compute_steering_angle(image, lane_lines) * -1
-
-    #steering_angle = (trailer_angle * 0.5 + steering_angle_raw)/2
-    steering_angle = trailer_angle 
-
-
-    # Go faster on sharper turns.
+    # Go slower on sharper turns.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
         car.set_drive_power(-0.6)
     else:
@@ -148,11 +151,8 @@ def auto_reverse():
 
     # Video
     if recording:
-        visual_image = ip.display_trailer_info(image, trailer_angle, trailer_points)
-
-        visual_image = cv2.putText(visual_image, f"Steering Angle from Straight: {steering_angle}", 
-                              (50, 25), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
-        #visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+        visual_image = ip.display_lanes_and_path(image, steering_angle * -1, lane_lines)
+        visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
         video.write(visual_image)
 
 
