@@ -17,7 +17,7 @@ from threading import Thread
 import signal
 
 # Package Imports
-import cv2
+import cv2, pickle, struct, socket
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
@@ -34,6 +34,8 @@ controller_present = True
 mode = Main_Mode.MANUAL
 auto_exit = False
 recording = False
+streaming = False
+client_socket = None
 
 stream = qc.StreamCamera()
 g      = Gamepad()
@@ -58,7 +60,7 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording
+    global done, mode, transition_mode, check_auto_exit_thread, recording, streaming
 
     if g.was_pressed(inputs.B):
         done = True
@@ -81,6 +83,13 @@ def manual():
         else:
             recording = False
             print("Disabled Recording for Autonomous")
+    elif g.was_pressed(inputs.SELECT):
+        if not streaming:
+            streaming = True
+            print("Enabled Streaming for Autonomous")
+        else:
+            streaming = False
+            print("Disabled Streaming for Autonomous")
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -116,7 +125,7 @@ def auto_forward():
         video.write(visual_image)
 
 def auto_reverse():
-    global stream, auto_exit, recording
+    global stream, auto_exit, recording, streaming
     if auto_exit:
         exit_auto()
         return
@@ -182,10 +191,19 @@ def auto_reverse():
     car.set_steering_angle(-stable_angle)
 
     # Video
-    if recording:
+    if recording or streaming:
         visual_image = ip.display_lanes_and_path(image, steering_angle * -1, lane_lines)
         visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
-        video.write(visual_image)
+        
+    
+        if streaming:
+            
+            stream_to_client(visual_image)
+            
+
+        if recording:
+            video.write(visual_image)
+
 
 
 def check_auto_exit():
@@ -195,6 +213,8 @@ def check_auto_exit():
         if g.was_pressed(inputs.B):
             auto_exit = True
             return
+        
+
 
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
@@ -208,7 +228,26 @@ def exit_auto():
 def main():
     print("STARTING MAIN")
 
-    global stream, done, mode, controller_present
+  
+
+    global stream, done, mode, controller_present, client_socket
+
+    server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    host_name  = socket.gethostname()
+    host_ip = '192.168.2.208'
+    #print('HOST IP:',host_ip)
+    port = 9999
+    socket_address = (host_ip,port)
+
+    # Socket Bind
+    server_socket.bind(socket_address)
+
+    # Socket Listen
+    server_socket.listen(2)
+    print("LISTENING AT:",socket_address)
+
+    # Socket Accept
+    client_socket, addr = server_socket.accept()
 
     try:
         g.update_input()
@@ -246,8 +285,17 @@ def main():
             auto_forward()
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
-
+    server_socket.close()
     cleanup()
+
+def stream_to_client(stream_image):
+    global streaming, client_socket
+    if streaming:
+        if client_socket:
+            print("streaming")
+            a = pickle.dumps(stream_image)
+            message = struct.pack("Q",len(a))+a
+            client_socket.sendall(message)
 
 def cleanup():
     global stream, car, video
@@ -265,5 +313,6 @@ if __name__ == "__main__":
     #server_child = Thread(target=server_main)
     #server_child.start()
     main()
+    
     #server_child.kill()
     #server_child.join()

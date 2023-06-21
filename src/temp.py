@@ -1,12 +1,11 @@
 # This code is for the server 
-# Lets import the libraries
 import socket, cv2, pickle,struct,imutils
-
+from quick_capture_module import StreamCamera
 # Socket Create
 server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 host_name  = socket.gethostname()
 host_ip = socket.gethostbyname(host_name)
-print('HOST IP:',host_ip)
+#print('HOST IP:',host_ip)
 port = 9999
 socket_address = (host_ip,port)
 
@@ -14,23 +13,29 @@ socket_address = (host_ip,port)
 server_socket.bind(socket_address)
 
 # Socket Listen
-server_socket.listen(5)
+server_socket.listen(2)
 print("LISTENING AT:",socket_address)
 
 # Socket Accept
+client_socket, addr = server_socket.accept()
 while True:
-	client_socket,addr = server_socket.accept()
+	
 	print('GOT CONNECTION FROM:',addr)
 	if client_socket:
-		vid = cv2.VideoCapture(0)
+		#vid = StreamCamera()
 		
-		while(vid.isOpened()):
-			img,frame = vid.read()
-			frame = imutils.resize(frame,width=320)
-			a = pickle.dumps(frame)
-			message = struct.pack("Q",len(a))+a
-			client_socket.sendall(message)
-			
-			cv2.imshow('TRANSMITTING VIDEO',frame)
-			if cv2.waitKey(1) == '13':
-				client_socket.close()
+		while(stream.isOpened()):
+			try:
+				frame = vid.capture()
+				#frame = imutils.resize(frame,width=320)
+				a = pickle.dumps(frame)
+				message = struct.pack("Q",len(a))+a
+				client_socket.sendall(message)
+				
+				#cv2.imshow('TRANSMITTING VIDEO',frame)
+				#if cv2.waitKey(1) == '13':
+			except KeyboardInterrupt:
+				break
+		
+		print("Shutting down...")
+		client_socket.close()
