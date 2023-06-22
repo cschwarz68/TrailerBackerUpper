@@ -142,26 +142,23 @@ def auto_reverse():
         lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
         trailer_deviation = cx - lane_center_x
         _, width, _ = image.shape
-        if trailer_deviation < width * Reverse_Calibrations.POSITION_THRESHOLD * -1:
-            if trailer_angle < Reverse_Calibrations.ANLGE_OFF_CENTER_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        elif trailer_deviation > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            if trailer_angle > Reverse_Calibrations.ANLGE_OFF_CENTER_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        # else:
-        #     steering_angle = 0
+
+        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+
+        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+      
+        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
     else:
         steering_angle = 0
 
-    # Go slower on sharper turns.
+    # Redundant, but may need to adjust speed in the future.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
-        car.set_drive_power(-0.8)
+        car.set_drive_power(-.8)
     else:
-        car.set_drive_power(-0.8)
+        car.set_drive_power(-.8)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(-stable_angle)
 

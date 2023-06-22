@@ -45,6 +45,6 @@ class OpenCV_Settings:
 
 class Reverse_Calibrations:
     POSITION_THRESHOLD         = 1 / 32
-    ANLGE_OFF_CENTER_THRESHOLD = 5
-    HITCH_ANGLE_THRESHOLD      = 5
+    ANGLE_OFF_CENTER_THRESHOLD = 1
+    HITCH_ANGLE_THRESHOLD      = 1
     TURN_RATIO                 = 2.5
