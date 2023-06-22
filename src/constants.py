@@ -6,7 +6,7 @@ class Main_Mode(Enum):
     AUTO_REVERSE = 2
 
 class Drive_Params:
-    JOYSTICK_MAX = 32767.0
+    JOYSTICK_MAX         = 32767.0
     STEERING_RACK_CENTER = 86
 
     STEERING_RACK_RIGHT = STEERING_RACK_CENTER + 30
@@ -44,6 +44,7 @@ class OpenCV_Settings:
     RECORDING_FRAMERATE = 15 # Arbitrary
 
 class Reverse_Calibrations:
-    POSITION_THRESHOLD = 1 / 32
-    ANGLE_THRESHOLD = 1
-    TURN_RATIO = 2.5
+    POSITION_THRESHOLD         = 1 / 32
+    ANGLE_OFF_CENTER_THRESHOLD = 1
+    HITCH_ANGLE_THRESHOLD      = 1
+    TURN_RATIO                 = 2.5

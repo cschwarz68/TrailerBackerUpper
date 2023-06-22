@@ -141,52 +141,39 @@ def auto_reverse():
 
     # Trailer
     filtered = ip.filter_red(image)
-    cropped = ip.region_of_interest(filtered)
+    cropped = ip.region_of_interest(filtered, True)
     cx, cy = ip.center_red(cropped)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
-    trailer_angle = ip.compute_trailer_angle(image, cx, cy) - steering_angle_lanes
+    hitch_angle = ip.compute_hitch_angle(image, cx, cy)
+    trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
 
-    # Calculations
-    """
-    get the difference between the midpoint of the lanes and the tape
-    if the trailer is to the left of the center beyond some threshold:
-        if the trailer angle is to the left:
-            turn wheels right
-        else if the trailer angle is to the right:
-            turn wheels left
-    else if the trailer is to the right of the center beyond some threshold:
-        if the trailer angle is to the right:
-            turn wheels left
-        else if the trailer angle is to the left:
-            turn wheels right
-    
-    Collapse down this logic later.
-    """
     steering_angle = 0
     if num_lanes == 2:
         lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
         trailer_deviation = cx - lane_center_x
         _, width, _ = image.shape
-        if trailer_deviation < width * Reverse_Calibrations.POSITION_THRESHOLD * -1:
-            if trailer_angle < Reverse_Calibrations.ANGLE_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        elif trailer_deviation > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            if trailer_angle > Reverse_Calibrations.ANGLE_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        # else:
-        #     steering_angle = 0
-    else:
-        steering_angle = 0
 
-    # Go slower on sharper turns.
-    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
-        car.set_drive_power(-0.8)
+        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+            #If the trailer is not centered, steer to the center.
+
+        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            #If the angle of the hitch is too great, reduce it.
+      
+        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            #If the angle of the trailer relative to lane center is too great, reduce it
     else:
-        car.set_drive_power(-0.8)
+        #If two lanes are not visible
+
+        steering_angle = 0 #TODO: make this actually be useful
+
+    # Redundant, but may need to adjust speed in the future.
+    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
+        car.set_drive_power(-.8)
+    else:
+        car.set_drive_power(-.8)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(-stable_angle)
 

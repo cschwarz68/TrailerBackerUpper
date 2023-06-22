@@ -30,7 +30,18 @@ def edge_detector(img: cv2.Mat) -> cv2.Mat:
     edges = cv2.Canny(binary, 200, 400)
     return edges
 
-# Crops an image to focus on the bottom half.
+# Replaces specified fraction of image with white.
+"""
+IMPORTANT
+
+The y-axis coordinate starts from the top of the image, while the x-axis starts from the left as usual.
+  1 2 3 4
+0  ________
+1 |
+2 |
+3 |
+4 |
+"""
 def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
@@ -51,8 +62,8 @@ def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
         polygon = np.array(
             [
                 [
-                    (0, height / 2), 
-                    (width, height / 2), 
+                    (0, height * 1 / 4), 
+                    (width, height * 1 / 4), 
                     (width, height), 
                     (0, height)
                 ]
@@ -208,7 +219,7 @@ def center_red(img: cv2.Mat) -> tuple[float, float]:
     return (cx, cy)
 
 # Finds the angle between the bottom center point and middle of the detected red zone / tape.
-def compute_trailer_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
+def compute_hitch_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
     origin_x, origin_y = frame.shape[1] / 2, frame.shape[0]
     x_offset, y_offset = cx - origin_x, origin_y - cy
     angle = math.atan(x_offset / y_offset)
@@ -282,7 +293,7 @@ def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, floa
     filtered = filter_red(img)
     cropped = region_of_interest(filtered)
     cx, cy = center_red(cropped)
-    angle = compute_trailer_angle(img, cx, cy)
+    angle = compute_hitch_angle(img, cx, cy)
     return (angle, (origin_x, origin_y, cx, cy))
 
 # To be used in conjunction with `display_lanes_and_path`.

@@ -17,6 +17,7 @@ FREQ = 50 # Default PWM frequency.
 def cleanup():
     io.stop()
     os.system("systemctl stop pigpiod")
+    time.sleep(1)
 
 class DCMotor:
     """
