@@ -145,14 +145,19 @@ def auto_reverse():
 
         if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
             steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+            #If the trailer is not centered, steer to the center.
 
         if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
             steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            #If the angle of the hitch is too great, reduce it.
       
         if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
             steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            #If the angle of the trailer relative to lane center is too great, reduce it
     else:
-        steering_angle = 0
+        #If two lanes are not visible
+
+        steering_angle = 0 #TODO: make this actually be useful
 
     # Redundant, but may need to adjust speed in the future.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
