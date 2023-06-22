@@ -17,7 +17,7 @@ from threading import Thread
 import signal
 
 # Package Imports
-import cv2, pickle, struct, socket
+import cv2, pickle, struct, socket, sys
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
@@ -35,7 +35,7 @@ mode = Main_Mode.MANUAL
 auto_exit = False
 recording = False
 streaming = False
-client_socket = None
+server_socket = None
 
 stream = qc.StreamCamera()
 g      = Gamepad()
@@ -84,6 +84,7 @@ def manual():
             recording = False
             print("Disabled Recording for Autonomous")
     elif g.was_pressed(inputs.SELECT):
+        print("pressed select")
         if not streaming:
             streaming = True
             print("Enabled Streaming for Autonomous")
@@ -217,9 +218,9 @@ def main():
 
   
 
-    global stream, done, mode, controller_present, client_socket
+    global stream, done, mode, controller_present, server_socket
 
-    server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     host_name  = socket.gethostname()
     host_ip = '192.168.2.208'
     #print('HOST IP:',host_ip)
@@ -227,14 +228,10 @@ def main():
     socket_address = (host_ip,port)
 
     # Socket Bind
-    server_socket.bind(socket_address)
+    #server_socket.bind(socket_address)
 
-    # Socket Listen
-    server_socket.listen(2)
-    print("LISTENING AT:",socket_address)
-
-    # Socket Accept
-    client_socket, addr = server_socket.accept()
+   
+   
 
     try:
         g.update_input()
@@ -276,13 +273,15 @@ def main():
     cleanup()
 
 def stream_to_client(stream_image):
-    global streaming, client_socket
+    global streaming, server_socket
     if streaming:
-        if client_socket:
-            print("streaming")
-            a = pickle.dumps(stream_image)
-            message = struct.pack("Q",len(a))+a
-            client_socket.sendall(message)
+        if server_socket:
+            #print("streaming")
+            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
+            ret, buffer = cv2.imencode('.jpg', stream_image, encode_param)
+            message = buffer.tobytes()
+            #print(sys.getsizeof(message))
+            server_socket.sendto(message, ('192.168.2.185', 9999))
 
 def cleanup():
     global stream, car, video
