@@ -18,6 +18,7 @@ We're developing a 1/10th scale truck with a trailer that can be used to demonst
 - Python 3.9.2.
 > See software documentation for more info.
 
+
 ## Project Status
 The vehicle can autonomously navigate forward. Autonomous reverse navigation functions with a straight lane, but still has room for improvement when the lane greatly curves.  
 Currently, a planned neural network was trained for forward navigation, but the models are now insufficient. We have plans to implement machine learning later.
