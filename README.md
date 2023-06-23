@@ -1,4 +1,7 @@
 # TrailerBackerUpper
+
+![Image.](./docs/image.png)
+
 This project contains Python source code for a manually and autonomously controlled 1/10th scale truck with a trailer.
 > Also see software documentation.
 

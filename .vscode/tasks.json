@@ -4,7 +4,7 @@
         {
             "label": "One Command Run",
             "type": "shell",
-            "command": "cd /home/nads/Documents/Python/TrailerBackerUpper ; /usr/bin/env sudo -E /bin/python /home/nads/Documents/Python/TrailerBackerUpper/src/main.py",
+            "command": "cd /home/${USER}/Documents/Python/TrailerBackerUpper ; /usr/bin/env sudo -E /bin/python /home/${USER}/Documents/Python/TrailerBackerUpper/src/main.py",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
