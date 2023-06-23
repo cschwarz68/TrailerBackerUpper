@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import division
+from struct import pack
 import cv2
-import numpy as np
-import socket
-import struct
 import math
 
 
@@ -32,7 +30,7 @@ class FrameSegment(object):
         array_pos_start = 0
         while count:
             array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-            self.s.sendto(struct.pack("B", count) +
+            self.s.sendto(pack("B", count) +
                 dat[array_pos_start:array_pos_end], 
                 (self.addr, self.port)
                 )

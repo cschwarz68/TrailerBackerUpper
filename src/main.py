@@ -67,7 +67,6 @@ def manual():
 
     if g.was_pressed(inputs.B):
         done = True
-        print("Shutting down...")
     elif g.was_pressed(inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
@@ -230,8 +229,8 @@ def main():
     port = 9999
     socket_address = (host_ip,port)
     #insert streaming address here
-    addr = 'localhost'
-    frame_segment = FrameSegment(server_socket, 3000, addr)
+    addr = '192.168.2.185'
+    frame_segment = FrameSegment(server_socket, 25565, addr)
 
     # Socket Bind
     #server_socket.bind(socket_address)
@@ -291,14 +290,10 @@ def cleanup():
 
     # Video
     video.release()
-    print("released video")
 
     print("Cleaned up.")
 
 if __name__ == "__main__":
-    #server_child = Thread(target=server_main)
-    #server_child.start()
     main()
     
-    #server_child.kill()
-    #server_child.join()
+   
