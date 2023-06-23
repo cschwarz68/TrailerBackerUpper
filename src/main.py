@@ -2,30 +2,24 @@
 This is the main program.
 There are three modes: manual, forward autonomous, and reverse autonomous.
 
-Upon start, if the controller is found, the program defaults to manual mode.
-
-Forward autonomous mode can be entered by pressing (X) and then (START).
-Reverse autonomous mode can be entrered by pressing (Y) and then (START).
-    Return to manual mode by pressing (B).
-
-Press (A) to enable recording for autonomous mode.
+Also contains streaming and recording capabilities.
 
 Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
-import signal
+import signal, socket
 
 # Package Imports
-import cv2, pickle, struct, socket, sys
+import cv2
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
-import image_processing_module as ip
 from streaming import FrameSegment
-import quick_capture_module as qc
+import image_processing as ip
+import camera as cam
 from car import Car
 
 # Mutable
@@ -33,14 +27,12 @@ transition_mode = Main_Mode.AUTO_FORWARD
 check_auto_exit_thread = None
 controller_present = True
 mode = Main_Mode.MANUAL
+frame_segment = None
 auto_exit = False
 recording = False
 streaming = False
-server_socket = None
-frame_segment = None
 
-
-stream = qc.StreamCamera()
+stream = cam.Camera()
 g      = Gamepad()
 car    = Car()
 
@@ -86,7 +78,6 @@ def manual():
             recording = False
             print("Disabled Recording for Autonomous")
     elif g.was_pressed(inputs.SELECT):
-        print("pressed select")
         if not streaming:
             streaming = True
             print("Enabled Streaming for Autonomous")
@@ -102,7 +93,7 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit, recording
+    global stream, auto_exit, recording, streaming
     if auto_exit:
         exit_auto()
         return
@@ -123,9 +114,13 @@ def auto_forward():
     car.set_steering_angle(stable_angle)
 
     # Video
-    if recording:
+    if recording or streaming:
         visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        video.write(visual_image)
+
+        if streaming:   
+            stream_to_client(visual_image)
+        if recording:
+            video.write(visual_image)
 
 def auto_reverse():
     global stream, auto_exit, recording, streaming
@@ -158,19 +153,19 @@ def auto_reverse():
 
         if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
             steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
-            #If the trailer is not centered, steer to the center.
+            # If the trailer is not centered, steer to the center.
 
         if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
             steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
-            #If the angle of the hitch is too great, reduce it.
+            # If the angle of the hitch is too great, reduce it.
       
         if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
             steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            #If the angle of the trailer relative to lane center is too great, reduce it
+            # If the angle of the trailer relative to lane center is too great, reduce it.
     else:
-        #If two lanes are not visible
+        # If two lanes are not visible.
 
-        steering_angle = 0 #TODO: make this actually be useful
+        steering_angle = 0 # TODO: Make this actually be useful.
 
     # Redundant, but may need to adjust speed in the future.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
@@ -184,17 +179,11 @@ def auto_reverse():
     if recording or streaming:
         visual_image = ip.display_lanes_and_path(image, steering_angle * -1, lane_lines)
         visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
-        
-    
-        if streaming:
-            
-            stream_to_client(visual_image)
-            
 
+        if streaming:   
+            stream_to_client(visual_image)
         if recording:
             video.write(visual_image)
-
-
 
 def check_auto_exit():
     global mode, auto_exit
@@ -203,8 +192,6 @@ def check_auto_exit():
         if g.was_pressed(inputs.B):
             auto_exit = True
             return
-        
-
 
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
@@ -218,25 +205,18 @@ def exit_auto():
 def main():
     print("STARTING MAIN")
 
-  
-
     global stream, done, mode, controller_present, frame_segment
 
+    # Streaming
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    host_name  = socket.gethostname()
-    host_ip = socket.gethostbyname(host_name)
-    #print('HOST IP:',host_ip)
-    port = 9999
-    socket_address = (host_ip,port)
-    #insert streaming address here
-    addr = '192.168.2.185'
-    frame_segment = FrameSegment(server_socket, 25565, addr)
+    port = 25565
+    """
+    IMPORTANT
 
-    # Socket Bind
-    #server_socket.bind(socket_address)
-
-   
-   
+    Insert the IP address of the device to stream to.
+    """
+    addr = "192.168.2.185"
+    frame_segment = FrameSegment(server_socket, port, addr)
 
     try:
         g.update_input()
@@ -252,7 +232,6 @@ def main():
                 print("Invalid mode.")
                 exit(0)
         else:
-            print("Plug in gamepad to start.")
             exit(0)
 
     # Main loop.
@@ -274,13 +253,14 @@ def main():
             auto_forward()
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
+
     server_socket.close()
     cleanup()
 
 def stream_to_client(stream_image):
-    global streaming, server_socket, frame_segment
+    global streaming, frame_segment
     if streaming:
-            frame_segment.udp_frame(stream_image)
+        frame_segment.udp_frame(stream_image)
 
 def cleanup():
     global stream, car, video
@@ -295,5 +275,3 @@ def cleanup():
 
 if __name__ == "__main__":
     main()
-    
-   

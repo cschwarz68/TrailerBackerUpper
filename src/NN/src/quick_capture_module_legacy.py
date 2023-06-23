@@ -29,7 +29,7 @@ import cv2
 import io
 from io import BytesIO
     #from matplotlib import pyplot as plt
-import image_processing_module as ip
+# import image_processing_module as ip
 import numpy as np
 
 #initialize the StreamCamera class
@@ -71,23 +71,23 @@ class StreamCamera:
         self.camera.stop_preview()
         self.camera.close()
 
-#main method
-if __name__ == "__main__":
-    #initialize the camera
-    camera = StreamCamera()
+# #main method
+# if __name__ == "__main__":
+#     #initialize the camera
+#     camera = StreamCamera()
 
-    #while loop to continuously capture images
-    while True:
-            #print('image?')
-        #captures an image
-        image = camera.capture()
-            #print('image?')
-        #method in image_proccessing
-        image = ip.display_reds_and_lane(image)
-            # image = ip.get_reds(image)
-            # image = ip.get_angle_image(image)
-        cv2.imshow("img", image)
-        #
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-    camera.stop()
+#     #while loop to continuously capture images
+#     while True:
+#             #print('image?')
+#         #captures an image
+#         image = camera.capture()
+#             #print('image?')
+#         #method in image_proccessing
+#         image = ip.display_reds_and_lane(image)
+#             # image = ip.get_reds(image)
+#             # image = ip.get_angle_image(image)
+#         cv2.imshow("img", image)
+#         #
+#         if cv2.waitKey(1) & 0xFF == ord("q"):
+#             break
+#     camera.stop()

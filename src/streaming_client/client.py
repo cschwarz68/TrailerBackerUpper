@@ -1,26 +1,30 @@
+"""
+Source code for car camera feed streaming client.
+
+Does not work on DSRI facility desktops. Bring your own computer.
+"""
+
 from cv2 import imdecode, imshow, waitKey, destroyAllWindows
 from socket import socket, AF_INET, SOCK_DGRAM
 from numpy import fromstring, uint8
 from struct import unpack
 
-MAX_DGRAM = 2**16
+MAX_DGRAM = 2 ** 16
 
-def dump_buffer(s):
-    """ Emptying buffer frame """
+def dump_buffer(s: socket):
+    # Emptying buffer frame.
     while True:
-        seg, addr = s.recvfrom(MAX_DGRAM)
+        seg, _ = s.recvfrom(MAX_DGRAM)
         print(seg[0])
         if unpack("B", seg[0:1])[0] == 1:
-            print("finish emptying buffer")
+            print("Finish emptying buffer.")
             break
 
 def main():
-    """ Getting image udp frame &
-    concate before decode and output image """
-    
-    # Set up socket
+    # Get image UDP frame & concatenate before decoding and outputting the image.
+    # Set up socket.
     s = socket(AF_INET, SOCK_DGRAM)
-    s.bind(('0.0.0.0', 25565)) #Minecraft port (picked arbitrarily).
+    s.bind(('0.0.0.0', 25565)) # Minecraft port (picked arbitrarily).
     dat = b''
     dump_buffer(s)
 
@@ -31,12 +35,11 @@ def main():
         else:
             dat += seg[1:]
             img = imdecode(fromstring(dat, dtype=uint8), 1)
-            imshow('frame', img)
+            imshow("Camera Feed", img)
             if waitKey(1) & 0xFF == ord('q'):
                 break
             dat = b''
 
-    # cap.release()
     destroyAllWindows()
     s.close()
 

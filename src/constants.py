@@ -41,7 +41,7 @@ class Camera_Settings():
     ALPHA                 = 20
 
 class OpenCV_Settings:
-    RECORDING_FRAMERATE = 15 # Arbitrary
+    RECORDING_FRAMERATE = 15 # Arbitrary.
 
 class Reverse_Calibrations:
     POSITION_THRESHOLD         = 1 / 32

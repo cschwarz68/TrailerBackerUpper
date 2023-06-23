@@ -7,7 +7,7 @@ The main script creates an instance of the StreamCamera class, captures an image
 displays the resulting image using the OpenCV library, and exits when the 'q' key is pressed.
 Finally, it calls the stop method to stop the camera preview and close the camera.
 
-Note: If the images change to fast or an extreme angle is detected, numpy will emit a RuntimeWarning. This is okay.
+Note: If the images change too fast or an extreme angle is detected, numpy will emit a RuntimeWarning. This is okay.
 """
 
 # Package Imports
@@ -17,9 +17,9 @@ import cv2
 
 # Local Imports
 from constants import OpenCV_Settings
-import image_processing_module as ip
+import image_processing as ip
 
-class StreamCamera:
+class Camera:
     def __init__(self):
         self.camera = Picamera2()
         # Adjust camera parameters. Using defaults.
@@ -51,7 +51,7 @@ class StreamCamera:
 
 # Unit Test
 if __name__ == "__main__":
-    camera = StreamCamera()
+    camera = Camera()
     debug_output = []
 
     """

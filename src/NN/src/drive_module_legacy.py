@@ -20,7 +20,7 @@ at the same time by setting the car to drive at a constant speed and turning the
 #imports
 import RPi.GPIO as GPIO
 import time
-import steer_module as sr
+import steer_module_legacy as sr
 
 # GPIO mode should be consistent across all modules
 GPIO.setmode(GPIO.BCM)

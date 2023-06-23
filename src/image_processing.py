@@ -41,6 +41,8 @@ The y-axis coordinate starts from the top of the image, while the x-axis starts 
 2 |
 3 |
 4 |
+
+Leaving polygons embedded here for clarity.
 """
 def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
     height, width = edges.shape
@@ -304,4 +306,3 @@ def display_trailer_info(img: cv2.Mat,
     final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
                               (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
-
