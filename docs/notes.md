@@ -18,7 +18,7 @@ Library: cv2
 Library: numpy  
 	The fundamental package for scientific computing with Python.
 
-Library: matplotlib  
+Library: ~~matplotlib~~ (unused)  
 	Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.
 
 Library: ~~RPi.GPIO~~ pigpio  
@@ -32,10 +32,10 @@ Module: ~~steer_module~~ --> car
 	Controls steering with servo.
 	This is being refactored and further developed by Chris.
 
-Module: image_processing_module
+Module: ~~image_processing_module~~ image processing
 	Processes images with OpenCV2.
 
-Module: quick_capture_module
+Module: ~~quick_capture_module~~ camera
 	Captures images from the camera to be fed into the image processing module.
 
 Module: car  
@@ -109,7 +109,7 @@ File: `steer_module.py` (DEPRECATED)
 
 	(Chris.)
 
-File: `image_processing_module.py`
+File: ~~`image_processing_module.py`~~ `image_processing.py`
 
 	To Do:
 		1. Better type comments. Also apply to other modules. DONE
@@ -134,7 +134,7 @@ File: `image_processing_module.py`
 		7. Changed to use -90, 0, 90 system for steering.
 		8. And more.
 
-File: `quick_capture_module.py`
+File: ~~`quick_capture_module.py`~~ `camera.py`
 
 	To Do:
 		1. Clean up comments. DONE
