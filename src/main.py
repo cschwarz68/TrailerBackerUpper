@@ -24,6 +24,7 @@ from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrat
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
 import image_processing_module as ip
+from streaming import FrameSegment
 import quick_capture_module as qc
 from car import Car
 
@@ -36,6 +37,8 @@ auto_exit = False
 recording = False
 streaming = False
 server_socket = None
+frame_segment = None
+
 
 stream = qc.StreamCamera()
 g      = Gamepad()
@@ -218,14 +221,17 @@ def main():
 
   
 
-    global stream, done, mode, controller_present, server_socket
+    global stream, done, mode, controller_present, frame_segment
 
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     host_name  = socket.gethostname()
-    host_ip = '192.168.2.208'
+    host_ip = socket.gethostbyname(host_name)
     #print('HOST IP:',host_ip)
     port = 9999
     socket_address = (host_ip,port)
+    #insert streaming address here
+    addr = 'localhost'
+    frame_segment = FrameSegment(server_socket, 3000, addr)
 
     # Socket Bind
     #server_socket.bind(socket_address)
@@ -273,15 +279,9 @@ def main():
     cleanup()
 
 def stream_to_client(stream_image):
-    global streaming, server_socket
+    global streaming, server_socket, frame_segment
     if streaming:
-        if server_socket:
-            #print("streaming")
-            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 50]
-            ret, buffer = cv2.imencode('.jpg', stream_image, encode_param)
-            message = buffer.tobytes()
-            #print(sys.getsizeof(message))
-            server_socket.sendto(message, ('192.168.2.185', 9999))
+            frame_segment.udp_frame(stream_image)
 
 def cleanup():
     global stream, car, video
