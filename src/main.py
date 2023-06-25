@@ -257,7 +257,7 @@ def main():
     server_socket.close()
     cleanup()
 
-def stream_to_client(stream_image):
+def stream_to_client(stream_image: cv2.Mat):
     global streaming, frame_segment
     if streaming:
         frame_segment.udp_frame(stream_image)
