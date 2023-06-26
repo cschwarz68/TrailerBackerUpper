@@ -79,6 +79,10 @@ class Car:
         max_angle_deviation_two_lines=40, 
         max_angle_deviation_one_line=40, 
     ):
+        """
+        Prevents some extreme input from resulting in an extreme steering reaction.
+        Clamps steering angle based on previous steering angle.
+        """
         if num_of_lane_lines == 2:
             max_angle_deviation = max_angle_deviation_two_lines
         else:

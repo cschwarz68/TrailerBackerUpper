@@ -1,20 +1,5 @@
 from inputs import get_gamepad
 
-_STICK_MAX_VALUE = 32768
-
-_INPUTS = [
-        ("Key",      "BTN_EAST"), 
-        ("Key",      "BTN_SOUTH"), 
-        ("Key",      "BTN_WEST"), 
-        ("Key",      "BTN_NORTH"), 
-        ("Key",      "BTN_START"), 
-        ("Key",      "BTN_SELECT"),
-        ("Absolute", "ABS_RX"),
-        ("Absolute", "ABS_RY"), 
-        ("Absolute", "ABS_Y"),
-        ("Absolute", "ABS_X")
-    ]
-
 class Inputs:
     SYN_REPORT = 0
     # Buttons
@@ -26,16 +11,19 @@ class Inputs:
     L_BUMPER = 6
     START = 7
     SELECT = 8
+    R_THUMB = 9
+    L_THUMB = 10
+    HOME = 11
     # Sticks
-    RY = 9
-    RX = 10
-    LY = 11
-    LX = 12
+    RY = 12
+    RX = 13
+    LY = 14
+    LX = 15
     # Triggers
-    R_TRIGGER = 13
-    L_TRIGGER = 14
-    D_PAD_Y = 15
-    D_PAD_X = 16
+    R_TRIGGER = 16
+    L_TRIGGER = 17
+    D_PAD_Y = 18
+    D_PAD_X = 19
 
 class State:
     # Constants for input state.
@@ -55,6 +43,9 @@ _KEYMAP = {
     "BTN_WEST": Inputs.Y, 
     "BTN_START": Inputs.START, 
     "BTN_SELECT": Inputs.SELECT, 
+    "BTN_THUMBR": Inputs.R_THUMB, 
+    "BTN_THUMBL": Inputs.L_THUMB, 
+    "BTN_MODE": Inputs.HOME, 
     "BTN_TR": Inputs.R_BUMPER, 
     "BTN_TL": Inputs.L_BUMPER, 
     "ABS_RZ": Inputs.R_TRIGGER, 
@@ -79,17 +70,17 @@ class Gamepad:
     def update_input(self):
         events = get_gamepad()
         for event in events:
-            self.input =(_KEYMAP[event.code],event.state)
+            self.input = (_KEYMAP[event.code], event.state)
             return self.input
 
-    def was_pressed(self, button:int) -> bool:
-        if button not in range(1,9): # Appropriate range of buttons in Gamepad class above.
+    def was_pressed(self, button: int) -> bool:
+        if button not in range(1, 12): # Appropriate range of buttons in Gamepad class above.
             raise Exception("Invalid button! See gamepad.Gamepad!")
         elif self.input is not None:
             return (self.input[0] == button) and (self.input[1] == State.PRESSED)
 
     def get_stick_value(self, stick_axis: int) -> int:
-        if stick_axis not in range (9, 13):
+        if stick_axis not in range (12, 16):
             raise Exception("Invalid stick input! See gamepad.Gamepad!")
         elif self.input is not None:
             if self.input[0] == stick_axis:
@@ -98,9 +89,9 @@ class Gamepad:
     def get_trigger_value(self) -> int:
         if self.input is not None:
             if self.input[0] == Inputs.R_TRIGGER:
-                    return self.input[1]
+                return self.input[1]
             elif self.input[0] == Inputs.L_TRIGGER:
-                    return -self.input[1]
+                return -self.input[1]
 
 if __name__ == "__main__":
     while True:

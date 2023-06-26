@@ -2,29 +2,24 @@
 This is the main program.
 There are three modes: manual, forward autonomous, and reverse autonomous.
 
-Upon start, if the controller is found, the program defaults to manual mode.
-
-Forward autonomous mode can be entered by pressing (X) and then (START).
-Reverse autonomous mode can be entrered by pressing (Y) and then (START).
-    Return to manual mode by pressing (B).
-
-Press (A) to enable recording for autonomous mode.
+Also contains streaming and recording capabilities.
 
 Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
-import signal
+import signal, socket
 
 # Package Imports
-import cv2, pickle, struct, socket
+import cv2
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
 from gamepad import Gamepad, Inputs as inputs
 from motor import cleanup as GPIO_cleanup
-import image_processing_module as ip
-import quick_capture_module as qc
+from streaming import FrameSegment
+import image_processing as ip
+import camera as cam
 from car import Car
 
 # Mutable
@@ -32,12 +27,12 @@ transition_mode = Main_Mode.AUTO_FORWARD
 check_auto_exit_thread = None
 controller_present = True
 mode = Main_Mode.MANUAL
+frame_segment = None
 auto_exit = False
 recording = False
 streaming = False
-client_socket = None
 
-stream = qc.StreamCamera()
+stream = cam.Camera()
 g      = Gamepad()
 car    = Car()
 
@@ -64,7 +59,6 @@ def manual():
 
     if g.was_pressed(inputs.B):
         done = True
-        print("Shutting down...")
     elif g.was_pressed(inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
@@ -99,7 +93,7 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit, recording
+    global stream, auto_exit, recording, streaming
     if auto_exit:
         exit_auto()
         return
@@ -120,9 +114,13 @@ def auto_forward():
     car.set_steering_angle(stable_angle)
 
     # Video
-    if recording:
+    if recording or streaming:
         visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        video.write(visual_image)
+
+        if streaming:   
+            stream_to_client(visual_image)
+        if recording:
+            video.write(visual_image)
 
 def auto_reverse():
     global stream, auto_exit, recording, streaming
@@ -141,70 +139,51 @@ def auto_reverse():
 
     # Trailer
     filtered = ip.filter_red(image)
-    cropped = ip.region_of_interest(filtered)
+    cropped = ip.region_of_interest(filtered, True)
     cx, cy = ip.center_red(cropped)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
-    trailer_angle = ip.compute_trailer_angle(image, cx, cy) - steering_angle_lanes
+    hitch_angle = ip.compute_hitch_angle(image, cx, cy)
+    trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
 
-    # Calculations
-    """
-    get the difference between the midpoint of the lanes and the tape
-    if the trailer is to the left of the center beyond some threshold:
-        if the trailer angle is to the left:
-            turn wheels right
-        else if the trailer angle is to the right:
-            turn wheels left
-    else if the trailer is to the right of the center beyond some threshold:
-        if the trailer angle is to the right:
-            turn wheels left
-        else if the trailer angle is to the left:
-            turn wheels right
-    
-    Collapse down this logic later.
-    """
     steering_angle = 0
     if num_lanes == 2:
         lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
         trailer_deviation = cx - lane_center_x
         _, width, _ = image.shape
-        if trailer_deviation < width * Reverse_Calibrations.POSITION_THRESHOLD * -1:
-            if trailer_angle < Reverse_Calibrations.ANGLE_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        elif trailer_deviation > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            if trailer_angle > Reverse_Calibrations.ANGLE_THRESHOLD:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
-            else:
-                steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO * -1
-        # else:
-        #     steering_angle = 0
-    else:
-        steering_angle = 0
 
-    # Go slower on sharper turns.
-    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
-        car.set_drive_power(-0.8)
+        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+            # If the trailer is not centered, steer to the center.
+
+        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            # If the angle of the hitch is too great, reduce it.
+      
+        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            # If the angle of the trailer relative to lane center is too great, reduce it.
     else:
-        car.set_drive_power(-0.8)
+        # If two lanes are not visible.
+
+        steering_angle = 0 # TODO: Make this actually be useful.
+
+    # Redundant, but may need to adjust speed in the future.
+    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
+        car.set_drive_power(-.8)
+    else:
+        car.set_drive_power(-.8)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(-stable_angle)
 
     # Video
     if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle * -1, lane_lines)
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
         visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
-        
-    
-        if streaming:
-            
-            stream_to_client(visual_image)
-            
 
+        if streaming:
+            stream_to_client(visual_image)
         if recording:
             video.write(visual_image)
-
-
 
 def check_auto_exit():
     global mode, auto_exit
@@ -213,8 +192,6 @@ def check_auto_exit():
         if g.was_pressed(inputs.B):
             auto_exit = True
             return
-        
-
 
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
@@ -228,26 +205,18 @@ def exit_auto():
 def main():
     print("STARTING MAIN")
 
-  
+    global stream, done, mode, controller_present, frame_segment
 
-    global stream, done, mode, controller_present, client_socket
+    # Streaming
+    server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    port = 25565
+    """
+    IMPORTANT
 
-    server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    host_name  = socket.gethostname()
-    host_ip = '192.168.2.208'
-    #print('HOST IP:',host_ip)
-    port = 9999
-    socket_address = (host_ip,port)
-
-    # Socket Bind
-    server_socket.bind(socket_address)
-
-    # Socket Listen
-    server_socket.listen(2)
-    print("LISTENING AT:",socket_address)
-
-    # Socket Accept
-    client_socket, addr = server_socket.accept()
+    Insert the IP address of the device to stream to.
+    """
+    addr = "192.168.2.185"
+    frame_segment = FrameSegment(server_socket, port, addr)
 
     try:
         g.update_input()
@@ -263,7 +232,6 @@ def main():
                 print("Invalid mode.")
                 exit(0)
         else:
-            print("Plug in gamepad to start.")
             exit(0)
 
     # Main loop.
@@ -285,17 +253,14 @@ def main():
             auto_forward()
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
+
     server_socket.close()
     cleanup()
 
-def stream_to_client(stream_image):
-    global streaming, client_socket
+def stream_to_client(stream_image: cv2.Mat):
+    global streaming, frame_segment
     if streaming:
-        if client_socket:
-            print("streaming")
-            a = pickle.dumps(stream_image)
-            message = struct.pack("Q",len(a))+a
-            client_socket.sendall(message)
+        frame_segment.udp_frame(stream_image)
 
 def cleanup():
     global stream, car, video
@@ -305,14 +270,8 @@ def cleanup():
 
     # Video
     video.release()
-    print("released video")
 
     print("Cleaned up.")
 
 if __name__ == "__main__":
-    #server_child = Thread(target=server_main)
-    #server_child.start()
     main()
-    
-    #server_child.kill()
-    #server_child.join()
