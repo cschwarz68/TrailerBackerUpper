@@ -177,10 +177,10 @@ def auto_reverse():
 
     # Video
     if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle * -1, lane_lines)
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
         visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
 
-        if streaming:   
+        if streaming:
             stream_to_client(visual_image)
         if recording:
             video.write(visual_image)
@@ -257,7 +257,7 @@ def main():
     server_socket.close()
     cleanup()
 
-def stream_to_client(stream_image):
+def stream_to_client(stream_image: cv2.Mat):
     global streaming, frame_segment
     if streaming:
         frame_segment.udp_frame(stream_image)

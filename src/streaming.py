@@ -25,7 +25,7 @@ class FrameSegment:
         compress_img = cv2.imencode('.jpg', img)[1]
         dat = compress_img.tostring()
         size = len(dat)
-        count = math.ceil(size/(self.MAX_IMAGE_DGRAM))
+        count = math.ceil(size / (self.MAX_IMAGE_DGRAM))
         array_pos_start = 0
         while count:
             array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
