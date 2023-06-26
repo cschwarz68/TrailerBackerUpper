@@ -17,7 +17,7 @@ drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_
 
 class Car:
     """
-    The car class controls driving and steering of the car. Should only instantiate once.
+    The car class controls driving and steering of the car. Should only instantiate once
     """
 
     def __init__(self):
