@@ -1,27 +1,20 @@
 """
-Neural Network Independent Module (Legacy)
+Neural Network Test Module (Legacy)
 
-Autonomous A.I. navigation.
-
-IMPORTANT
-This module's drivetrain code relies on legacy modules.
-Remember to disable the gpio daemon, otherwise nothing will move.
+Reads a video and prints the predicted steering angles.
 """
-
-import time
 
 # Package Imports
 from keras.models import load_model
-from picamera2 import Picamera2
 import numpy as np
+from camera import Camera
 import cv2
 
-# Local Imports (Legacy)
-import steer_module_legacy as sr
-import drive_module_legacy as dr
-import quick_capture_module_legacy as qc
+model = load_model('/home/nads2/TrailerBackerUpper/src/NN/models/lane_navigation_final_2.h5')
 
-model = load_model('models/lane_navigation_final_2.h5')
+video_directory = "/home/nads2/TrailerBackerUpper/src/NN/nn_captures"
+
+
 
 def img_preprocess(image: cv2.Mat) -> cv2.Mat:
     # Remove top half of the image, as it is not relavant for lane following.
@@ -52,18 +45,14 @@ def compute_steering_angle(frame: cv2.Mat):
     return steering_angle
 
 if __name__ == "__main__":
-    steer = sr.Steer()
-    drive = dr.Drive()
-    stream = qc.StreamCamera()
+    stream = Camera()
 
-    end_time = time.time() + 20
-
-    while time.time() < end_time:
-        image = stream.capture()
-        steer_angle = compute_steering_angle(image)
-        steer.steer_by_angle(steer_angle)
-        drive.drive(.7)
-
-    drive.drive(0)
-    steer.steer_by_angle(90)
-    stream.stop()
+    try:
+        i = 0
+        while True:
+            _, frame = stream.capture() 
+            angle = compute_steering_angle(frame)-90
+            print(angle)
+    finally:
+        pass
+        #stream.release()

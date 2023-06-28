@@ -91,6 +91,11 @@ def manual():
         car.gamepad_steer(steer_value)
     if drive_value is not None:
         car.gamepad_drive(drive_value)
+    
+    if streaming:
+        image = stream.capture()
+        stream_to_client(image)
+
 
 def auto_forward():
     global stream, auto_exit, recording, streaming
