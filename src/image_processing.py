@@ -16,6 +16,14 @@ import cv2
 # Local Imports
 from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
 
+class Line:
+    def __init__(self, x1,y1,x2,y2):
+        self.x1 = x1 
+        self.y1 = y1
+        self.x2 = x2 
+        self.y2 = y2
+
+
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)
 # Ignoring Polyfit warning because it's bothersome.
@@ -48,7 +56,7 @@ def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
-    if not reverse:
+    if not reverse: #REMEMBER TO CHANGE
         polygon = np.array(
             [
                 [
@@ -95,7 +103,7 @@ line_segments [
 def detect_line_segments(img: cv2.Mat) -> np.ndarray:
     rho = 1             # Distance precision in pixels, i.e. 1 pixel.
     angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
-    min_threshold = 10  # Minimal of votes for a line to be counted.
+    min_threshold = 15  # Minimal of votes for a line to be counted.
     line_segments = cv2.HoughLinesP(
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
@@ -117,9 +125,9 @@ def make_points(frame: cv2.Mat, line: np.ndarray) -> tuple[float, float, float, 
 # Approximates the slope and intercept of each line segment, determines which side of the image it's on, 
 # and then computes the average line for each side. Returns array of length 0 - 2 from `make_points`.
 # The frame is the uncropped image.
-def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[tuple[float, float, float, float]]:
+def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> tuple[Line , Line]:
     if line_segments is None:
-        return []
+        return (None, None)
 
     _, width, _ = frame.shape
     left_fit = []
@@ -140,18 +148,20 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 
     left_fit_average = np.average(left_fit, axis=0) # Get averages going downward. Collapse into one array.
     right_fit_average = np.average(right_fit, axis=0)
-    lane_lines = []
+    left_lane, right_lane = None, None
     if len(left_fit) > 0:
-        lane_lines.append(make_points(frame, left_fit_average))
+        left_lane = Line(*make_points(frame, left_fit_average))
+        
     if len(right_fit) > 0:
-        lane_lines.append(make_points(frame, right_fit_average))
+        right_lane = Line(*make_points(frame, right_fit_average))
 
     # Because lane_lines will only ever have two values, we could return this as a tuple, but that would require unnecessary refactoring.
-    return lane_lines
+    return left_lane, right_lane
 
 # Use lane lines to predict the steering angle in degrees.
 # -90 --> left, 0 --> straight, 90 --> right
-def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, float, float]]) -> float:
+def compute_steering_angle(frame: cv2.Mat, lanes: tuple[Line,Line]) -> float:
+    lane_lines = [lane for lane in lanes if lane is not None] #convert to list because this was built before I was using tuples lol
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...
         return 0
@@ -159,14 +169,14 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
     height, width, _ = frame.shape
     if len(lane_lines) == 1:
         # In the event only a left lane or right lane was detected, 
-        # we calculate the x-offset based on the difference between the extrapolated x coordinates.
-        x1, _, x2, _ = lane_lines[0]
-        x_offset = x2 - x1
+        # we calculate the x-offset based on the difference between the extrapolated x coordinates. # why ???????
+        x1, x2 = lane_lines[0].x1, lane_lines[0].x2
+        x_offset = x2 - x1 # what ??????
     else:
         # Otherwise, the offset is based on the average between the topmost (as in the y-coordinate is at the middle of the frame) 
         # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
-        _, _, left_x2, _ = lane_lines[0]
-        _, _, right_x2, _ = lane_lines[1]
+        left_x2 = lane_lines[0].x2
+        right_x2= lane_lines[1].x2
         mid = width / 2 * (1 + Image_Processing_Calibrations.CAMERA_MID_OFFSET_PERCENT)
         x_offset = (left_x2 + right_x2) / 2 - mid
 
@@ -261,7 +271,7 @@ def display_lines(img: cv2.Mat, lines: list[tuple[float, float, float, float]], 
 
 # Returns the steering angle and lanes.
 # Should be identical to the steps in main, but separate for testing.
-def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, float]]]:
+def steering_info(img: cv2.Mat) -> tuple[float, tuple[Line, Line]]:
     edges = edge_detector(img)
     cropped_edges = region_of_interest(edges)
     line_segments = detect_line_segments(cropped_edges)
