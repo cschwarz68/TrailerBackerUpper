@@ -92,6 +92,11 @@ def manual():
         car.gamepad_steer(steer_value)
     if drive_value is not None:
         car.gamepad_drive(drive_value)
+    
+    if streaming:
+        image = stream.capture()
+        stream_to_client(image)
+
 
 def auto_forward():
     global stream, auto_exit, recording, streaming
@@ -132,17 +137,20 @@ def auto_reverse():
 
     # Lanes
     edges = ip.edge_detector(image)
-    cropped_edges = ip.region_of_interest(edges)
-    line_segments = ip.detect_line_segments(cropped_edges)
-    lane_lines = ip.average_slope_intercept(image, line_segments)
-    num_lanes = len(lane_lines)
-    steering_angle_lanes = ip.compute_steering_angle(image, lane_lines)
+    cropped_edges_lower = ip.region_of_interest(edges)
+    cropped_edges_upper = ip.region_of_interest(edges, True)
+    line_segments_lower = ip.detect_line_segments(cropped_edges_lower)
+    line_segments_upper = ip.detect_line_segments(cropped_edges_upper)
+    lane_lines_lower = ip.average_slope_intercept(image, line_segments_lower)
+    lane_lines_upper = ip.average_slope_intercept(image, line_segments_upper)
+    num_lanes = len(lane_lines_lower)
+    steering_angle_lanes = ip.compute_steering_angle(image, lane_lines_lower)
 
     # Trailer
     filtered = ip.filter_red(image)
     cropped = ip.region_of_interest(filtered, True)
     cx, cy = ip.center_red(cropped)
-    trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
+    trailer_points = ip.Line(image.shape[1] / 2, image.shape[0], cx, cy)
     hitch_angle = ip.compute_hitch_angle(image, cx, cy)
     trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
     
@@ -167,10 +175,23 @@ def auto_reverse():
         # If the angle of the trailer relative to lane center is too great, reduce it.
     else:
         # If two lanes are not visible.
+        lane_x = lane_lines_lower[0].x2
+        trailer_distance_from_lane = abs(lane_x-cx)
+    
+        
 
-        #steering_angle = 0 # TODO: Make this actually be useful.
-        #steering_angle = steering_angle * 2.5
-        pass
+        if abs(trailer_distance_from_lane) > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+            # If the trailer is not centered, steer to the center.
+
+        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            # If the angle of the hitch is too great, reduce it.
+      
+        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+            # If the angle of the trailer relative to lane center is too great, reduce it.
+
 
     # Redundant, but may need to adjust speed in the future.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
@@ -182,13 +203,17 @@ def auto_reverse():
 
     # Video
     if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines_lower)
+        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines_upper)
         visual_image = ip.display_trailer_info(visual_image, trailer_angle, trailer_points)
 
         if streaming:
-            stream_to_client(visual_image)
+            stream_to_client(cropped_edges_lower)
         if recording:
             video.write(visual_image)
+
+def get_slope(line: ip.Line):
+    return (line.y2 - line.y1 ) / (line.x2 - line.x1)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -262,7 +287,7 @@ def main():
     server_socket.close()
     cleanup()
 
-def stream_to_client(stream_image):
+def stream_to_client(stream_image: cv2.Mat):
     global streaming, frame_segment
     if streaming:
         frame_segment.udp_frame(stream_image)
