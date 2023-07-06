@@ -29,6 +29,7 @@ class Car:
 
         self.steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
         self.drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
+        self.jackknifed = False
 
     def gamepad_drive(self, trigger_val: int):
         """

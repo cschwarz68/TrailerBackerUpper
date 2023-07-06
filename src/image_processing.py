@@ -44,11 +44,11 @@ The y-axis coordinate starts from the top of the image, while the x-axis starts 
 
 Leaving polygons embedded here for clarity.
 """
-def region_of_interest(edges: cv2.Mat, reverse: bool=False) -> cv2.Mat:
+def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
     height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
-    if not reverse: #REMEMBER TO CHANGE
+    if not reverse:
         polygon = np.array(
             [
                 [
@@ -64,10 +64,10 @@ def region_of_interest(edges: cv2.Mat, reverse: bool=False) -> cv2.Mat:
         polygon = np.array(
             [
                 [
-                    (0, 0), 
-                    (width, 0), 
-                    (width, height / 2), 
-                    (0, height / 2)
+                    (0, height * 1 / 4), 
+                    (width, height * 1 / 4), 
+                    (width, height), 
+                    (0, height)
                 ]
             ], 
             np.int32
@@ -95,7 +95,7 @@ line_segments [
 def detect_line_segments(img: cv2.Mat) -> np.ndarray:
     rho = 1             # Distance precision in pixels, i.e. 1 pixel.
     angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
-    min_threshold = 15  # Minimal of votes for a line to be counted.
+    min_threshold = 10  # Minimal of votes for a line to be counted.
     line_segments = cv2.HoughLinesP(
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
@@ -103,29 +103,23 @@ def detect_line_segments(img: cv2.Mat) -> np.ndarray:
 
 # Extrapolates a line to its endpoints at the edges of the image. y is maxed at half the height.
 # Used to determine deviation from lane.
-def make_points(frame: cv2.Mat, line: np.ndarray, extended: bool = False) -> Line:
+def make_points(frame: cv2.Mat, line: np.ndarray) -> tuple[float, float, float, float]:
     height, width, _ = frame.shape
     slope, intercept = line
-    if not extended:
-        y1 = height # Bottom of the frame / image.
-        y2 = y1 / 2 # Middle.
-    else:
-        y1 = height/2
-        y2 = 0
-    
-
+    y1 = height # Bottom of the frame / image.
+    y2 = y1 / 2 # Middle.
 
     # Extrapolate the line to a line segment with endpoints on the edges of the frame.
     x1 = max(-width, min(2 * width, ((y1 - intercept) / slope)))
     x2 = max(-width, min(2 * width, ((y2 - intercept) / slope)))
-    return Line(x1, y1, x2, y2)
+    return (x1, y1, x2, y2)
 
 # Approximates the slope and intercept of each line segment, determines which side of the image it's on, 
 # and then computes the average line for each side. Returns array of length 0 - 2 from `make_points`.
 # The frame is the uncropped image.
-def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> tuple[Line , Line]:
+def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[tuple[float, float, float, float]]:
     if line_segments is None:
-        return (None, None)
+        return []
 
     _, width, _ = frame.shape
     left_fit = []
@@ -146,20 +140,18 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> tuple[
 
     left_fit_average = np.average(left_fit, axis=0) # Get averages going downward. Collapse into one array.
     right_fit_average = np.average(right_fit, axis=0)
-    left_lane, right_lane = None, None
+    lane_lines = []
     if len(left_fit) > 0:
-        left_lane = Line(*make_points(frame, left_fit_average))
-        
+        lane_lines.append(make_points(frame, left_fit_average))
     if len(right_fit) > 0:
-        right_lane = Line(*make_points(frame, right_fit_average))
+        lane_lines.append(make_points(frame, right_fit_average))
 
     # Because lane_lines will only ever have two values, we could return this as a tuple, but that would require unnecessary refactoring.
-    return left_lane, right_lane
+    return lane_lines
 
 # Use lane lines to predict the steering angle in degrees.
 # -90 --> left, 0 --> straight, 90 --> right
-def compute_steering_angle(frame: cv2.Mat, lanes: tuple[Line,Line]) -> float:
-    lane_lines = [lane for lane in lanes if lane is not None] #convert to list because this was built before I was using tuples lol
+def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, float, float]]) -> float:
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...
         return 0
@@ -167,14 +159,14 @@ def compute_steering_angle(frame: cv2.Mat, lanes: tuple[Line,Line]) -> float:
     height, width, _ = frame.shape
     if len(lane_lines) == 1:
         # In the event only a left lane or right lane was detected, 
-        # we calculate the x-offset based on the difference between the extrapolated x coordinates. # why ???????
-        x1, x2 = lane_lines[0].x1, lane_lines[0].x2
-        x_offset = x2 - x1 # what ??????
+        # we calculate the x-offset based on the difference between the extrapolated x coordinates.
+        x1, _, x2, _ = lane_lines[0]
+        x_offset = x2 - x1
     else:
         # Otherwise, the offset is based on the average between the topmost (as in the y-coordinate is at the middle of the frame) 
         # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
-        left_x2 = lane_lines[0].x2
-        right_x2= lane_lines[1].x2
+        _, _, left_x2, _ = lane_lines[0]
+        _, _, right_x2, _ = lane_lines[1]
         mid = width / 2 * (1 + Image_Processing_Calibrations.CAMERA_MID_OFFSET_PERCENT)
         x_offset = (left_x2 + right_x2) / 2 - mid
 
@@ -258,18 +250,18 @@ def combine_images(pairs: list[tuple[cv2.Mat, float]]) -> cv2.Mat:
     return base
 
 # Adds lines to image. Color is in RGB format.
-def display_lines(img: cv2.Mat, lines: list[Line], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
+def display_lines(img: cv2.Mat, lines: list[tuple[float, float, float, float]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
     line_image = img.copy()
     if lines is None:
         return line_image
     for line in lines:
-        x1, y1, x2, y2 = line.x1, line.y1, line.x2, line.y2
+        x1, y1, x2, y2 = line
         cv2.line(line_image, (int(x1), int(y1)), (int(x2), int(y2)), line_color, line_width)
     return line_image
 
 # Returns the steering angle and lanes.
 # Should be identical to the steps in main, but separate for testing.
-def steering_info(img: cv2.Mat) -> tuple[float, tuple[Line, Line]]:
+def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, float]]]:
     edges = edge_detector(img)
     cropped_edges = region_of_interest(edges)
     line_segments = detect_line_segments(cropped_edges)
@@ -278,7 +270,7 @@ def steering_info(img: cv2.Mat) -> tuple[float, tuple[Line, Line]]:
     return (steering_angle_deg, lane_lines)
 
 # Makes a reduced opacity image containing lane lines and the calculated path. 
-def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[Line]) -> cv2.Mat:
+def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[tuple[float, float, float, float]]) -> cv2.Mat:
     height, width, _ = img.shape
     steering_angle_radians = math.radians(steering_angle_deg + 90)
 
@@ -289,7 +281,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     y2 = height / 2
 
     final_image = display_lines(img, lane_lines, (255, 0, 0))
-    final_image = display_lines(final_image, [Line(x1, y1, x2, y2)], (0, 255, 0))
+    final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
     final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
                               (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
@@ -309,9 +301,8 @@ def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, floa
 # To be used in conjunction with `display_lanes_and_path`.
 def display_trailer_info(img: cv2.Mat, 
                          trailer_angle: float, 
-                         trailer_points: Line) -> cv2.Mat:
+                         trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
     final_image = display_lines(img, [trailer_points], (0, 0, 255))
     final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
                               (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
-
