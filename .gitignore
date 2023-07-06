@@ -167,8 +167,11 @@ cython_debug/
 
 # Custom
 test_captures/
+frames/
 cache.txt
 temp.txt
 test.py
 thing.py
 *.mp4
+*.avi
+*.png

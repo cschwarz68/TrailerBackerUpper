@@ -13,23 +13,19 @@ import time
 # Package Imports
 from keras.models import load_model
 from picamera2 import Picamera2
+
+
+# Local Imports
 from car import Car
 from camera import Camera
-import numpy as np
-import cv2
+from motor import cleanup
 
-# Local Imports (Legacy)
-# import steer_module_legacy as sr
-# import drive_module_legacy as dr
-# import quick_capture_module_legacy as qc
-
-
-
-model = load_model('/home/nads2/TrailerBackerUpper/src/NN/models/lane_navigation_check.h5')
+model = load_model('/home/nads/Documents/Python/TrailerBackerUpper/src/NN/models/straight_line_driver.h5')
+print("model loaded")
 
 def img_preprocess(image: cv2.Mat) -> cv2.Mat:
     # Remove top half of the image, as it is not relavant for lane following.
-    image = image[int(image.shape[0] / 2) : int(image.shape[0]), 0 : int(image.shape[1])]
+    # image = image[int(image.shape[0] / 2) : int(image.shape[0]), 0 : int(image.shape[1])]
     # Nvidia model said it's best to use the YUV color space.
     image = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
     image = cv2.GaussianBlur(image, (3, 3), 0)
@@ -59,14 +55,16 @@ if __name__ == "__main__":
     car = Car()
     cam = Camera()
 
-    end_time = time.time() + 20
+    end_time = time.time() + 80
 
     while time.time() < end_time:
         image = cam.capture()
         steer_angle = compute_steering_angle(image)
-        car.set_steering_angle(steer_angle-90)
-        print(steer_angle-90)
-        car.set_drive_power(.7)
+        car.set_steering_angle(steer_angle)
+        car.set_drive_power(-.7)
 
-    car.stop()
+    car.set_drive_power(0)
+    car.set_steering_angle(0)
+    
     cam.stop()
+    cleanup()

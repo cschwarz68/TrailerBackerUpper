@@ -38,9 +38,9 @@ g      = Gamepad()
 car    = Car()
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
-fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+fourcc = cv2.VideoWriter_fourcc(*"XVID")
 base_height, base_width, _ = stream.capture().shape
-video = cv2.VideoWriter("main_video.mp4", 
+video = cv2.VideoWriter("main_video.avi", 
                         fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
                         (base_width, base_height), 
                         isColor=True)
@@ -134,6 +134,7 @@ def auto_reverse():
         exit_auto()
         return
     image = stream.capture()
+    raw_image = image
 
     # Lanes
     edges = ip.edge_detector(image)
@@ -195,9 +196,9 @@ def auto_reverse():
 
     # Redundant, but may need to adjust speed in the future.
     if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
-        car.set_drive_power(-.75)
+        car.set_drive_power(-.7)
     else:
-        car.set_drive_power(-.75)
+        car.set_drive_power(-.7)
     stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
     car.set_steering_angle(-stable_angle)
 
@@ -210,7 +211,7 @@ def auto_reverse():
         if streaming:
             stream_to_client(cropped_edges_lower)
         if recording:
-            video.write(visual_image)
+            video.write(raw_image)
 
 def get_slope(line: ip.Line):
     return (line.y2 - line.y1 ) / (line.x2 - line.x1)
