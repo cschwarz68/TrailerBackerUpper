@@ -16,7 +16,6 @@ import cv2
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
 from gamepad import Gamepad, Inputs as inputs
-from motor import cleanup as GPIO_cleanup
 from streaming import FrameSegment
 import image_processing as ip
 import camera as cam
