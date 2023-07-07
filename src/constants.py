@@ -29,9 +29,12 @@ class Image_Processing_Calibrations:
     This is the original comment from the prior developer:
         "0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right"
     """
-    CAMERA_MID_OFFSET_PERCENT = 0.02
+    CAMERA_MID_OFFSET_PERCENT = 0.02 # is this 2% or .02%
 
 class Camera_Settings():
+    # I do not think we use this at all
+
+    
     # "The alpha channel (also called alpha planes) is a color component 
     # that represents the degree of transparency (or opacity) of a color (i.e., the red, green and blue channels). 
     # It is used to determine how a pixel is rendered when blended with another."
