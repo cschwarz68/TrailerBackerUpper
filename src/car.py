@@ -4,8 +4,7 @@ as well as some autonomous driving functionality.
 """
 
 from constants import Drive_Params
-from motor import DCMotor
-from motor import Servo
+from motor import DCMotor, Servo, cleanup
 
 _SERVO_MOTOR_PIN         = 4
 _DRIVE_MOTOR_POWER_PIN   = 25
@@ -108,6 +107,9 @@ class Car:
         self.set_steering_angle(0)
         self.steer_motor.stop()
         self.drive_motor.stop()
+    
+    def cleanup(self):
+        cleanup()
 
 
 def clamp_steering_angle(angle):
@@ -118,3 +120,5 @@ def clamp_steering_angle(angle):
     angle = Drive_Params.STEERING_RACK_RIGHT if angle >= Drive_Params.STEERING_RACK_RIGHT else angle
     angle = Drive_Params.STEERING_RACK_LEFT if angle <= Drive_Params.STEERING_RACK_LEFT else angle
     return angle
+
+

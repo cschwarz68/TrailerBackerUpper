@@ -15,6 +15,7 @@ io.set_PWM_range(9, 100) # Makes it so 50 = 50% duty cycle.
 FREQ = 50 # Default PWM frequency.
 
 def cleanup():
+    """Releases GPIO resources and stops daemon"""
     io.stop()
     os.system("systemctl stop pigpiod")
     time.sleep(1)

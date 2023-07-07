@@ -12,7 +12,6 @@ import time
 
 # Package Imports
 from keras.models import load_model
-from picamera2 import Picamera2
 import numpy as np
 import cv2
 
