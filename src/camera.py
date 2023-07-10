@@ -13,15 +13,25 @@ Note: If the images change too fast or an extreme angle is detected, numpy will 
 # Package Imports
 from picamera2 import Picamera2 # Using version 0.3.9!
 import numpy as np
-import cv2
+import cv2, sys
 
 # Local Imports
 from constants import OpenCV_Settings
 import image_processing as ip
 
 class Camera:
-    def __init__(self):
-        self.camera = Picamera2()
+    PICAMERA = 0
+    USB_CAM = 1
+    def __init__(self, cam_type=0):
+        if cam_type == Camera.PICAMERA:
+            self.camera = Picamera2()
+        elif cam_type == Camera.USB_CAM:
+            self.camera = cv2.VideoCapture(1)
+        else:
+            raise Exception("Invalid camera type supplied to Camera constructor. Available options are PICAMERA and USB_CAM")
+            
+        
+        self.type = cam_type
         # Adjust camera parameters. Using defaults.
 
         # self.camera.preview_configuration.main.format = Camera_Settings.PREVIEW_CONFIG_FORMAT

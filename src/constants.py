@@ -1,4 +1,5 @@
 from enum import Enum
+from config_parser import driving, steering, camera
 
 class Main_Mode(Enum):
     MANUAL       = 0
@@ -7,12 +8,12 @@ class Main_Mode(Enum):
 
 class Drive_Params:
     JOYSTICK_MAX         = 32767.0
-    STEERING_RACK_CENTER = 86
+    STEERING_RACK_CENTER = steering["center"]
 
-    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + 30
-    STEERING_RACK_LEFT = STEERING_RACK_CENTER - 40
-    SHARP_TURN_DEGREES = 7.5
-    SHARP_TURN_DEGREES_REVERSE = 20
+    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + steering["right"]
+    STEERING_RACK_LEFT = STEERING_RACK_CENTER - steering["left"]
+    SHARP_TURN_DEGREES = driving["sharp turn threshold"]
+    SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
 
 class Lane_Bounds_Ratio:
     LEFT  = 3 / 4
@@ -26,10 +27,12 @@ class Image_Processing_Calibrations:
     >0% --> Camera is skewed towards the left.
     <0% --> Camera is skewed towards the right.
 
+    Must be expressed as decimal. 2% -> .02
+
     This is the original comment from the prior developer:
         "0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right"
     """
-    CAMERA_MID_OFFSET_PERCENT = 0.02 # is this 2% or .02%
+    CAMERA_MID_OFFSET_PERCENT = camera["front offset"] 
 
 class Camera_Settings():
     # I do not think we use this at all
@@ -44,10 +47,10 @@ class Camera_Settings():
     ALPHA                 = 20
 
 class OpenCV_Settings:
-    RECORDING_FRAMERATE = 15 # Arbitrary.
+    RECORDING_FRAMERATE = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).
 
 class Reverse_Calibrations:
-    POSITION_THRESHOLD         = 1 / 32
-    ANGLE_OFF_CENTER_THRESHOLD = 1
-    HITCH_ANGLE_THRESHOLD      = 1
-    TURN_RATIO                 = 2.5
+    POSITION_THRESHOLD         = driving["position threshold"]
+    ANGLE_OFF_CENTER_THRESHOLD = driving["trailer angle off center threshold"]
+    HITCH_ANGLE_THRESHOLD      = driving["hitch angle threshold"]
+    TURN_RATIO                 = driving["turn ratio"]
