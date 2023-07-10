@@ -27,6 +27,18 @@ calibrations:
         framerate: 15
     
     driving: 
+        sharp turn threshold: 7.5
+        #threshold of front
+        sharp turn reverse threshold: 20
+        #threshold of back
+        position threshold : 0.03125        #
+        trailer angle off center threshold : 1
+        #angle of trailer relative to center of lane
+        hitch angle threshold : 1
+        #amount of degrees before trailer correction
+        turn ratio : 2.5
+        #
+
 
 
     

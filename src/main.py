@@ -18,7 +18,7 @@ from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrat
 from gamepad import Gamepad, Inputs as inputs
 from streaming import FrameSegment
 import image_processing as ip
-import camera as cam
+from camera import Camera
 from car import Car
 
 # Mutable
@@ -31,13 +31,13 @@ auto_exit = False
 recording = False
 streaming = False
 
-stream = cam.Camera()
+cam = Camera()
 g      = Gamepad()
 car    = Car()
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-base_height, base_width, _ = stream.capture().shape
+base_height, base_width, _ = cam.capture().shape
 video = cv2.VideoWriter("main_video.avi", 
                         fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
                         (base_width, base_height), 
@@ -92,11 +92,11 @@ def manual():
         car.gamepad_drive(drive_value)
 
 def auto_forward():
-    global stream, auto_exit, recording, streaming
+    global cam, auto_exit, recording, streaming
     if auto_exit:
         exit_auto()
         return
-    image = stream.capture()
+    image = cam.capture()
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
     line_segments = ip.detect_line_segments(cropped_edges)
@@ -126,11 +126,11 @@ def maintain_hitch_angle(hitch_angle):
             return hitch_angle * Reverse_Calibrations.TURN_RATIO
 
 def auto_reverse():
-    global stream, auto_exit, recording, streaming
+    global cam, auto_exit, recording, streaming
     if auto_exit:
         exit_auto()
         return
-    image = stream.capture()
+    image = cam.capture()
     raw_image = image
 
     # Lanes
@@ -175,19 +175,24 @@ def auto_reverse():
             # If the angle of the trailer relative to lane center is too great, reduce it.
         
 
-        if(car.jackknifed):
+        if(car.jackknifed): #if jackknifed, start driving forward to fix, will implement forward camera once we get USB adapter.
             steering_angle = steering_angle_lanes 
             drive_power = .7
+            if abs(hitch_angle < 1):
+                car.jackknifed = False #once angle is reduced, car will start reverse driving again
+         
         else:
             car.set_steering_angle(-steering_angle_lanes)
             drive_power = -.7
         
 
-    else:
+    else: #code reuse because i still am not 100% sure how to handle 1 lane detected. Thinking 
       if(abs(hitch_angle) > 30):
             car.jackknifed = True
             
       if(car.jackknifed):
+            if abs(hitch_angle < 5):
+                car.jackknifed = False
             steering_angle = steering_angle_lanes 
             drive_power = .7
       else:
@@ -234,7 +239,7 @@ def exit_auto():
 def main():
     print("STARTING MAIN")
 
-    global stream, done, mode, controller_present, frame_segment
+    global cam, done, mode, controller_present, frame_segment
 
     # Streaming
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -292,10 +297,10 @@ def stream_to_client(stream_image: cv2.Mat):
         frame_segment.udp_frame(stream_image)
 
 def cleanup():
-    global stream, car, video
-    stream.stop()
+    global cam, car, video
+    cam.stop()
     car.stop()
-    GPIO_cleanup()
+    car.cleanup()
 
     # Video
     video.release()

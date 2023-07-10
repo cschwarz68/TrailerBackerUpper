@@ -17,9 +17,9 @@ import cv2
 
 
 # Local Imports
-from car import Car
 from camera import Camera
 from motor import cleanup
+from car import Car
 
 model = load_model('/home/nads/Documents/Python/TrailerBackerUpper/src/NN/models/straight_line_driver.h5')
 print("model loaded")
