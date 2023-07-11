@@ -5,6 +5,8 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
+# TODO: Make better documentation after discussing with Dr. Schwarz
+
 # L1 = wheelbase of car
 # L2 = 'wheelbase' of trailer
 # M1 = trailer hitch offset
