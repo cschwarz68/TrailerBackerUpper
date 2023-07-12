@@ -3,6 +3,10 @@ import image_processing as ip
 from constants import Reverse_Calibrations
 import os
 
+
+# TODO: This can probably go into model.py at some point
+# ALSO TODO: actually make the neural network work in some nontrivial way...
+
 def create_frame(source_file):
     cap = cv2.VideoCapture(source_file)
     angle = 0
