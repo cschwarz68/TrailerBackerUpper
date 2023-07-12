@@ -175,3 +175,6 @@ thing.py
 *.mp4
 *.avi
 *.png
+
+#Temporarily ignoring since I have it set up with my IP in there (it is local so it is not the end of the world if it gets committed).
+config.yml

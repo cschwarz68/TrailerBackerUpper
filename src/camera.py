@@ -20,18 +20,12 @@ from constants import OpenCV_Settings
 import image_processing as ip
 
 class Camera:
-    PICAMERA = 0
-    USB_CAM = 1
-    def __init__(self, cam_type=0):
-        if cam_type == Camera.PICAMERA:
-            self.camera = Picamera2()
-        elif cam_type == Camera.USB_CAM:
-            self.camera = cv2.VideoCapture(1)
-        else:
-            raise Exception("Invalid camera type supplied to Camera constructor. Available options are PICAMERA and USB_CAM")
-            
+    
+    def __init__(self, cam_num=0):
+        self.camera = Picamera2(cam_num)
+      
         
-        self.type = cam_type
+        
         # Adjust camera parameters. Using defaults.
 
         # self.camera.preview_configuration.main.format = Camera_Settings.PREVIEW_CONFIG_FORMAT
