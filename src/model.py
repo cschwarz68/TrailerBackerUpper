@@ -27,7 +27,7 @@ import cv2
 from camera import Camera
 from car import Car
 
-model = load_model('/home/nads/Documents/Python/TrailerBackerUpper/src/NN/models/straight_line_driver.h5')
+model = load_model('./src/NN/models/straight_line_driver.h5')
 print("model loaded")
 
 def img_preprocess(image: cv2.Mat) -> cv2.Mat:

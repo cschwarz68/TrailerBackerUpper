@@ -1,5 +1,5 @@
 from enum import Enum
-from config_parser import driving, steering, camera
+from config_parser import driving, steering, camera, streaming
 
 class Main_Mode(Enum):
     MANUAL       = 0
@@ -54,3 +54,7 @@ class Reverse_Calibrations:
     ANGLE_OFF_CENTER_THRESHOLD = driving["trailer angle off center threshold"]
     HITCH_ANGLE_THRESHOLD      = driving["hitch angle threshold"]
     TURN_RATIO                 = driving["turn ratio"]
+
+class Streaming:
+    DESTINATION_ADDRESS = streaming["destination ip"]
+    DESTINATION_PORT = streaming["destination port"]

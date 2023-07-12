@@ -15,7 +15,7 @@ def create_frame(source_file):
         while cap.isOpened():
             _, image = cap.read()
             angle = get_angle(image)
-            os.chdir('/home/nads/Documents/Python/TrailerBackerUpper/src/frames2')
+            os.chdir('./src/frames') 
             cv2.imwrite("%s_%03d_%03d.png" % (source_file, i, angle), image)
             os.chdir('..')
             i += 1

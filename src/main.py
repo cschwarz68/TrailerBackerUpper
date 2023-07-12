@@ -14,7 +14,7 @@ import signal, socket, traceback
 import cv2
 
 # Local Imports
-from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
+from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations, Streaming
 from gamepad import Gamepad, Inputs as inputs
 from streaming import FrameSegment
 import image_processing as ip
@@ -251,13 +251,9 @@ def main():
 
     # Streaming
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    port = 25565
-    """
-    IMPORTANT
-
-    Insert the IP address of the device to stream to.
-    """
-    addr = "192.168.2.185"
+    port = Streaming.DESTINATION_PORT
+ 
+    addr = Streaming.DESTINATION_ADDRESS
     frame_segment = FrameSegment(server_socket, port, addr)
 
     try:
