@@ -25,6 +25,7 @@ calibrations:
         rear offset: 0.02
         #Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
         framerate: 15
+
     
     driving: 
         sharp turn threshold: 7.5
@@ -37,7 +38,12 @@ calibrations:
         hitch angle threshold : 1
         #amount of degrees before trailer correction
         turn ratio : 2.5
-        #
+    
+    streaming:
+        #Streaming destination IP address
+        destination ip: "192.168.2.185"
+        #Streaming destination port
+        destination port: 25565
 
 
 

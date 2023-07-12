@@ -8,6 +8,7 @@ import socket
 
 
 
+
 # Package Imports
 import numpy as np
 import cv2
@@ -29,27 +30,6 @@ def filter_yellow(img: cv2.Mat) -> cv2.Mat:
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
 
-def filter_red(img: cv2.Mat) -> cv2.Mat:
-    
-    # Bitwise complement operator. Flips each bit for each element in the matrix.
-    invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([85, 150, 40])
-    upper_cyan = np.array([95, 255, 255])
-    # Clamp to certain cyan shades.
-    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
-    return mask
-
-def filter_blue(img: cv2.Mat) -> cv2.Mat:
-    
-    # Bitwise complement operator. Flips each bit for each element in the matrix.
-    invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([20, 220, 225])
-    upper_cyan = np.array([30, 230, 230])
-    # Clamp to certain cyan shades.
-    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
-    return mask
 
 
 def center_yellow(img: cv2.Mat) -> tuple[float, float]:
@@ -74,18 +54,15 @@ def center_yellow(img: cv2.Mat) -> tuple[float, float]:
     
 
 def update_image(cam):
-    start = time_ns()
+    
     image = cam.capture()
-    end = time_ns()
+    
     
     filtered = filter_yellow(image)
     return filtered
 
    
-def func(num):
-    
-    while num>1:
-        pass
+
     
         
 def go():
@@ -110,6 +87,7 @@ def go():
         
         start = time_ns()
         
+        #need to thread all this stuff otherwise it is totally useless
         while avg_color >.5:
             
             img = update_image(cam)
@@ -118,7 +96,7 @@ def go():
             cv2.putText(img, f"Average Pixel Value: {avg_color}", 
                                 (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             stream_to_client(img)
-        on_time = time_ns()- start
+        nanoseconds_on = time_ns()- start
         
         
         start2 = time_ns()
@@ -129,16 +107,24 @@ def go():
             cv2.putText(img, f"Average Pixel Value: {avg_color}", 
                                 (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             stream_to_client(img)
-        off_time = time_ns() - start2
+        nanoseconds_off = time_ns() - start2
 
-        if off_time < 100000:
-            off_time = 0
+        if nanoseconds_off < 1000:
+            nanoseconds_off = 0
 
-        if on_time < 100000:
-            on_time = 0
-        seconds_on = on_time/ 1000000000
-        seconds_off = off_time/1000000000
-        print(seconds_on, seconds_off, seconds_on +seconds_off) 
+        if nanoseconds_on < 1000:
+            nanoseconds_on = 0
+        seconds_on = nanoseconds_on / 1000000000
+        seconds_off = nanoseconds_off / 1000000000
+
+        wheel_diameter = 2.5 # inches (disgusting)
+
+        wheel_circumference = wheel_diameter * math.pi # still inches (disgusting)
+        rotation_time = seconds_on + seconds_off
+
+        speed = wheel_circumference/rotation_time # inches per second (why don't engineers use metric)
+
+        print(rotation_time, speed) 
         
 
 

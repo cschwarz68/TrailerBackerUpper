@@ -96,7 +96,8 @@ def detect_line_segments(img: cv2.Mat) -> np.ndarray:
     rho = 1             # Distance precision in pixels, i.e. 1 pixel.
     angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
     min_threshold = 10  # Minimal of votes for a line to be counted.
-    line_segments = cv2.HoughLinesP(
+    
+    line_segments = cv2.HoughLinesP( # Detect lines using probabalistic Hough transform. More info: https://en.wikipedia.org/wiki/Hough_transform
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
     return line_segments
@@ -195,14 +196,14 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     # Bitwise complement operator. Flips each bit for each element in the matrix.
     invert = ~img
     hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([85, 150, 40])
-    upper_cyan = np.array([95, 255, 255])
+    lower_cyan = np.array([85, 150, 40]) # Lower bound of HSV values to include in mask
+    upper_cyan = np.array([95, 255, 255]) # Upper bound of HSV values to include in mask
     # Clamp to certain cyan shades.
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
 
-# Finds the center of the red tape.
-def center_red(img: cv2.Mat) -> tuple[float, float]:
+# Finds the weighted center of the image. Images filtered for certain colors should be passed here to find the coordinates of colored markers.
+def weighted_center(img: cv2.Mat) -> tuple[float, float]:
 
     # Contour: structural outlines.
     # Ignoring hierarchy (second return value).
@@ -294,7 +295,7 @@ def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, floa
     origin_x, origin_y = img.shape[1] / 2, img.shape[0]
     filtered = filter_red(img)
     cropped = region_of_interest(filtered)
-    cx, cy = center_red(cropped)
+    cx, cy = weighted_center(cropped)
     angle = compute_hitch_angle(img, cx, cy)
     return (angle, (origin_x, origin_y, cx, cy))
 

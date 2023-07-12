@@ -1,11 +1,18 @@
 """
-Neural Network Independent Module (Legacy)
+Autonomous A.I. navigation module.
 
-Autonomous A.I. navigation.
+This is legacy code (updated to use pigpiod insted of RPi.GPIO, but that's it).
 
-IMPORTANT
-This module's drivetrain code relies on legacy modules.
-Remember to disable the gpio daemon, otherwise nothing will move.
+I will maybe eventually document how to supply training frames to Google Colab as well as document the functionality of this module.
+
+Neural Network is once again being put aside, this time because of colabs requirements to be present while connected to one of their remote runtimes.
+It can take many hours to train from a couple minutes of video, so actually sitting and waiting for it isn't very fun.
+
+I would train it on the pc that I do my work on, but they stole my graphics card to use in someone else's pc!!!! Those monsters!!!!
+Don't they know this robot is the most important thing we do in this office???
+
+
+
 """
 
 import time
@@ -18,7 +25,6 @@ import cv2
 
 # Local Imports
 from camera import Camera
-from motor import cleanup
 from car import Car
 
 model = load_model('/home/nads/Documents/Python/TrailerBackerUpper/src/NN/models/straight_line_driver.h5')
@@ -68,4 +74,4 @@ if __name__ == "__main__":
     car.set_steering_angle(0)
     
     cam.stop()
-    cleanup()
+    car.cleanup()
