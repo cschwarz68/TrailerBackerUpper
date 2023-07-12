@@ -33,7 +33,7 @@ def get_angle(image):
     # Trailer
     filtered = ip.filter_red(image)
     cropped = ip.region_of_interest(filtered, True)
-    cx, cy = ip.center_red(cropped)
+    cx, cy = ip.weighted_center(cropped)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
     hitch_angle = ip.compute_hitch_angle(image, cx, cy)
     trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
