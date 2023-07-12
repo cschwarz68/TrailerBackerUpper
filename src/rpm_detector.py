@@ -16,7 +16,8 @@ import cv2
 #Local Imports
 import image_processing as ip
 
-#Horrible terrible spaghetti code module; will make this all not suck before implementing for real
+# Horrible terrible spaghetti code module; will make this all not suck before implementing for real.
+# My plan is to implement the functionality of this module main or maybe image processing and then delete this file
 
 
 def filter_yellow(img: cv2.Mat) -> cv2.Mat:
