@@ -1,13 +1,13 @@
 import yaml
-def read_one_block_of_yaml_data(filename):
+def read_config(filename):
     with open(f'{filename}.yml','r') as f:
         output = yaml.safe_load(f)
     return output
     
 #reads yaml file
-config = read_one_block_of_yaml_data('/home/nads/Documents/Python/TrailerBackerUpper/src/config')
+config = read_config('./src/config')
 
-calibrations = config['calibrations']
+calibrations = config['settings']
 
 driving = calibrations['driving']
 

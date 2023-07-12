@@ -1,5 +1,5 @@
 
-calibrations: 
+settings: 
     
     # Steering rack calibrations
     steering rack: 
@@ -26,19 +26,21 @@ calibrations:
         #Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
         framerate: 15
 
-    
+    #Driving settings
     driving: 
         sharp turn threshold: 7.5
         #threshold of front
         sharp turn reverse threshold: 20
         #threshold of back
         position threshold : 0.03125        #
-        trailer angle off center threshold : 1
         #angle of trailer relative to center of lane
-        hitch angle threshold : 1
+        trailer angle off center threshold : 1
         #amount of degrees before trailer correction
+        hitch angle threshold : 1
+        
         turn ratio : 2.5
-    
+
+    #Streaming settings
     streaming:
         #Streaming destination IP address
         destination ip: "192.168.2.185"
