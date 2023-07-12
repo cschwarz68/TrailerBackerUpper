@@ -8,7 +8,7 @@ Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
-import signal, socket
+import signal, socket, traceback
 
 # Package Imports
 import cv2
@@ -56,6 +56,8 @@ signal.signal(signal.SIGINT, handler)
 def manual():
     global done, mode, transition_mode, check_auto_exit_thread, recording, streaming
 
+    image = cam.capture()
+
     if g.was_pressed(inputs.B):
         done = True
     elif g.was_pressed(inputs.X):
@@ -83,6 +85,12 @@ def manual():
         else:
             streaming = False
             print("Disabled Streaming for Autonomous")
+    elif g.was_pressed(inputs.R_BUMPER):
+        print("pressed RB")
+
+
+    if streaming:
+        stream_to_client(image)
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -144,7 +152,7 @@ def auto_reverse():
     # Trailer
     filtered = ip.filter_red(image)
     cropped = ip.region_of_interest(filtered, True)
-    cx, cy = ip.center_red(cropped)
+    cx, cy = ip.weighted_center(cropped)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
     hitch_angle = ip.compute_hitch_angle(image, cx, cy)
     trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
@@ -274,8 +282,9 @@ def main():
         if mode == Main_Mode.MANUAL:
             try:
                 g.update_input()
-            except:
-                print("CONTROLLER DISCONNECTED")
+            except Exception as e:
+                print("update_input() threw an exception: ", e)
+                traceback.print_exc()
                 mode = transition_mode
                 controller_present = False
                 print("Entered Mode:", transition_mode)
