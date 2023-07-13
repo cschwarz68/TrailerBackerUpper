@@ -4,7 +4,7 @@ def read_config(filename):
         output = yaml.safe_load(f)
     return output
     
-#reads yaml file
+
 config = read_config('./src/config')
 
 calibrations = config['settings']

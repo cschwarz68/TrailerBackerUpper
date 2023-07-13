@@ -129,15 +129,6 @@ def go():
         
 
 
-        
-        
-
-
-
-
-
-
-
 def stream_to_client(stream_image: cv2.Mat):
     frame_segment
    
@@ -160,15 +151,3 @@ if __name__ == "__main__":
     go()
 
    
-    
-
-        
-        
-
-
-
-
-
-
-
-
