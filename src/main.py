@@ -15,7 +15,7 @@ import cv2
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations, Streaming
-from gamepad import Gamepad, Inputs as inputs
+from gamepad import Gamepad, Inputs, UnpluggedError
 from streaming import FrameSegment
 import image_processing as ip
 from camera import Camera
@@ -65,15 +65,15 @@ def manual():
 
 
 
-    if g.was_pressed(inputs.B):
+    if g.was_pressed(Inputs.B):
         done = True
-    elif g.was_pressed(inputs.X):
+    elif g.was_pressed(Inputs.X):
         transition_mode = Main_Mode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
-    elif g.was_pressed(inputs.Y):
+    elif g.was_pressed(Inputs.Y):
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
-    elif g.was_pressed(inputs.START):
+    elif g.was_pressed(Inputs.START):
         
         mode = transition_mode
 
@@ -85,7 +85,7 @@ def manual():
         check_auto_exit_thread = Thread(target=check_auto_exit)
         check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
-    elif g.was_pressed(inputs.A):
+    elif g.was_pressed(Inputs.A):
         if not recording:
             recording = True
             print("Started Recording")
@@ -97,7 +97,7 @@ def manual():
 
     
 
-    steer_value = g.get_stick_value(inputs.LX)
+    steer_value = g.get_stick_value(Inputs.LX)
     drive_value = g.get_trigger_value()
     if steer_value is not None:
         car.gamepad_steer(steer_value)
@@ -239,10 +239,10 @@ def check_auto_exit():
 
     while mode != Main_Mode.MANUAL:
         g.update_input()
-        if g.was_pressed(inputs.B):
+        if g.was_pressed(Inputs.B):
             auto_exit = True
             return
-        if g.was_pressed(inputs.A):
+        if g.was_pressed(Inputs.A):
             if not recording:
                 recording = True
                 print("Started Recording")
@@ -276,14 +276,14 @@ def stream_in_manual():
         stream_to_client(image)
         if recording:
             video.write(image)
-        if g.was_pressed(inputs.B) or mode != Main_Mode.MANUAL:
+        if g.was_pressed(Inputs.B) or mode != Main_Mode.MANUAL:
             break
         
         
 def main():
     print("STARTING MAIN")
 
-    global cam, done, mode, controller_present, frame_segment
+    global done, mode, controller_present, frame_segment
 
     # Streaming
     server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -296,7 +296,7 @@ def main():
 
     try:
         g.update_input()
-    except:
+    except UnpluggedError:
         go = input("Are you sure you want to start without gamepad? Will automatically enter autonomous mode: ").casefold()
         if go == "y" or go == "yes":
             go_mode = input("Autonomous Mode. 1 for forward, 2 for reverse: ")
@@ -308,6 +308,7 @@ def main():
                 print("Invalid mode.")
                 exit(0)
         else:
+            print("Re-run with gamepad plugged in to start")
             exit(0)
 
     # Main loop.
@@ -339,13 +340,15 @@ def stream_to_client(stream_image: cv2.Mat):
 
 def cleanup():
     global cam, car, video, manual_streaming_thread
-    manual_streaming_thread.join()
+    if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
+        manual_streaming_thread.join()
     cam.stop()
     car.stop()
     car.cleanup()
 
     # Video
-    video.release()
+    if video is not None:
+        video.release()
 
     print("Cleaned up.")
 

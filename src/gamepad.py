@@ -1,4 +1,4 @@
-from inputs import get_gamepad
+from inputs import get_gamepad, UnpluggedError
 
 class Inputs:
     SYN_REPORT = 0
