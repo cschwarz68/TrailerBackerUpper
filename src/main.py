@@ -332,8 +332,9 @@ def main():
         elif mode == Main_Mode.AUTO_REVERSE:
             auto_reverse()
 
-    server_socket.close()
+    
     cleanup()
+    server_socket.close()
 
 def stream_to_client(stream_image: cv2.Mat):
     frame_segment.udp_frame(stream_image)

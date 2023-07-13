@@ -29,9 +29,6 @@ class FrameSegment:
         array_pos_start = 0
         while count:
             array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-            try:
-                self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
-            except OSError:
-                print("Streaming Error: Exception caught when trying to send data; dropping packet.")
+            self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
             array_pos_start = array_pos_end
             count -= 1
