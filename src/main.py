@@ -31,7 +31,7 @@ frame_segment = None
 auto_exit = False
 recording = False
 
-cam = Camera()
+cam    = Camera()
 g      = Gamepad()
 car    = Car()
 
@@ -88,10 +88,10 @@ def manual():
     elif g.was_pressed(inputs.A):
         if not recording:
             recording = True
-            print("Enabled Recording for Autonomous")
+            print("Started Recording")
         else:
             recording = False
-            print("Disabled Recording for Autonomous")
+            print("Stopped Recording")
   
 
 
@@ -231,12 +231,24 @@ def auto_reverse():
         video.write(raw_image)
 
 def check_auto_exit():
-    global mode, auto_exit
+    global mode, auto_exit, recording
+    """
+    The initial function of this function was to listen for presses of B and return to manual mode if B was pressed.
+    It now also allows enabling and disabling of recording while in autonomous driving modes. Should be renamed accordingly at some point
+    """
+
     while mode != Main_Mode.MANUAL:
         g.update_input()
         if g.was_pressed(inputs.B):
             auto_exit = True
             return
+        if g.was_pressed(inputs.A):
+            if not recording:
+                recording = True
+                print("Started Recording")
+            else:
+                recording = False 
+                print("Stopped Recording")
 
 def exit_auto():
     global mode, check_auto_exit_thread, auto_exit
@@ -248,17 +260,22 @@ def exit_auto():
     print("Returning To:", mode)
 
 def stream_in_manual():
+    global recording
     """
     This function is the targert of manual_streaming_thread.
 
     cam.capture() hangs until a frame is supplied by the system. As a result, gamepad inputs can only be read when as frames are captured
     if g.update_input() and cam.capture() are called sequentially. Here, captures are offloaded to another thread whenever the car is in manual
-    control mode. 
+    control mode.
+
+    This function also records if recording is enabled. May need to rename it to something more general.
     """
     while True:
         image = cam.capture()
         
         stream_to_client(image)
+        if recording:
+            video.write(image)
         if g.was_pressed(inputs.B) or mode != Main_Mode.MANUAL:
             break
         

@@ -43,7 +43,7 @@ class Car:
         Sets the drive power of the motor. Input should range from [-1, 1] where -1 is full reverse, 0 is stop, and 1 is full forward.
         """
 
-        duty_cycle = abs(power * 100)
+        duty_cycle: int = int(abs(power * 100))
         if power < 0:
             self.drive_motor.reverse()
         elif power > 0:

@@ -32,6 +32,6 @@ class FrameSegment:
             try:
                 self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
             except OSError:
-                print("Streaming Error: Exception caught when trying to send, dropping packet.")
+                print("Streaming Error: Exception caught when trying to send data; dropping packet.")
             array_pos_start = array_pos_end
             count -= 1
