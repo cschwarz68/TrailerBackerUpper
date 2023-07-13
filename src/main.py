@@ -8,7 +8,7 @@ Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
-import signal, socket, traceback
+import signal, socket, traceback, time
 
 # Package Imports
 import cv2
@@ -334,7 +334,9 @@ def main():
 
     
     cleanup()
-    server_socket.close()
+    server_socket.close() #Socket must be closed after calling cleanup() as a thread which may be using the socket is joined in cleanup.
+    print("Terminated")
+    
 
 def stream_to_client(stream_image: cv2.Mat):
     frame_segment.udp_frame(stream_image)
