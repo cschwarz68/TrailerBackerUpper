@@ -24,12 +24,13 @@ from car import Car
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD
 check_auto_exit_thread = None
+manual_streaming_thread = None
 controller_present = True
 mode = Main_Mode.MANUAL
 frame_segment = None
 auto_exit = False
 recording = False
-streaming = False
+manual_streaming = False
 
 cam = Camera()
 g      = Gamepad()
@@ -54,9 +55,15 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording, streaming
+    global done, mode, transition_mode, check_auto_exit_thread, recording
 
-    image = cam.capture()
+    if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()):
+        manual_streaming_thread = Thread(target=stream_in_manual)
+        manual_streaming_thread.start()
+    else:
+        pass
+
+
 
     if g.was_pressed(inputs.B):
         done = True
@@ -78,19 +85,9 @@ def manual():
         else:
             recording = False
             print("Disabled Recording for Autonomous")
-    elif g.was_pressed(inputs.SELECT):
-        if not streaming:
-            streaming = True
-            print("Enabled Streaming for Autonomous")
-        else:
-            streaming = False
-            print("Disabled Streaming for Autonomous")
-    elif g.was_pressed(inputs.R_BUMPER):
-        print("pressed RB")
 
 
-    if streaming:
-        stream_to_client(image)
+    
 
     steer_value = g.get_stick_value(inputs.LX)
     drive_value = g.get_trigger_value()
@@ -99,8 +96,9 @@ def manual():
     if drive_value is not None:
         car.gamepad_drive(drive_value)
 
+
 def auto_forward():
-    global cam, auto_exit, recording, streaming
+    global cam, auto_exit, recording
     if auto_exit:
         exit_auto()
         return
@@ -121,20 +119,19 @@ def auto_forward():
     car.set_steering_angle(stable_angle)
 
     # Video
-    if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+    
+    visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
 
-        if streaming:   
-            stream_to_client(visual_image)
-        if recording:
-            video.write(visual_image)
+    stream_to_client(visual_image)
+    if recording:
+        video.write(visual_image)
 
 def maintain_hitch_angle(hitch_angle):
      if hitch_angle is not None and abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
             return hitch_angle * Reverse_Calibrations.TURN_RATIO
 
 def auto_reverse():
-    global cam, auto_exit, recording, streaming
+    global cam, auto_exit, recording
     if auto_exit:
         exit_auto()
         return
@@ -218,14 +215,12 @@ def auto_reverse():
     car.set_steering_angle(-stable_angle)
 
     # Video
-    if recording or streaming:
-        visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
-        visual_image = ip.display_trailer_info(visual_image, hitch_angle, trailer_points)
+    visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+    visual_image = ip.display_trailer_info(visual_image, hitch_angle, trailer_points)
 
-        if streaming:
-            stream_to_client(visual_image)
-        if recording:
-            video.write(raw_image)
+    stream_to_client(visual_image)
+    if recording:
+        video.write(raw_image)
 
 def check_auto_exit():
     global mode, auto_exit
@@ -244,6 +239,15 @@ def exit_auto():
     auto_exit = False
     print("Returning To:", mode)
 
+def stream_in_manual():
+    while manual_streaming:
+        image = cam.capture()
+        
+        stream_to_client(image)
+        if g.was_pressed(inputs.B):
+            break
+        
+        
 def main():
     print("STARTING MAIN")
 
@@ -255,6 +259,8 @@ def main():
  
     addr = Streaming.DESTINATION_ADDRESS
     frame_segment = FrameSegment(server_socket, port, addr)
+
+    
 
     try:
         g.update_input()
@@ -297,12 +303,11 @@ def main():
     cleanup()
 
 def stream_to_client(stream_image: cv2.Mat):
-    global streaming, frame_segment
-    if streaming:
-        frame_segment.udp_frame(stream_image)
+    frame_segment.udp_frame(stream_image)
 
 def cleanup():
-    global cam, car, video
+    global cam, car, video, manual_streaming_thread
+    manual_streaming_thread.join()
     cam.stop()
     car.stop()
     car.cleanup()
