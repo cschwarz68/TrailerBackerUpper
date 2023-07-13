@@ -30,7 +30,6 @@ mode = Main_Mode.MANUAL
 frame_segment = None
 auto_exit = False
 recording = False
-manual_streaming = False
 
 cam = Camera()
 g      = Gamepad()
@@ -55,13 +54,14 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording
+    global done, mode, transition_mode, check_auto_exit_thread, recording, manual_streaming_thread
 
-    if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()):
+
+    #Streaming must be handled in its own thread in manual driving mode. see comments on stream_in_manual()
+    if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()): 
         manual_streaming_thread = Thread(target=stream_in_manual)
         manual_streaming_thread.start()
-    else:
-        pass
+
 
 
 
@@ -74,7 +74,14 @@ def manual():
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
     elif g.was_pressed(inputs.START):
+        
         mode = transition_mode
+
+        #Terminate thread for streaming in manual, since we are about to leave manual.
+        if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
+            manual_streaming_thread.join()
+        
+        #Start thread to listen for instruction to return to manual mode
         check_auto_exit_thread = Thread(target=check_auto_exit)
         check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
@@ -85,6 +92,7 @@ def manual():
         else:
             recording = False
             print("Disabled Recording for Autonomous")
+  
 
 
     
@@ -240,11 +248,18 @@ def exit_auto():
     print("Returning To:", mode)
 
 def stream_in_manual():
-    while manual_streaming:
+    """
+    This function is the targert of manual_streaming_thread.
+
+    cam.capture() hangs until a frame is supplied by the system. As a result, gamepad inputs can only be read when as frames are captured
+    if g.update_input() and cam.capture() are called sequentially. Here, captures are offloaded to another thread whenever the car is in manual
+    control mode. 
+    """
+    while True:
         image = cam.capture()
         
         stream_to_client(image)
-        if g.was_pressed(inputs.B):
+        if g.was_pressed(inputs.B) or mode != Main_Mode.MANUAL:
             break
         
         
