@@ -10,7 +10,7 @@ from numpy import fromstring, uint8
 from struct import unpack
 
 # Change this value if you would like to use a different port (default is 25565).
-PORT: 25565
+PORT = 25565
 # NOTE: You cannot run this program and play multiplayer Minecraft at the same time if you are using port 25565.
 
 

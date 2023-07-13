@@ -1,5 +1,5 @@
 """
-From ancabilloni/udp_camera_streaming.
+From ancabilloni/udp_camera_streaming. https://github.com/ancabilloni/udp_camera_streaming
 """
 
 from struct import pack
@@ -29,6 +29,9 @@ class FrameSegment:
         array_pos_start = 0
         while count:
             array_pos_end = min(size, array_pos_start + self.MAX_IMAGE_DGRAM)
-            self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
+            try:
+                self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
+            except OSError:
+                print("Streaming Error: Exception caught when trying to send, dropping packet.")
             array_pos_start = array_pos_end
             count -= 1
