@@ -25,11 +25,11 @@ from car import Car
 transition_mode = Main_Mode.AUTO_FORWARD
 check_auto_exit_thread = None
 manual_streaming_thread = None
-controller_present = True
 mode = Main_Mode.MANUAL
 frame_segment = None
 auto_exit = False
 recording = False
+server_socket = None
 
 cam    = Camera()
 g      = Gamepad()
@@ -49,9 +49,9 @@ done = False
 # Trigger cleanup upon keyboard interrupt.
 def handler(signum: signal.Signals, stack_frame):
     global done
-    print("Keyboard interrupt detected. Cleaning up.")
+    print("\nKeyboard interrupt detected.")
     done = True
-    print(signum, signal.Signals(signum).name, stack_frame) 
+    #print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
     exit(0)
 signal.signal(signal.SIGINT, handler)
@@ -286,7 +286,7 @@ def stream_in_manual():
 def main():
     print("STARTING MAIN")
 
-    global done, mode, controller_present, frame_segment
+    global done, mode, frame_segment, server_socket
 
     # Streaming
     if Streaming.DO_STREAM:
@@ -325,7 +325,6 @@ def main():
                 print("update_input() threw an exception: ", e)
                 traceback.print_exc()
                 mode = transition_mode
-                controller_present = False
                 print("Entered Mode:", transition_mode)
         
         if mode == Main_Mode.MANUAL:
@@ -338,8 +337,7 @@ def main():
 
     
     cleanup()
-    if Streaming.DO_STREAM:
-        server_socket.close() #Socket must be closed after calling cleanup() as a thread which may be using the socket is joined in cleanup.
+     
     
     
 
@@ -350,10 +348,12 @@ def stream_to_client(stream_image: cv2.Mat):
         frame_segment.udp_frame(stream_image)
 
 def cleanup():
-    global cam, car, video, manual_streaming_thread
+    global cam, car, video, manual_streaming_thread, server_socket
     print("Cleaning up...")
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
+    if Streaming.DO_STREAM and server_socket is not None:
+        server_socket.close()
     cam.stop()
     car.stop()
     car.cleanup()
