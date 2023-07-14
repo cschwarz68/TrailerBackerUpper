@@ -21,7 +21,7 @@ import image_processing as ip
 
 class Camera:
     
-    def __init__(self, cam_num=0):
+    def __init__(self, cam_num=0, framerate= 15):
         self.camera = Picamera2(cam_num)
       
         
@@ -30,7 +30,7 @@ class Camera:
 
         # self.camera.preview_configuration.main.format = Camera_Settings.PREVIEW_CONFIG_FORMAT
         # self.camera.resolution = Camera_Settings.RESOLUTION
-        # self.camera.framerate = Camera_Settings.FRAMERATE
+        self.camera.framerate = framerate
         # self.camera.start_preview(alpha=Camera_Settings.ALPHA)
 
         self.camera.start()
