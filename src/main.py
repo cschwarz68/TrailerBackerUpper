@@ -48,9 +48,12 @@ done = False
 
 # Trigger cleanup upon keyboard interrupt.
 def handler(signum: signal.Signals, stack_frame):
+    global done
     print("Keyboard interrupt detected. Cleaning up.")
+    done = True
     print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
+    exit(0)
 signal.signal(signal.SIGINT, handler)
 
 def manual():
@@ -260,7 +263,7 @@ def exit_auto():
     print("Returning To:", mode)
 
 def stream_in_manual():
-    global recording
+    global recording, done
     """
     This function is the targert of manual_streaming_thread.
 
@@ -270,7 +273,7 @@ def stream_in_manual():
 
     This function also records if recording is enabled. May need to rename it to something more general.
     """
-    while True:
+    while not done:
         image = cam.capture()
         
         stream_to_client(image)
