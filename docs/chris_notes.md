@@ -36,3 +36,11 @@ PS look at me actually documenting a problem and the steps to its solution inste
 
 
 
+IDEA: Handle all image processing in separate thread
+Image processing  (more generally, I/O) is the slowest part of this operation. Taking the load of image processing off of the main thread could considerable improve performance.
+(I do notice some latency in lane detection at times and with my plans to add speed detection, the image processing load will only get heavier.)
+
+We have 4 cores so why not use them? ie, should I use the multiprocessing module instead of threading module? Tasks are IO bound so threading is fine I think??? 
+
+
+

@@ -57,8 +57,8 @@ class Car:
         Input to this function must range from [-32768, 32767] where -32768 corresponds to full left, 0 to center, and 32767 to full right.
         This is the range of values provided by gamepad analog stick input.
         """
-
-        ANGLE_NORMALIZATION_CONSTANT = Drive_Params.JOYSTICK_MAX / 90 # Ensures steering angle ranges from [-90, 90]
+        JOYSTICK_MAX = 32767.0
+        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / 90 # Ensures steering angle ranges from [-90, 90]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
         self.set_steering_angle(angle)
 

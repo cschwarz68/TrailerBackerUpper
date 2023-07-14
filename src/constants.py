@@ -7,7 +7,6 @@ class Main_Mode(Enum):
     AUTO_REVERSE = 2
 
 class Drive_Params:
-    JOYSTICK_MAX         = 32767.0
     STEERING_RACK_CENTER = steering["center"]
 
     STEERING_RACK_RIGHT = STEERING_RACK_CENTER + steering["right"]
@@ -32,7 +31,7 @@ class Image_Processing_Calibrations:
     This is the original comment from the prior developer:
         "0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right"
     """
-    CAMERA_MID_OFFSET_PERCENT = camera["front offset"] 
+    CAMERA_MID_OFFSET_PERCENT = camera["rear offset"] 
 
 class Camera_Settings():
     # I do not think we use this at all
@@ -57,5 +56,5 @@ class Reverse_Calibrations:
 
 class Streaming:
     DESTINATION_ADDRESS = streaming["destination ip"]
-    DESTINATION_PORT = streaming["destination port"]
-    DO_STREAM = streaming["do stream"]
+    DESTINATION_PORT    = streaming["destination port"]
+    DO_STREAM           = streaming["do stream"]
