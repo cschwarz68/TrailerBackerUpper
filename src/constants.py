@@ -58,3 +58,4 @@ class Reverse_Calibrations:
 class Streaming:
     DESTINATION_ADDRESS = streaming["destination ip"]
     DESTINATION_PORT = streaming["destination port"]
+    DO_STREAM = streaming["do stream"]

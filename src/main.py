@@ -286,11 +286,12 @@ def main():
     global done, mode, controller_present, frame_segment
 
     # Streaming
-    server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    port = Streaming.DESTINATION_PORT
- 
-    addr = Streaming.DESTINATION_ADDRESS
-    frame_segment = FrameSegment(server_socket, port, addr)
+    if Streaming.DO_STREAM:
+        server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        port = Streaming.DESTINATION_PORT
+    
+        addr = Streaming.DESTINATION_ADDRESS
+        frame_segment = FrameSegment(server_socket, port, addr)
 
     
 
@@ -334,15 +335,20 @@ def main():
 
     
     cleanup()
-    server_socket.close() #Socket must be closed after calling cleanup() as a thread which may be using the socket is joined in cleanup.
-    print("Terminated")
+    if Streaming.DO_STREAM:
+        server_socket.close() #Socket must be closed after calling cleanup() as a thread which may be using the socket is joined in cleanup.
+    
     
 
 def stream_to_client(stream_image: cv2.Mat):
-    frame_segment.udp_frame(stream_image)
+    global frame_segment
+    
+    if Streaming.DO_STREAM:
+        frame_segment.udp_frame(stream_image)
 
 def cleanup():
     global cam, car, video, manual_streaming_thread
+    print("Cleaning up...")
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
     cam.stop()
@@ -350,8 +356,8 @@ def cleanup():
     car.cleanup()
 
     # Video
-    if video is not None:
-        video.release()
+    
+    video.release()
 
     print("Cleaned up.")
 
