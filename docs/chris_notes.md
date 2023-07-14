@@ -44,3 +44,13 @@ We have 4 cores so why not use them? ie, should I use the multiprocessing module
 
 
 
+PROBLEM: RPM detection is sort of terribke
+
+    Wasn't even sure if it was possible with our setup so I initially had an extremely naive solution: Put a colored paper over some of the wheel. Measure the time the colored paper is visble, and the time the colored paper is not visible, add the two together for a rotation. Implemented it horribly with loops that would halt anything else from happening but it sort of maybe detected the speed.
+
+    Ideally, I would check when the coordinates of the yellow pass a fixed point. Each pass would correspond to one rotation, and the time between passes would be the duration of a wheel rotation.
+
+    Epic realization that took me way too long to notice: The wheel operates relative to the trailer, and we already have a marker which is fixed to the trailer: the red tape. By using the relative position of the yellow wheel marker to the red trailer marker, I can implement the system where I make note of passes of the yellow past a fixed point.
+
+    Note: The way we are detecting coordinates of colored markers is by filtering the image for only that color, and finding the centroid of the image. When the yellow is not visible,
+    the center will just be the middle of the frame. I plan on handling this by checking the level of blackness/whiteness (average pixel value of the image) in the image, and only considering the center when the whiteness is higher than a certain thresold.
