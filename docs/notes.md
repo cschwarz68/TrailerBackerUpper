@@ -6,7 +6,7 @@
 Module: time  
 	This module provides various time-related functions.
 
-Module: logging  
+Module: ~~logging~~ ( unused)  
 	This module defines functions and classes which implement a flexible event logging system for applications and libraries.
 
 Library: inputs  
@@ -15,20 +15,20 @@ Library: inputs
 Library: cv2  
 	OpenCV is a library of programming functions mainly for real-time computer vision.
 
-Library: numpy  
+Library: [`numpy`](#https://numpy.org/doc/stable/)  
 	The fundamental package for scientific computing with Python.
 
 Library: ~~matplotlib~~ (unused)  
 	Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.
 
-Library: ~~RPi.GPIO~~ pigpio  
+Library: ~~RPi.GPIO~~ [`pigpio`](#http://abyz.me.uk/rpi/pigpio/)
 	This package provides a Python module to control the GPIO on a Raspberry Pi.
 
-Module: ~~drive_module~~ --> car  
+Module: ~~drive_module~~ --> [`car`](../src/car.py)
 	Controls drivetrain with PWM.
 	This is being refactored and further developed by Chris.
 
-Module: ~~steer_module~~ --> car  
+Module: ~~steer_module~~ --> [`car`](../src/car.py)
 	Controls steering with servo.
 	This is being refactored and further developed by Chris.
 
@@ -43,7 +43,7 @@ Module: car
 
 FILES
 
-File: `main.py`
+File: [`main.py`](../src/main.py)
 	
 	To Do:
 		1. Re-order and label imports. DONE
@@ -109,7 +109,7 @@ File: `steer_module.py` (DEPRECATED)
 
 	(Chris.)
 
-File: ~~`image_processing_module.py`~~ `image_processing.py`
+File: ~~`image_processing_module.py`~~ [`image_processing.py`](../src/image_processing.py)
 
 	To Do:
 		1. Better type comments. Also apply to other modules. DONE
@@ -134,7 +134,7 @@ File: ~~`image_processing_module.py`~~ `image_processing.py`
 		7. Changed to use -90, 0, 90 system for steering.
 		8. And more.
 
-File: ~~`quick_capture_module.py`~~ `camera.py`
+File: ~~`quick_capture_module.py`~~ [`camera.py`](../src/camera.py)
 
 	To Do:
 		1. Clean up comments. DONE
