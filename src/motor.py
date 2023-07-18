@@ -29,7 +29,7 @@ class DCMotor:
     FORWARD = 1
     REVERSE = -1
 
-    def __init__(self, power_pin: int, forward_pin: int, reverse_pin: int, duty_cycle: int = 50):
+    def __init__(self, power_pin: int, forward_pin: int, reverse_pin: int):
         self.power = power_pin 
         self.forward_pin = forward_pin
         self.reverse_pin = reverse_pin 
@@ -42,7 +42,7 @@ class DCMotor:
         io.set_PWM_frequency(forward_pin, FREQ)
         io.set_PWM_frequency(reverse_pin, FREQ)
 
-        self.duty_cycle = duty_cycle
+        
 
     def forward(self):
         io.set_low(self.reverse_pin)
