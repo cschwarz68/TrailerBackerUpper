@@ -14,11 +14,21 @@ _DRIVE_MOTOR_REVERSE_PIN = 5
 steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
 drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
 
+
+
 class Car:
+    _self = None
     """
     The car class controls driving and steering of the car. Should only instantiate once.
     """
-
+    def __new__(cls):
+        # Ensures only one instance of Car exists at one time. One machine shouldn't be controlling more than one car.
+        if cls._self is None:
+            cls._self = super().__new__(cls)
+        else:
+            raise Exception("Car may not be instatiated more than once.")
+        return cls._self
+        
     def __init__(self):
         """
         Create instance of car with initial steering angle at center position. Instantiates steering motor and drive motor at appropriate pins. Uses BCM pin numbering system.
@@ -120,5 +130,7 @@ def clamp_steering_angle(angle):
     angle = Drive_Params.STEERING_RACK_RIGHT if angle >= Drive_Params.STEERING_RACK_RIGHT else angle
     angle = Drive_Params.STEERING_RACK_LEFT if angle <= Drive_Params.STEERING_RACK_LEFT else angle
     return angle
+
+
 
 

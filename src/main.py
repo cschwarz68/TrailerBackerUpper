@@ -31,9 +31,10 @@ auto_exit = False
 recording = False
 server_socket = None
 
+car = Car()
 cam    = Camera()
 g      = Gamepad()
-car    = Car()
+
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
@@ -51,7 +52,7 @@ def handler(signum: signal.Signals, stack_frame):
     global done
     print("\nKeyboard interrupt detected.")
     done = True
-    #print(signum, signal.Signals(signum).name, stack_frame) 
+    # print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
     exit(0)
 signal.signal(signal.SIGINT, handler)
@@ -147,6 +148,7 @@ def auto_reverse():
         exit_auto()
         return
     image = cam.capture()
+   
     raw_image = image
 
     # Lanes
@@ -273,6 +275,7 @@ def stream_in_manual():
 
     This function also records if recording is enabled. May need to rename it to something more general.
     """
+
     while not done:
         image = cam.capture()
         
@@ -281,6 +284,8 @@ def stream_in_manual():
             video.write(image)
         if g.was_pressed(Inputs.B) or mode != Main_Mode.MANUAL:
             break
+    
+       
         
         
 def main():
@@ -312,7 +317,7 @@ def main():
                 print("Invalid mode.")
                 exit(0)
         else:
-            print("Re-run with gamepad plugged in to start")
+            print("Plug in gamepad and restart program to use.")
             exit(0)
 
     # Main loop.
@@ -346,6 +351,7 @@ def stream_to_client(stream_image: cv2.Mat):
     
     if Streaming.DO_STREAM:
         frame_segment.udp_frame(stream_image)
+        
 
 def cleanup():
     global cam, car, video, manual_streaming_thread, server_socket
