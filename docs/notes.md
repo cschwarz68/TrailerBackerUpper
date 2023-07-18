@@ -187,11 +187,12 @@ Usage notes:
 
 1. The original user on the Raspberry Pi is "nads" with password "nads".
 2. The second user is "nads2" with password "nads2".
-3. Attempting to use visual tests / debugging while connected to the second user via. SSH will not work.
+3. Attempting to use visual tests / debugging while connected to the second user via. SSH will not work.  
+	Can we set up [X forwarding?](https://en.wikipedia.org/wiki/X_Window_System) Is that worth the effort?
 4. When broadcasting video output, run [`client.py`](../src/streaming_client/client.py) on target machine to view stream.
 5. ~~Cannot record video while using the controller to control the car. Suspected voltage drop causes the gamepad to disconnect, forcing the program into autonomous mode.~~ You can now record video while using the controller to control the car
 6. We may not have enough state information to implement model predictive control.
-7. Sometimes the monitor enters a state where everything is minimized. To correct this:
+7. Sometimes the monitor will default to a bad resolution on boot. To correct this:
 	1. Click the Raspberry Pi icon in the upper left corner.
 	2. Go to Preferences --> Screen Configuration.
 	3. Right click on the HDMI that appears.
@@ -211,6 +212,6 @@ ROBOT
 
 CAMERA
 
-1. With OpenCV stuff, we can get the dimensions of an image with `image.shape`.
+1. With OpenCV stuff, we can get the dimensions of an image with `image.shape()`.
 2. The OpenCV documentation is lacking in Python. Most of it is in C++, usually with a line somewhere describing the Python embedding. The C++ documentation is still useful!
 3. For some reason running in debug can cause issues with a tuple in the reverse section..?
