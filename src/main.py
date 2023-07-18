@@ -38,7 +38,7 @@ g      = Gamepad()
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-base_height, base_width, _ = cam.capture().shape
+base_height, base_width, _ = cam.read().shape
 video = cv2.VideoWriter("main_video.avi", 
                         fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
                         (base_width, base_height), 
@@ -114,7 +114,7 @@ def auto_forward():
     if auto_exit:
         exit_auto()
         return
-    image = cam.capture()
+    image = cam.read()
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
     line_segments = ip.detect_line_segments(cropped_edges)
@@ -147,7 +147,7 @@ def auto_reverse():
     if auto_exit:
         exit_auto()
         return
-    image = cam.capture()
+    image = cam.read()
    
     raw_image = image
 
@@ -269,15 +269,15 @@ def stream_in_manual():
     """
     This function is the targert of manual_streaming_thread.
 
-    cam.capture() hangs until a frame is supplied by the system. As a result, gamepad inputs can only be read when as frames are captured
-    if g.update_input() and cam.capture() are called sequentially. Here, captures are offloaded to another thread whenever the car is in manual
+    cam.read() hangs until a frame is supplied by the system. As a result, gamepad inputs can only be read when as frames are captured
+    if g.update_input() and cam.read() are called sequentially. Here, captures are offloaded to another thread whenever the car is in manual
     control mode.
 
     This function also records if recording is enabled. May need to rename it to something more general.
     """
 
     while not done:
-        image = cam.capture()
+        image = cam.read()
         
         stream_to_client(image)
         if recording:
