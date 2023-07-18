@@ -45,95 +45,95 @@ Module: ~~quick_capture_module~~ [`camera`](../src/camera.py)
 FILES
 
 File: [`main.py`](../src/main.py)
-	
-	To Do:
-		1. Re-order and label imports. DONE
-		2. Add more debug messages for control flow. DONE
-		3. Remove deprecated or unnecessary code. DONE
-		4. Move commented out code to separate cache file. DONE
-		5. Find a better way of reading controller input instead of iterating. DONE
-		6. Move constants to separate file. DONE
-		7. Revise variable names as needed. NOT NEEDED
-		8. Add more comments. DONE
-		9. Also add controller option for switching to autonomous mode? DONE
-		10. Resolve Polyfit warning caused by the image processing module. ??? DONE
 
-	Questions:
-		1. Why the large try-catch block?
-			Answer: See below.
-		2. How to jump to code in except?
-			Answer: When the controller is unplugged it automatically goes into autonomous mode.
-		3. What is the middle portion of manual mode for?
-			Answer: No longer relevant.
-		4. The video recording thing doesn't work..?
-			Answer: Resolved. Use VLC Media Player.
+To Do:
+	1. Re-order and label imports. DONE
+	2. Add more debug messages for control flow. DONE
+	3. Remove deprecated or unnecessary code. DONE
+	4. Move commented out code to separate cache file. DONE
+	5. Find a better way of reading controller input instead of iterating. DONE
+	6. Move constants to separate file. DONE
+	7. Revise variable names as needed. NOT NEEDED
+	8. Add more comments. DONE
+	9. Also add controller option for switching to autonomous mode? DONE
+	10. Resolve Polyfit warning caused by the image processing module. ??? DONE
 
-	Essential Modifications:
-		1. Removed unused imports: time, logging.
-			Also removed `from matplotlib import pyplot as plt`.
-		2. Removed commented out camera_module as cm because it appears to be deprecated.
-		3. Made the try-catch system more concise.
-		4. Added constants.py file.
-		5. Moved manual and autonomous modes into deparate functions.
-		6. Labeled video recording thing in a separate function.
-		7. Created function for detecting controller inputs.
-		8. Removed comments referencing deprecated camera module.
-		9. Added new controls. Now requires controller to be plugged in to start.
-		10. Video recording capability in autonomous.
-		11. Start GPIO daemon with OS commands. This is for hardware-level GPIO control / more finegrained servo control.
-		12. And more.
+Questions:
+	1. Why the large try-catch block?
+		Answer: See below.
+	2. How to jump to code in except?
+		Answer: When the controller is unplugged it automatically goes into autonomous mode.
+	3. What is the middle portion of manual mode for?
+		Answer: No longer relevant.
+	4. The video recording thing doesn't work..?
+		Answer: Resolved. Use VLC Media Player.
+
+Essential Modifications:
+	1. Removed unused imports: time, logging.
+		Also removed `from matplotlib import pyplot as plt`.
+	2. Removed commented out camera_module as cm because it appears to be deprecated.
+	3. Made the try-catch system more concise.
+	4. Added constants.py file.
+	5. Moved manual and autonomous modes into deparate functions.
+	6. Labeled video recording thing in a separate function.
+	7. Created function for detecting controller inputs.
+	8. Removed comments referencing deprecated camera module.
+	9. Added new controls. Now requires controller to be plugged in to start.
+	10. Video recording capability in autonomous.
+	11. Start GPIO daemon with OS commands. This is for hardware-level GPIO control / more finegrained servo control.
+	12. And more.
 
 File: `drive_module.py` (DEPRECATED)
 
-	(Chris is further developing and refactoring this now.)
+(Chris is further developing and refactoring this now.)
 
-	To Do:
-		1. Clean up comments.
-		2. Reorderings.
-		3. Rename variables if necessary.
-		4. Refine unit tests.
+To Do:
+	1. Clean up comments.
+	2. Reorderings.
+	3. Rename variables if necessary.
+	4. Refine unit tests.
 
-	Questions:
-		1. Wiring and ports. DONE
-		2. Why disable warning?
-			Answer: Possibly for former debugging purposes.
-		3. Calibration setting parameters, again.
-			Answer: Working on it.
-		4. Video capture not working..?
-			Anwer: Doesn't work.
+Questions:
+	1. Wiring and ports. DONE
+	2. Why disable warning?
+		Answer: Possibly for former debugging purposes.
+	3. Calibration setting parameters, again.
+		Answer: Working on it.
+	4. Video capture not working..?
+		Anwer: Doesn't work.
 
-	Essential Modifications:
-		1. Changed variable name dc to duty_cycle. More clear as to the intention of the code.
-		2. New modeling and abstractions for physical components.
+Essential Modifications:
+	1. Changed variable name dc to duty_cycle. More clear as to the intention of the code.
+	2. New modeling and abstractions for physical components.
 
 File: `steer_module.py` (DEPRECATED)
 
-	(Chris.)
+(Chris.)
 
 File: ~~`image_processing_module.py`~~ [`image_processing.py`](../src/image_processing.py)
 
-	To Do:
-		1. Better type comments. Also apply to other modules. DONE
-		2. Revise variables names if necessary. DONE
-		3. Move bounds constants to constants.py. DONE
+To Do:
+	1. Better type comments. Also apply to other modules. DONE
+	2. Revise variables names if necessary. DONE
+	3. Move bounds constants to constants.py. DONE
 
-	Questions:
-		1. What are the calculations in the later half doing?
-			Answer: See sticky notes.
-		2. Potentially use 0-slope detection to determine end of path.
-			Answer: Later.
-		3. Why are we going faster on sharper turns?
-			Answer: Turning is slower.
+Questions:
+	1. What are the calculations in the later half doing?
+		Answer: See sticky notes.
+	2. Potentially use 0-slope detection to determine end of path.
+		Answer: Later.
+	3. Why are we going faster on sharper turns?
+		Answer: Turning is slower.
 
-	Essential Modifications:
-		1. Added a lot of type hints. Removed the comments from the previous developer as a result, but those can be added back in later.
-		2. Corrected redundant image calculation.
-		3. Moved some values to the constants file.
-		4. Use radians to angle conversion from the `math` module.
-		5. Clarified comments. See documentation for more detailed explanation.
-		6. Ignorings warning for polyfit function.
-		7. Changed to use -90, 0, 90 system for steering.
-		8. And more.
+Essential Modifications:
+	1. Added a lot of type hints. Removed the comments from the previous developer as a result, but those can be added back in later.
+	2. Corrected redundant image calculation.
+	3. Moved some values to the constants file.
+	4. Use radians to angle conversion from the `math` module.
+	5. Clarified comments. See documentation for more detailed explanation.
+	6. Ignorings warning for polyfit function.
+	7. Changed to use -90, 0, 90 system for steering.
+	8. And more.
 
 File: ~~`quick_capture_module.py`~~ [`camera.py`](../src/camera.py)
 
@@ -172,7 +172,7 @@ To Do:
 Essential Modifications:
 1. Added second user nads2.
 2. Set up SSH and dual use of car.  
-	Use .vscode directory.
+3. Use .vscode directory.
 3. Use -90, 0, 90 system.
 4. Build task / launching.
 5. Replaced old drive and steer modules with car module.
