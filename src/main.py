@@ -12,13 +12,16 @@ import signal, socket, traceback, time
 
 # Package Imports
 import cv2
+import os
+import glob
 
 # Local Imports
 from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations, Streaming
 from gamepad import Gamepad, Inputs, UnpluggedError
 from streaming import FrameSegment
 import image_processing as ip
-from camera import Camera
+# from camera import Camera
+from threaded_camera import Camera
 from car import Car
 
 # Mutable
@@ -30,9 +33,11 @@ frame_segment = None
 auto_exit = False
 recording = False
 server_socket = None
+frames = []
 
 car = Car()
-cam    = Camera()
+cam    = Camera().start()
+time.sleep(2)
 g      = Gamepad()
 
 
@@ -265,7 +270,7 @@ def exit_auto():
     print("Returning To:", mode)
 
 def stream_in_manual():
-    global recording, done
+    global recording, done, frames
     """
     This function is the targert of manual_streaming_thread.
 
@@ -281,7 +286,7 @@ def stream_in_manual():
         
         stream_to_client(image)
         if recording:
-            video.write(image)
+            frames.append(image)
         if g.was_pressed(Inputs.B) or mode != Main_Mode.MANUAL:
             break
     
@@ -354,7 +359,8 @@ def stream_to_client(stream_image: cv2.Mat):
         
 
 def cleanup():
-    global cam, car, video, manual_streaming_thread, server_socket
+    
+    global cam, car, video, manual_streaming_thread, server_socket, frames
     print("Cleaning up...")
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
