@@ -20,3 +20,7 @@ class IO(io.pi):
 
     def set_input(self, pin):
         super().set_mode(pin, io.INPUT)
+
+# Should I get rid of this file? Sort of just bloats the file structure and
+# The only benefit is nicer (arguably) names for a couple functions... I don't think I even use `set_input()`
+# Counter argument: if it ain't broke don't fix it.
