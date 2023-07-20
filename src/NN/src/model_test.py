@@ -50,7 +50,7 @@ if __name__ == "__main__":
     try:
         i = 0
         while True:
-            _, frame = stream.capture() 
+            _, frame = stream.read() 
             angle = compute_steering_angle(frame)-90
             print(angle)
     finally:
