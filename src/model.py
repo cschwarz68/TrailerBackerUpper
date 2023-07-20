@@ -65,7 +65,7 @@ if __name__ == "__main__":
     end_time = time.time() + 80
 
     while time.time() < end_time:
-        image = cam.capture()
+        image = cam.read()
         steer_angle = compute_steering_angle(image)
         car.set_steering_angle(steer_angle)
         car.set_drive_power(-.7)
