@@ -1,10 +1,15 @@
+# Support for the `picamera` moudle has ended. `picamera2`` aims to replace it using the new libcamera system`
+# Unfortunately, `picamera2` is in very early stages of development. It does seem to be quite slow, but that might just be my fault
+# for coding poorly. In any case, the interface for controlling the camera's settings is very confusing.
+# Please consult https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf before making any crazy changes in this module.
+
 from picamera2 import Picamera2
 from threading import Thread 
-from picamera2.encoders import H264Encoder, Quality
-import cv2
+import libcamera
 import numpy as np
 
 import time
+
 
 class Camera:
    
@@ -13,18 +18,19 @@ class Camera:
         self.frames=0
         self.camera = Picamera2()
         self.config = self.camera.create_video_configuration(main= {"size":resolution})
+        self.config["transform"] = libcamera.Transform(hflip=True,vflip=True)
         self.camera.configure(self.config)
 
         self.framerate = framerate
-        #self.raw_capture = PiRGBArray(self.camera, size = resolution)
-        #self.stream = self.camera.capture_continuous(self.raw_capture, format = "bgr", use_video_port = True)
+      
 
-        self.camera.start() 
+        self.camera.start()
 
-        time.sleep(1)
+        time.sleep(2) # Needs a moment to get ready.
 
-        self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate})
-
+        self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate}) 
+        # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for camera control information
+        # (Appendix C: Camera controls)
 
         self.frame = None
         self.array = None
@@ -49,7 +55,6 @@ class Camera:
         return
             
     def read(self):
-        #self.frame = np.rot90(self.frame, 2)
         return self.frame 
     
     def stop(self):
