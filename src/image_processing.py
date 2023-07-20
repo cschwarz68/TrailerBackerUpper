@@ -196,7 +196,7 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     # Bitwise complement operator. Flips each bit for each element in the matrix.
     invert = ~img
     hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([85, 150, 40]) # Lower bound of HSV values to include in mask
+    lower_cyan = np.array([85, 100, 40]) # Lower bound of HSV values to include in mask
     upper_cyan = np.array([95, 255, 255]) # Upper bound of HSV values to include in mask
     # Clamp to certain cyan shades.
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
@@ -211,7 +211,7 @@ def weighted_center(img: cv2.Mat) -> tuple[float, float]:
     if len(contours)>0:
         big_contour = max(contours, key=cv2.contourArea)
     else:
-        return(img.shape[1] / 2, img.shape[0] / 2) # (if don't see anything, center is image center)
+        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
 
     # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
     moments = cv2.moments(big_contour)
@@ -288,6 +288,10 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
                               (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
+
+# cv2.putText except I added defaults to save me from typing
+def put_text(image: cv2.Mat, message: str, pos = (25,25), font_scale = 1, color = (255, 255, 255), thickness = 2):
+    cv2.putText(image, message, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
 
 # `steering_info` but with the red angle and coordinates.
 # Should be identical to the steps in main, but separate for testing.
