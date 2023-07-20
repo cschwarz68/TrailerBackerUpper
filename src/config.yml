@@ -24,7 +24,7 @@ settings:
         # Offset of rear camera
         rear offset: 0.02
         #Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
-        framerate: 15
+        framerate: 10
 
     #Driving settings
     driving: 
@@ -32,7 +32,7 @@ settings:
         #threshold of front
         sharp turn reverse threshold: 20
         #threshold of back
-        position threshold : 0.03125        #
+        position threshold : 0.03125        #1/60
         #angle of trailer relative to center of lane
         trailer angle off center threshold : 1
         #amount of degrees before trailer correction
