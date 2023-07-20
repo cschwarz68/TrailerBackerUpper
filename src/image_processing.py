@@ -211,7 +211,7 @@ def weighted_center(img: cv2.Mat) -> tuple[float, float]:
     if len(contours)>0:
         big_contour = max(contours, key=cv2.contourArea)
     else:
-        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
+        return(img.shape[1] / 2, img.shape[0] / 2) # (if don't see anything, center is image center)
 
     # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
     moments = cv2.moments(big_contour)
