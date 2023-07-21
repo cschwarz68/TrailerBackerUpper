@@ -15,6 +15,7 @@ import cv2
 
 # Local Imports
 from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
+from image_utils import weighted_center, filter_red
 
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)

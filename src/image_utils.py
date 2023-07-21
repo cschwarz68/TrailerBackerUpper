@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+# this was probably a waste of time i will do this later
+
 class RGBColor:
     def __init__(self, R: int, G: int, B: int):
         self.R = R
