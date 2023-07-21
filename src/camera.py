@@ -18,6 +18,7 @@ import cv2, sys
 # Local Imports
 from constants import OpenCV_Settings
 import image_processing as ip
+import image_utils as iu
 
 class Camera:
     
@@ -72,7 +73,7 @@ if __name__ == "__main__":
 
     while True:
         image = camera.capture()
-        reduced = ip.combine_images([(image, 0.25)]) # Reduce opacity of base image.
+        reduced = iu.combine_images([(image, 0.25)]) # Reduce opacity of base image.
 
         if go == "1":
             # Normal lane detection.

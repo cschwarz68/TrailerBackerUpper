@@ -209,19 +209,7 @@ Run `quick_capture_module.py` for unit tests.
 
 """
 
-# Returns a black image with dimensions identical to that of the given image.
-def zero_image(frame: cv2.Mat) -> cv2.Mat:
-    return np.zeros_like(frame)
 
-# Combines images together, where weight of each image can be adjusted.
-# Images later in the list take z-axis priority.
-def combine_images(pairs: list[tuple[cv2.Mat, float]]) -> cv2.Mat:
-    # Throw exception if no images are provided.
-    base = zero_image(pairs[0][0])
-    for image, weight in pairs:
-        # The last parameter is gamma, and is for adjusting the overall brightness.
-        base = cv2.addWeighted(base, 1, image, weight, 0)
-    return base
 
 # Adds lines to image. Color is in RGB format.
 def display_lines(img: cv2.Mat, lines: list[tuple[float, float, float, float]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
@@ -262,9 +250,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
 
     return final_image
 
-# cv2.putText except I added defaults to save me from typing
-def put_text(image: cv2.Mat, message: str, pos = (25,25), font_scale = 1, color = (255, 255, 255), thickness = 2):
-    cv2.putText(image, message, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
+
 
 # `steering_info` but with the red angle and coordinates.
 # Should be identical to the steps in main, but separate for testing.

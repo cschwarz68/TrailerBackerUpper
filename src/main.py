@@ -20,9 +20,11 @@ from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrat
 from gamepad import Gamepad, Inputs, UnpluggedError
 from streaming import FrameSegment
 import image_processing as ip
+import image_utils as iu
 # from camera import Camera
 from threaded_camera import Camera
 from car import Car
+from car_controller import CarController
 
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD
@@ -37,8 +39,9 @@ frames = []
 
 car = Car()
 cam    = Camera().start()
-time.sleep(2)
 g = Gamepad()
+car_controller = CarController()
+time.sleep(2)
 
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
@@ -60,7 +63,6 @@ def handler(signum: signal.Signals, stack_frame):
     done = True
     # print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
-    exit(0)
 signal.signal(signal.SIGINT, handler)
 
 def manual():
@@ -70,7 +72,7 @@ def manual():
     #Streaming must be handled in its own thread in manual driving mode. see comments on stream_in_manual()
     if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()): 
         manual_streaming_thread = Thread(target=stream_in_manual)
-        #manual_streaming_thread.start()
+        manual_streaming_thread.start()
 
 
 
@@ -284,6 +286,8 @@ def stream_in_manual():
 
     while not done:
         image = cam.read()
+        speed = car_controller.update_vel()
+        iu.put_text(image,f"speed: {speed}")
         
         stream_to_client(image)
         if recording:
@@ -348,6 +352,8 @@ def main():
 
     
     cleanup()
+
+    time.sleep()
      
     
     
@@ -371,12 +377,14 @@ def cleanup():
     car.stop()
     car.cleanup()
     cam.stop()
+    car_controller.stop()
 
     # Video
     
-    video.release()
+    # video.release()
 
     print("Cleaned up.")
+    exit(0)
 
 if __name__ == "__main__":
     main()

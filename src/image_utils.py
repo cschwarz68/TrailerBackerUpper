@@ -3,6 +3,9 @@ import numpy as np
 
 # this was probably a waste of time i will do this later
 
+# WHY DOESN'T PYTHON HAVE TYPE ALIASES RAHHHHHHHHHHHHHHHHHHHHHHH this module would be so easy
+# apparantly they are adding them in python 3.12 so that's cool but there is no way I'm updating the project python version
+
 class RGBColor:
     def __init__(self, R: int, G: int, B: int):
         self.R = R
@@ -50,7 +53,23 @@ class HSVColor:
         pass
 
 
+# Returns a black image with dimensions identical to that of the given image.
+def zero_image(frame: cv2.Mat) -> cv2.Mat:
+    return np.zeros_like(frame)
 
+# cv2.putText except I added defaults to save me from typing
+def put_text(image: cv2.Mat, message: str, pos = (25,25), font_scale = 1, color = (255, 255, 255), thickness = 2):
+    cv2.putText(image, message, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
+
+# Combines images together, where weight of each image can be adjusted.
+# Images later in the list take z-axis priority.
+def combine_images(pairs: list[tuple[cv2.Mat, float]]) -> cv2.Mat:
+    # Throw exception if no images are provided.
+    base = zero_image(pairs[0][0])
+    for image, weight in pairs:
+        # The last parameter is gamma, and is for adjusting the overall brightness.
+        base = cv2.addWeighted(base, 1, image, weight, 0)
+    return base
 
     
  
@@ -71,14 +90,25 @@ def filter_red(img: cv2.Mat) -> cv2.Mat:
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
 
+def filter_yellow(img: cv2.Mat) -> cv2.Mat:
+    
+    # Bitwise complement operator. Flips each bit for each element in the matrix.
+    invert = ~img
+    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
+    lower_cyan = np.array([115, 150, 40])
+    upper_cyan = np.array([125, 255, 255])
+    # Clamp to certain cyan shades.
+    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
+    return mask
+
 def filter_for_color(img : cv2.Mat, lower_color: HSVColor, upper_color: HSVColor):
     # Filters an image for a specified color. `ranges`
 
     # Get inverse of color and convert to HSV since we look at the inverted image below
-    def get_HSV_of_inverse(color: Color):
-        R, G, B = color.get_RGB_tuple()
+    def get_HSV_of_inverse(color: RGBColor):
+        R, G, B = color.get_tuple()
         inverse_color = (~R, ~G, ~B)
-        H,S,V = Color(*inverse_color).get_HSV_tuple()
+        H,S,V = RGBColor(*inverse_color).toHSV().get_tuple()
         return H,S,V
     
     lower_H, lower_S, lower_V = get_HSV_of_inverse(lower_color)

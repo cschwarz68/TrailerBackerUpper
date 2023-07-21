@@ -26,8 +26,7 @@ class Car:
         # Ensures only one instance of Car exists at one time. One machine shouldn't be controlling more than one car.
         if cls._self is None:
             cls._self = super().__new__(cls)
-        else:
-            raise Exception("Car may not be instatiated more than once.")
+      
         return cls._self
         
     def __init__(self):
@@ -36,6 +35,7 @@ class Car:
         """
 
         self.current_steering_angle = 0
+        self.current_drive_power = 0
 
         self.steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
         self.drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
@@ -61,6 +61,7 @@ class Car:
             drive_motor.forward()
         else:
             drive_motor.stop_rotation()
+        self.current_drive_power = power
         self.drive_motor.set_power(duty_cycle)
 
     def gamepad_steer(self, stick_val: float):

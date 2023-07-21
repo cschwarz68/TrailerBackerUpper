@@ -12,14 +12,27 @@ import time
 
 
 class Camera:
+     
+    _self = None
+    camera = None
+
+    def __new__(cls):
+        # Ensures only one instance of Camera exists at one time. 
+        if cls._self is None:
+            cls._self = super().__new__(cls)
+
+        return cls._self
    
     def __init__(self, resolution = (640, 480), framerate = 60):
     
         self.frames=0
-        self.camera = Picamera2()
-        self.config = self.camera.create_video_configuration(main= {"size":resolution})
-        self.config["transform"] = libcamera.Transform(hflip=True,vflip=True)
-        self.camera.configure(self.config)
+        if self.camera is None:
+            self.camera = Picamera2()
+            self.thread = Thread(target=self.update, args = ())
+        if not self.camera.is_open:
+            self.config = self.camera.create_video_configuration(main= {"size":resolution})
+            self.config["transform"] = libcamera.Transform(hflip=False,vflip=True) 
+            self.camera.configure(self.config)
 
         self.framerate = framerate
       
@@ -27,7 +40,6 @@ class Camera:
         self.camera.start()
 
         time.sleep(2) # Needs a moment to get ready.
-
         self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate}) 
         # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for camera control information
         # (Appendix C: Camera controls)
@@ -37,7 +49,7 @@ class Camera:
         self.stopped = False
     
     def start(self):
-        Thread(target=self.update, args = ()).start()
+        self.thread.start()
         return self 
     
     def update(self):
@@ -59,6 +71,7 @@ class Camera:
     
     def stop(self):
         self.stopped = True
+        self.thread.join()
 
 if __name__ == "__main__":
     
