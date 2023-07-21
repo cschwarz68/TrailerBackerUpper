@@ -74,3 +74,16 @@ Developed threaded camera system and the captures per second has improved greatl
 The only issue is that videos do not write. I've tried saving all the frames and then writing them all after the thread has closed but that doesnt work either. Frames will happily be written to disk as jpg files, but trying to write those very same jpeg files back into a video makes some crazy thhings happen with the framerate (i think `imwrite` is very slow)
 
 The only method that has resulted in the videos writing, and the framerate of the video writer actually matching the camera framerate was when I streamed the video, then recorded the streamed frames. This would be a solution except I stream over UDP so packet loss is frequent, which is fine in stream form but not so good when I want to use my recorded frames to train a neural network. 
+
+
+PROBLEM: State
+
+I've thought that the way programs state is handled is really bad for a long time and it's finally become a necessity to change it rather than a desire. In determining corrective steering angles for reverse autonomous driving, individual state componenets are considered one after the other, and then a steering change is made. Of course, this is prone to all kinds of shortcoming. The model predictive control algorithm described [here](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/literature/On_motion_planning_and_control_for_truck_and_trail.pdf) consideres all relevant state information when making angle corrections. In order to implement this, the state of a number of properties of the car and trailer must be stored. Here is an example of how state (and image processing pipeline) is handled now. Hitch angle, trailer position, etc. are calculated based on an image taken by the camera, the values are used, and discarded at next loop iteration. Upon next iteration, another frame is taken and the process restarts.
+
+A SUPERIOR SYSTEM:
+A dedicated thread constantly polls camera for new frames, and any code needing a camera image reads the latest frame captured, rather than waiting until a new capture is served (this has already been implemented). A dedicated thread continously reads from the camera, and updates state componenets. Code which requires state information reads the last known state, rather than waiting until a state has been served (This may seem bad, but the state will be updated so quickly that I doubt having a slightly outdated state will be worse than the delays of waiting for the latest update).
+
+HOW TO IMPLEMENT:
+1. Camera: Done (mostly; video writing is broken but I don't really care about it at the moment)
+2. State Handler: Working on [`car_controller.py`](../src/car_controller.py) to keep track of state information; MPC code will poll the Car Controller for its necessary state information
+3. Model predictive control: Need to discuss with Dr. Schwarz since I am bad at math but this is the basic idea: Get all necessary state information via image processing, center of the two lanes lines is the axis and corrections are made to keep the vehicle alligned with it.
