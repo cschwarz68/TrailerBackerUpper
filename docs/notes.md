@@ -42,7 +42,7 @@ Module: ~~quick_capture_module~~ [`camera`](../src/camera.py)
 	Captures images from the camera to be fed into the image processing module.
 
 
-FILES
+# FILES
 
 File: [`main.py`](../src/main.py)
 
@@ -85,7 +85,7 @@ Essential Modifications:
 
 File: `drive_module.py` (DEPRECATED)
 
-(Chris is further developing and refactoring this now.)
+Deprecated. See notes for `car.py`
 
 To Do:
 	1. Clean up comments.
@@ -108,7 +108,7 @@ Essential Modifications:
 
 File: `steer_module.py` (DEPRECATED)
 
-(Chris.)
+Deprecated. See notes for `car.py`
 
 File: ~~`image_processing_module.py`~~ [`image_processing.py`](../src/image_processing.py)
 
@@ -157,7 +157,7 @@ Essential Modifications:
 3. Added better visual and console debug output.
 4. And more.
 
-GENERAL
+# GENERAL
 
 To Do:  
 1. Organize workspace. DONE  
@@ -200,7 +200,7 @@ Usage notes:
 	5. Apply and reboot as prompted.
 8. Add instructions for updating VSCode.
 
-ROBOT
+# ROBOT
 
 1. If voltage is low, switch to using direct power from extension cord.
 2. Steering will take power from white battery if the black one is turned off.
@@ -210,7 +210,7 @@ ROBOT
 	Also command.
 5. Wires.
 
-CAMERA
+# CAMERA
 
 1. With OpenCV stuff, we can get the dimensions of an image with `image.shape()`.
 2. The OpenCV documentation is lacking in Python. Most of it is in C++, usually with a line somewhere describing the Python embedding. The C++ documentation is still useful!

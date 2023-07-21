@@ -1,8 +1,8 @@
 import warnings
 import math
-from time import time_ns, time
+from time import time_ns, time, sleep
 from threading import Thread
-from camera import Camera
+from threaded_camera import Camera
 from streaming import FrameSegment
 import socket
 
@@ -24,7 +24,7 @@ def filter_yellow(img: cv2.Mat) -> cv2.Mat:
     
     # Bitwise complement operator. Flips each bit for each element in the matrix.
     invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(invert, cv2.COLOR_RGB2HSV)
     lower_cyan = np.array([115, 150, 40])
     upper_cyan = np.array([125, 255, 255])
     # Clamp to certain cyan shades.
@@ -33,100 +33,40 @@ def filter_yellow(img: cv2.Mat) -> cv2.Mat:
 
 
 
-def center_yellow(img: cv2.Mat) -> tuple[float, float]:
 
-    # Contour: structural outlines.
-    # Ignoring hierarchy (second return value).
-    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours)>0:
-        big_contour = max(contours, key=cv2.contourArea)
-    else:
-        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
-
-    # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
-    moments = cv2.moments(big_contour)
-    if (moments["m00"] == 0) or (moments["m00"] == 0):
-        return(img.shape[1] / 2, img.shape[0] / 2)
-    cx = moments["m10"] / moments["m00"]
-    cy = moments["m01"] / moments["m00"]
-    return (cx, cy)
 
 
     
 
-def update_image(cam):
+def update_image(cam: Camera):
     
-    image = cam.capture()
+    image = cam.read()
     
     
     filtered = filter_yellow(image)
     return filtered
 
    
-
-    
-        
 def go():
-    global cam, avg_color
-    #color_wacther = Thread(target = func(avg_color))
-    on_screen = False
-    off_screen = True
     while True:
-        img = update_image(cam)
-
-
-    
-        avg_color_per_row = np.average(img, axis =0)
-        avg_color = np.average(avg_color_per_row, axis = 0)
-        
-        #x,y = center_yellow(img)
-        #display_string = '{0:.2f}'.format(x) + ',' + '{0:.2f}'.format(y)
-        cv2.putText(img, f"Average Pixel Value: {avg_color}", 
-                                (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-
-        
-        
-        start = time_ns()
-        
-        #need to thread all this stuff otherwise it is totally useless
-        while avg_color >.5:
+        image = cam.read()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        yellow = filter_yellow(image)
+        red = ip.filter_red(image)
+        red_x, red_y = ip.weighted_center(red)
+        yellow_x, yellow_y = ip.weighted_center(yellow)
+        combined = ip.combine_images([(yellow,1),(red, 1)])
+        ip.put_text(combined, f"{yellow_x} {yellow_y}")
+        if int(yellow_y) in range(int(red_y)-10, int(red_y)+10):
             
-            img = update_image(cam)
-            avg_color_per_row = np.average(img, axis =0)
-            avg_color = np.average(avg_color_per_row, axis = 0)
-            cv2.putText(img, f"Average Pixel Value: {avg_color}", 
-                                (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            stream_to_client(img)
-        nanoseconds_on = time_ns()- start
+            ip.put_text(combined, "passing", (50,50))
+
+        #print(red_y, yellow_y)
         
+        stream_to_client(combined)
+    
         
-        start2 = time_ns()
-        while avg_color <=.5:
-            img = update_image(cam)
-            avg_color_per_row = np.average(img, axis =0)
-            avg_color = np.average(avg_color_per_row, axis = 0)
-            cv2.putText(img, f"Average Pixel Value: {avg_color}", 
-                                (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            stream_to_client(img)
-        nanoseconds_off = time_ns() - start2
 
-        if nanoseconds_off < 1000:
-            nanoseconds_off = 0
-
-        if nanoseconds_on < 1000:
-            nanoseconds_on = 0
-        seconds_on = nanoseconds_on / 1000000000
-        seconds_off = nanoseconds_off / 1000000000
-
-        wheel_diameter = 2.5 # inches (disgusting)
-
-        wheel_circumference = wheel_diameter * math.pi # still inches (disgusting)
-        rotation_time = seconds_on + seconds_off
-
-        speed = wheel_circumference/rotation_time # inches per second (why don't engineers use metric)
-
-        print(rotation_time, speed) 
-        
 
 
 def stream_to_client(stream_image: cv2.Mat):
@@ -146,8 +86,13 @@ if __name__ == "__main__":
     """
     addr = "192.168.2.185"
     frame_segment = FrameSegment(server_socket, port, addr)
-    cam = Camera()
+    cam = Camera().start()
+    
+    sleep(2)
     interval = 1/15
+    if 6 in range(int(2)-5, int(2)+5):
+        print('duh')
+    #exit(0)
     go()
 
    

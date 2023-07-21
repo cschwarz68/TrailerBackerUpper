@@ -21,6 +21,8 @@ warnings.simplefilter('ignore', np.RankWarning)
 # Ignoring Polyfit warning because it's bothersome.
 # Supposedly we can resolve it by decreasing the order (third argument), but it's already at 1 here...
 
+
+
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -189,37 +191,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
     angle_to_mid_deg = math.degrees(angle_to_mid_radian)
     return angle_to_mid_deg
 
-# Filters image for red by inverting image so red --> cyan. 
-# Uses HSV format to be able to only include certain saturation and brightness of cyan.
-def filter_red(img: cv2.Mat) -> cv2.Mat:
-    
-    # Bitwise complement operator. Flips each bit for each element in the matrix.
-    invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([85, 100, 40]) # Lower bound of HSV values to include in mask
-    upper_cyan = np.array([95, 255, 255]) # Upper bound of HSV values to include in mask
-    # Clamp to certain cyan shades.
-    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
-    return mask
 
-# Finds the weighted center of the image. Images filtered for certain colors should be passed here to find the coordinates of colored markers.
-def weighted_center(img: cv2.Mat) -> tuple[float, float]:
-
-    # Contour: structural outlines.
-    # Ignoring hierarchy (second return value).
-    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours)>0:
-        big_contour = max(contours, key=cv2.contourArea)
-    else:
-        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
-
-    # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
-    moments = cv2.moments(big_contour)
-    if (moments["m00"] == 0) or (moments["m00"] == 0):
-        return(img.shape[1] / 2, img.shape[0] / 2)
-    cx = moments["m10"] / moments["m00"]
-    cy = moments["m01"] / moments["m00"]
-    return (cx, cy)
 
 # Finds the angle between the bottom center point and middle of the detected red zone / tape.
 def compute_hitch_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
@@ -311,3 +283,7 @@ def display_trailer_info(img: cv2.Mat,
     final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
                               (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
+
+
+    
+

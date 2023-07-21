@@ -66,3 +66,11 @@ This has been an issue the whole time I've been working on the project. Alex not
 POTENTIAL SOLUTION:
 
 [Handling image capturing in a dedicated thread](https://pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/#pyis-cta-modal). 
+
+CURRENT STATUS:
+
+Developed threaded camera system and the captures per second has improved greatly, at least in my limited testing.
+
+The only issue is that videos do not write. I've tried saving all the frames and then writing them all after the thread has closed but that doesnt work either. Frames will happily be written to disk as jpg files, but trying to write those very same jpeg files back into a video makes some crazy thhings happen with the framerate (i think `imwrite` is very slow)
+
+The only method that has resulted in the videos writing, and the framerate of the video writer actually matching the camera framerate was when I streamed the video, then recorded the streamed frames. This would be a solution except I stream over UDP so packet loss is frequent, which is fine in stream form but not so good when I want to use my recorded frames to train a neural network. 

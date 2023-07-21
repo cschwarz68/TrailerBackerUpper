@@ -38,16 +38,17 @@ frames = []
 car = Car()
 cam    = Camera().start()
 time.sleep(2)
-g      = Gamepad()
+g = Gamepad()
 
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-base_height, base_width, _ = cam.read().shape
-video = cv2.VideoWriter("main_video.avi", 
-                        fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
-                        (base_width, base_height), 
-                        isColor=True)
+
+# base_height, base_width, _ = cam.read().shape
+# video = cv2.VideoWriter("main_video.avi", 
+#                         fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
+#                         (base_width, base_height), 
+#                         isColor=True)
 
 # Loops until (b) is pressed.
 done = False
@@ -69,7 +70,7 @@ def manual():
     #Streaming must be handled in its own thread in manual driving mode. see comments on stream_in_manual()
     if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()): 
         manual_streaming_thread = Thread(target=stream_in_manual)
-        manual_streaming_thread.start()
+        #manual_streaming_thread.start()
 
 
 
@@ -366,9 +367,10 @@ def cleanup():
         manual_streaming_thread.join()
     if Streaming.DO_STREAM and server_socket is not None:
         server_socket.close()
-    cam.stop()
+    
     car.stop()
     car.cleanup()
+    cam.stop()
 
     # Video
     
