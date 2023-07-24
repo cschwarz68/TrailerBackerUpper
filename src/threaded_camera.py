@@ -35,17 +35,16 @@ class Camera:
             self.camera.configure(self.config)
 
         self.framerate = framerate
-      
+        
 
         self.camera.start()
 
-        time.sleep(2) # Needs a moment to get ready.
+        time.sleep(2) # Needs a moment to get ready; doucmentations says to do this.
         self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate}) 
         # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for camera control information
         # (Appendix C: Camera controls)
 
-        self.frame = None
-        self.array = None
+        self.frame = self.camera.capture_array() # initialize camera with non-None frame
         self.stopped = False
     
     def start(self):
@@ -57,14 +56,9 @@ class Camera:
         while not self.stopped:
             
             self.frame = self.camera.capture_array()
-            
-            
-            
 
-            
-        
         self.camera.close()
-        return
+        
             
     def read(self):
         return self.frame 

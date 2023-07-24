@@ -1,10 +1,16 @@
 """
 From ancabilloni/udp_camera_streaming. https://github.com/ancabilloni/udp_camera_streaming
 """
-
+# Package imports
+from threading import Thread
 from struct import pack
+import socket
 import cv2
 import math
+
+# Local imports
+from constants import Streaming
+from threaded_camera import Camera
 
 class FrameSegment:
     """
@@ -32,3 +38,47 @@ class FrameSegment:
             self.s.sendto(pack("B", count) + dat[array_pos_start:array_pos_end], (self.addr, self.port))
             array_pos_start = array_pos_end
             count -= 1
+
+    
+class Streamer():
+    is_activated = Streaming.ENABLED
+    
+    def __init__(self):
+
+        self.camera = Camera()
+        self.frame = self.camera.read() # need an initial frame so udp_frame() doesn't throw error
+        
+        self.thread = Thread(target=self._send, args = ()) # Could make the switch to TCP now that this is threaded. RTSP would be really cool but streaming isn't a priority right now
+        self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        self.port = Streaming.DESTINATION_PORT
+        self.addr = Streaming.DESTINATION_ADDRESS
+        self.frame_segment = FrameSegment(self.server_socket, self.port, self.addr)
+
+        self.stopped = False
+        
+        if not self.is_activated:
+            print("Streaming is disabled. See config.yml to enable.")
+        
+
+    def stream_image(self, image):
+        self.frame=image
+        
+
+    def _send(self):
+        while not self.stopped:
+            if self.is_activated:
+                self.frame_segment.udp_frame(self.frame)
+            else:
+                pass
+
+
+    def start(self):
+        self.thread.start()
+        return self
+    
+    
+
+    def stop(self):
+        self.stopped = True
+        self.thread.join()
+        self.server_socket.close()

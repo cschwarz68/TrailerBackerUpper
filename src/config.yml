@@ -47,7 +47,7 @@ settings:
         #Streaming destination port. Client is preconfigured with port 25565 by default. 
         destination port: 25565
         #Enable or disable streaming
-        do stream: true
+        enabled: true
 
 
 

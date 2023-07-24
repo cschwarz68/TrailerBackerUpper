@@ -1,11 +1,8 @@
-import warnings
-import math
-from time import time_ns, time, sleep
+
+from time import time
 from threading import Thread
 from threaded_camera import Camera
 from car import Car
-from streaming import FrameSegment
-import socket
 
 
 
@@ -21,7 +18,7 @@ import image_utils as iu
 # Horrible terrible spaghetti code module; will make this all not suck before implementing for real.
 # My plan is to implement the functionality of this module main or maybe image processing and then delete this file
 
-class SpeedDetector:
+class Speedometer:
     
 
     def __init__(self):
@@ -85,8 +82,9 @@ class SpeedDetector:
                     self.last_frame_passed = False
 
                 if self.rotation_time != 0:
-                    speed = 2.5/self.rotation_time #2.5 is wheel diameter in inches, speed is in inches per second
-                    self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1
+                    WHEEL_DIAMETER = 2.5 # inches
+                    speed = WHEEL_DIAMETER/self.rotation_time # inches per second
+                    self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # pos for forward; neg for reverse
                 
             
 
@@ -100,47 +98,8 @@ class SpeedDetector:
 
 
 
-
-
-    
-
-def update_image(cam: Camera):
-    
-    image = cam.read()
-    
-    
-    filtered = iu.filter_yellow(image)
-    return filtered
-
-   
-def go():
-    detector = SpeedDetector()
-    time.sleep(3)
-    while True:
-        detector.update()
-      
         
 
 
-
-def stream_to_client(stream_image: cv2.Mat):
-    frame_segment
-   
-    frame_segment.udp_frame(stream_image)   
-
-if __name__ == "__main__":
-    # Streaming
-    avg_color = 0
-    server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-    port = 25565
-    """
-    IMPORTANT
-
-    Insert the IP address of the device to stream to.
-    """
-    addr = "192.168.2.185"
-    frame_segment = FrameSegment(server_socket, port, addr)
-
-    go()
 
    

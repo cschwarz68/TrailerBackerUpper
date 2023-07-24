@@ -16,9 +16,9 @@ import os
 import glob
 
 # Local Imports
-from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations, Streaming
+from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
 from gamepad import Gamepad, Inputs, UnpluggedError
-from streaming import FrameSegment
+from streaming import Streamer
 import image_processing as ip
 import image_utils as iu
 # from camera import Camera
@@ -28,20 +28,17 @@ from car_controller import CarController
 
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD
-check_auto_exit_thread = None
-manual_streaming_thread = None
 mode = Main_Mode.MANUAL
-frame_segment = None
-auto_exit = False
+check_auto_exit_thread = None
 recording = False
-server_socket = None
 frames = []
 
 car = Car()
-cam    = Camera().start()
 g = Gamepad()
+cam    = Camera().start()
+streamer = Streamer().start()
 car_controller = CarController()
-time.sleep(2)
+
 
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
@@ -66,14 +63,7 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, check_auto_exit_thread, recording, manual_streaming_thread
-
-
-    #Streaming must be handled in its own thread in manual driving mode. see comments on stream_in_manual()
-    if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()): 
-        manual_streaming_thread = Thread(target=stream_in_manual)
-        manual_streaming_thread.start()
-
+    global done, mode, transition_mode, recording, check_auto_exit_thread
 
 
 
@@ -87,15 +77,11 @@ def manual():
         print("Transitioned to auto REVERESE. Press START to init.")
     elif g.was_pressed(Inputs.START):
         
+        check_auto_exit_thread = Thread(target = check_auto_exit)
+        check_auto_exit_thread.start()
+        
         mode = transition_mode
 
-        #Terminate thread for streaming in manual, since we are about to leave manual.
-        if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
-            manual_streaming_thread.join()
-        
-        #Start thread to listen for instruction to return to manual mode
-        check_auto_exit_thread = Thread(target=check_auto_exit)
-        check_auto_exit_thread.start()
         print("Entered Mode:", transition_mode)
     elif g.was_pressed(Inputs.A):
         if not recording:
@@ -117,11 +103,11 @@ def manual():
         car.gamepad_drive(drive_value)
 
 
+
+
 def auto_forward():
-    global cam, auto_exit, recording
-    if auto_exit:
-        exit_auto()
-        return
+    global cam, recording
+   
     image = cam.read()
     edges = ip.edge_detector(image)
     cropped_edges = ip.region_of_interest(edges)
@@ -142,7 +128,7 @@ def auto_forward():
     
     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
 
-    stream_to_client(visual_image)
+    streamer.stream_image(visual_image)
     if recording:
         video.write(visual_image)
 
@@ -151,10 +137,7 @@ def maintain_hitch_angle(hitch_angle):
             return hitch_angle * Reverse_Calibrations.TURN_RATIO
 
 def auto_reverse():
-    global cam, auto_exit, recording
-    if auto_exit:
-        exit_auto()
-        return
+    global cam, recording
     image = cam.read()
    
     raw_image = image
@@ -239,37 +222,39 @@ def auto_reverse():
     visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
     visual_image = ip.display_trailer_info(visual_image, hitch_angle, trailer_points)
 
-    stream_to_client(visual_image)
+    streamer.stream_image(visual_image)
     if recording:
         video.write(raw_image)
 
 def check_auto_exit():
-    global mode, auto_exit, recording
+    global mode, recording
     """
     The initial function of this function was to listen for presses of B and return to manual mode if B was pressed.
     It now also allows enabling and disabling of recording while in autonomous driving modes. Should be renamed accordingly at some point
     """
 
-    while mode != Main_Mode.MANUAL:
-        g.update_input()
-        if g.was_pressed(Inputs.B):
-            auto_exit = True
-            return
-        if g.was_pressed(Inputs.A):
-            if not recording:
-                recording = True
-                print("Started Recording")
-            else:
-                recording = False 
-                print("Stopped Recording")
+    while True:
+        if mode != Main_Mode.MANUAL:
+            g.update_input()
+            if g.was_pressed(Inputs.B):
+                exit_auto()
+                return
+            if g.was_pressed(Inputs.A):
+                if not recording:
+                    recording = True
+                    print("Started Recording")
+                else:
+                    recording = False 
+                    print("Stopped Recording")
 
 def exit_auto():
-    global mode, check_auto_exit_thread, auto_exit
+    global mode
     mode = Main_Mode.MANUAL
     car.set_drive_power(0)
     car.set_steering_angle(0)
     check_auto_exit_thread.join()
-    auto_exit = False
+    
+    
     print("Returning To:", mode)
 
 def stream_in_manual():
@@ -277,9 +262,8 @@ def stream_in_manual():
     """
     This function is the targert of manual_streaming_thread.
 
-    cam.read() hangs until a frame is supplied by the system. As a result, gamepad inputs can only be read when as frames are captured
-    if g.update_input() and cam.read() are called sequentially. Here, captures are offloaded to another thread whenever the car is in manual
-    control mode.
+    Because get_gamepad() is a blocking function, images cannot be read from the camera unless an input occurs. This thread allows get gamepad to block all it wants
+    in manual() while still allowing reading of frames
 
     This function also records if recording is enabled. May need to rename it to something more general.
     """
@@ -289,7 +273,7 @@ def stream_in_manual():
         speed = car_controller.update_vel()
         iu.put_text(image,f"speed: {speed}")
         
-        stream_to_client(image)
+        streamer.stream_image(image)
         if recording:
             frames.append(image)
         if g.was_pressed(Inputs.B) or mode != Main_Mode.MANUAL:
@@ -301,16 +285,11 @@ def stream_in_manual():
 def main():
     print("STARTING MAIN")
 
-    global done, mode, frame_segment, server_socket
-
-    # Streaming
-    if Streaming.DO_STREAM:
-        server_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-        port = Streaming.DESTINATION_PORT
+    global done, mode, check_auto_exit_thread
     
-        addr = Streaming.DESTINATION_ADDRESS
-        frame_segment = FrameSegment(server_socket, port, addr)
 
+
+    
     
 
     try:
@@ -328,8 +307,10 @@ def main():
                 exit(0)
         else:
             print("Plug in gamepad and restart program to use.")
-            exit(0)
+            cleanup()
 
+    
+    
     # Main loop.
     while not done:
         # Detect if controller is plugged in.
@@ -353,34 +334,26 @@ def main():
     
     cleanup()
 
-    time.sleep()
      
     
     
 
-def stream_to_client(stream_image: cv2.Mat):
-    global frame_segment
-    
-    if Streaming.DO_STREAM:
-        frame_segment.udp_frame(stream_image)
+
         
 
 def cleanup():
     
-    global cam, car, video, manual_streaming_thread, server_socket, frames
+    global cam, car, video, streamer, frames
     print("Cleaning up...")
-    if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
-        manual_streaming_thread.join()
-    if Streaming.DO_STREAM and server_socket is not None:
-        server_socket.close()
     
+    
+    streamer.stop()
     car.stop()
     car.cleanup()
     cam.stop()
     car_controller.stop()
 
     # Video
-    
     # video.release()
 
     print("Cleaned up.")
