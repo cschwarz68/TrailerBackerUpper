@@ -7,7 +7,7 @@ Reads a video and prints the predicted steering angles.
 # Package Imports
 from keras.models import load_model
 import numpy as np
-from camera import Camera
+from NN.src.camera_single_threaded import Camera
 import cv2
 
 model = load_model('/home/nads2/TrailerBackerUpper/src/NN/models/lane_navigation_final_2.h5')

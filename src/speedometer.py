@@ -1,7 +1,7 @@
 
 from time import time
 from threading import Thread
-from threaded_camera import Camera
+from camera import Camera
 from car import Car
 
 

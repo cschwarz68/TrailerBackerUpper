@@ -22,7 +22,7 @@ from streaming import Streamer
 import image_processing as ip
 import image_utils as iu
 # from camera import Camera
-from threaded_camera import Camera
+from camera import Camera
 from car import Car
 from car_controller import CarController
 

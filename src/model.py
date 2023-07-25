@@ -24,7 +24,7 @@ import cv2
 
 
 # Local Imports
-from camera import Camera
+from NN.src.camera_single_threaded import Camera # This module has not been updated to use multi-threaded camera
 from car import Car
 
 model = load_model('./src/NN/models/straight_line_driver.h5')

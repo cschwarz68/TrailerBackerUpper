@@ -3,6 +3,7 @@ import numpy as np
 import image_processing as ip
 import image_utils as iu
 from car import Car
+from camera import Camera
 from speedometer import Speedometer
 
 class CarController:
