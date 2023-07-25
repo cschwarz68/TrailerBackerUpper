@@ -22,7 +22,6 @@ class Speedometer:
     
 
     def __init__(self):
-        #idk if I need anything in here yet
         self.car = Car()
         self.camera = Camera()
         self.last_frame_passed = False
@@ -65,6 +64,7 @@ class Speedometer:
 
             
             # if yellow and red have same y level (+- 10), then the yellow is passing the red
+            # Better pass detection that could be implemented: check if a line drawn from the red intersects the yellow
                 if int(yellow_y) in range(int(red_y)-10, int(red_y)+10):
                     self.current_frame_passing = True
                 else:
@@ -81,7 +81,7 @@ class Speedometer:
                 else:
                     self.last_frame_passed = False
 
-                if self.rotation_time != 0:
+                if self.rotation_time != 0: # avoid divide by 0 error
                     WHEEL_DIAMETER = 2.5 # inches
                     speed = WHEEL_DIAMETER/self.rotation_time # inches per second
                     self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # pos for forward; neg for reverse

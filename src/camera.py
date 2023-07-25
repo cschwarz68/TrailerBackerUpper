@@ -1,4 +1,4 @@
-# Support for the `picamera` moudle has ended. `picamera2`` aims to replace it using the new libcamera system`
+# Support for the `picamera` moudle has ended. `picamera2` aims to replace it using the new libcamera system
 # Unfortunately, `picamera2` is in very early stages of development. It does seem to be quite slow, but that might just be my fault
 # for coding poorly. In any case, the interface for controlling the camera's settings is very confusing.
 # Please consult https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf before making any crazy changes in this module.
@@ -7,6 +7,7 @@ from picamera2 import Picamera2
 from threading import Thread 
 import libcamera
 import numpy as np
+import cv2
 
 import time
 
@@ -17,7 +18,8 @@ class Camera:
     camera = None
 
     def __new__(cls):
-        # Ensures only one instance of Camera exists at one time. 
+        # Ensures only one instance of Camera exists at one time. Any module creating a camera object references the SAME camera. This is very useful.
+        # Once second camera is set up I will make two children of this class (one for each camera), and those classes will be singletons.
         if cls._self is None:
             cls._self = super().__new__(cls)
 
@@ -34,7 +36,6 @@ class Camera:
             self.config["transform"] = libcamera.Transform(hflip=False,vflip=True) 
             self.camera.configure(self.config)
 
-        self.framerate = framerate
         
 
         self.camera.start()
@@ -48,6 +49,8 @@ class Camera:
         self.stopped = False
     
     def start(self):
+        # If the camera is to be used by multiple python modules, only the *first* one should call `start()`, the others can
+        # simply instantiate the class, as all instances of this class are the same object.
         self.thread.start()
         return self 
     
@@ -60,7 +63,7 @@ class Camera:
         self.camera.close()
         
             
-    def read(self):
+    def read(self) -> cv2.Mat:
         return self.frame 
     
     def stop(self):

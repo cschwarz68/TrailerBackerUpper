@@ -6,6 +6,17 @@ import numpy as np
 # WHY DOESN'T PYTHON HAVE TYPE ALIASES RAHHHHHHHHHHHHHHHHHHHHHHH this module would be so easy
 # apparantly they are adding them in python 3.12 so that's cool but there is no way I'm updating the project python version
 
+
+class Line:
+    def __init__(self, x1, y1, x2, y2):
+        self.x1 = x1
+        self.y1 = y1 
+        self.x2 = x2 
+        self.y2 = y2 
+    
+    def to_tuple(self):
+        return self.x1, self.y1, self.x2, self.y2
+
 class RGBColor:
     def __init__(self, R: int, G: int, B: int):
         self.R = R

@@ -24,7 +24,7 @@ import image_utils as iu
 # from camera import Camera
 from camera import Camera
 from car import Car
-from car_controller import CarController
+from state_information import CarController
 
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD
