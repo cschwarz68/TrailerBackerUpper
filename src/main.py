@@ -8,7 +8,7 @@ Exit manual mode / the program by pressing (B).
 """
 
 from threading import Thread
-import signal, socket, traceback, time
+import signal, traceback
 
 # Package Imports
 import cv2
@@ -21,8 +21,9 @@ from gamepad import Gamepad, Inputs, UnpluggedError
 from streaming import Streamer
 import image_processing as ip
 import image_utils as iu
-# from camera import Camera
 from camera import Camera
+#from camera import Camera
+
 from car import Car
 from state_information import CarController
 
@@ -32,12 +33,14 @@ mode = Main_Mode.MANUAL
 check_auto_exit_thread = None
 recording = False
 frames = []
+manual_streaming_thread = None
+auto_exit = False
 
 car = Car()
 g = Gamepad()
-cam    = Camera().start()
-streamer = Streamer().start()
-car_controller = CarController()
+cam    = Camera()
+streamer = Streamer()
+#car_controller = CarController()
 
 
 
@@ -63,7 +66,12 @@ def handler(signum: signal.Signals, stack_frame):
 signal.signal(signal.SIGINT, handler)
 
 def manual():
-    global done, mode, transition_mode, recording, check_auto_exit_thread
+    global done, mode, transition_mode, recording, check_auto_exit_thread, manual_streaming_thread
+
+
+    if (manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()): 
+        manual_streaming_thread = Thread(target=stream_in_manual)
+        manual_streaming_thread.start()
 
 
 
@@ -76,11 +84,13 @@ def manual():
         transition_mode = Main_Mode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
     elif g.was_pressed(Inputs.START):
+        mode = transition_mode
         
+        if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
+            manual_streaming_thread.join()
         check_auto_exit_thread = Thread(target = check_auto_exit)
         check_auto_exit_thread.start()
         
-        mode = transition_mode
 
         print("Entered Mode:", transition_mode)
     elif g.was_pressed(Inputs.A):
@@ -94,7 +104,6 @@ def manual():
 
 
     
-
     steer_value = g.get_stick_value(Inputs.LX)
     drive_value = g.get_trigger_value()
     if steer_value is not None:
@@ -106,7 +115,11 @@ def manual():
 
 
 def auto_forward():
-    global cam, recording
+    global cam, recording, auto_exit
+
+    if auto_exit:
+        exit_auto()
+        return
    
     image = cam.read()
     edges = ip.edge_detector(image)
@@ -137,7 +150,11 @@ def maintain_hitch_angle(hitch_angle):
             return hitch_angle * Reverse_Calibrations.TURN_RATIO
 
 def auto_reverse():
-    global cam, recording
+    global cam, recording, auto_exit
+    if auto_exit:
+        exit_auto()
+        return
+
     image = cam.read()
    
     raw_image = image
@@ -219,7 +236,7 @@ def auto_reverse():
     car.set_steering_angle(-stable_angle)
 
     # Video
-    visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+    visual_image = ip.display_lanes_and_path(image, -stable_angle, lane_lines)
     visual_image = ip.display_trailer_info(visual_image, hitch_angle, trailer_points)
 
     streamer.stream_image(visual_image)
@@ -227,7 +244,7 @@ def auto_reverse():
         video.write(raw_image)
 
 def check_auto_exit():
-    global mode, recording
+    global mode, recording, auto_exit
     """
     The initial function of this function was to listen for presses of B and return to manual mode if B was pressed.
     It now also allows enabling and disabling of recording while in autonomous driving modes. Should be renamed accordingly at some point
@@ -237,7 +254,7 @@ def check_auto_exit():
         if mode != Main_Mode.MANUAL:
             g.update_input()
             if g.was_pressed(Inputs.B):
-                exit_auto()
+                auto_exit = True
                 return
             if g.was_pressed(Inputs.A):
                 if not recording:
@@ -248,11 +265,12 @@ def check_auto_exit():
                     print("Stopped Recording")
 
 def exit_auto():
-    global mode
+    global mode, auto_exit
     mode = Main_Mode.MANUAL
     car.set_drive_power(0)
     car.set_steering_angle(0)
     check_auto_exit_thread.join()
+    auto_exit = False
     
     
     print("Returning To:", mode)
@@ -269,15 +287,15 @@ def stream_in_manual():
     """
 
     while not done:
+        if mode != Main_Mode.MANUAL:
+            break
         image = cam.read()
-        speed = car_controller.update_vel()
-        iu.put_text(image,f"speed: {speed}")
+        #speed = car_controller.update_vel()
+        #iu.put_text(image,f"speed: {speed}")
         
         streamer.stream_image(image)
         if recording:
             frames.append(image)
-        if g.was_pressed(Inputs.B) or mode != Main_Mode.MANUAL:
-            break
     
        
         
@@ -285,9 +303,9 @@ def stream_in_manual():
 def main():
     print("STARTING MAIN")
 
-    global done, mode, check_auto_exit_thread
+    global done, mode, check_auto_exit_thread, manual_streaming_thread
     
-
+ 
 
     
     
@@ -343,15 +361,16 @@ def main():
 
 def cleanup():
     
-    global cam, car, video, streamer, frames
+    global cam, car, video, streamer, frames, manual_streaming_thread
     print("Cleaning up...")
     
-    
+    if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
+        manual_streaming_thread.join()
     streamer.stop()
     car.stop()
     car.cleanup()
     cam.stop()
-    car_controller.stop()
+    #car_controller.stop()
 
     # Video
     # video.release()

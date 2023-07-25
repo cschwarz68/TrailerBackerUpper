@@ -5,6 +5,7 @@ class Main_Mode(Enum):
     MANUAL       = 0
     AUTO_FORWARD = 1
     AUTO_REVERSE = 2
+    STOPPED = 3
 
 class Drive_Params:
     STEERING_RACK_CENTER = steering["center"]

@@ -8,6 +8,7 @@ All images are represented by OpenCV matrices, which are aliases of numpy arrays
 
 import warnings
 import math
+import time
 
 # Package Imports
 import numpy as np
@@ -16,6 +17,8 @@ import cv2
 # Local Imports
 from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
 from image_utils import weighted_center, filter_red
+from camera import Camera
+from streaming import Streamer
 
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)
@@ -27,10 +30,10 @@ warnings.simplefilter('ignore', np.RankWarning)
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    thresh = int(max(gray[0]) * 0.8)
-    blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
-    edges = cv2.Canny(binary, 200, 400)
+    #thresh = int(max(gray[0]) * 0.8)
+    #blur = cv2.GaussianBlur(gray, (21, 21), 0)
+    #_, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+    edges = cv2.Canny(gray, 200, 400)
     return edges
 
 # Replaces specified fraction of image with white.
@@ -48,7 +51,10 @@ The y-axis coordinate starts from the top of the image, while the x-axis starts 
 Leaving polygons embedded here for clarity.
 """
 def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
-    height, width = edges.shape
+    try:
+        height, width, _  = edges.shape
+    except:
+        height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
     if not reverse:
@@ -273,4 +279,35 @@ def display_trailer_info(img: cv2.Mat,
 
 
     
+if __name__ == "__main__":
+    cam = Camera().start()
+    streamer = Streamer()
+
+    i = 0
+    while True:
+        image = cam.read()
+        
+        edges = edge_detector(image)
+        cropped_edges = region_of_interest(edges)
+        line_segments = detect_line_segments(cropped_edges)
+        lane_lines = average_slope_intercept(image, line_segments)
+        num_lanes = len(lane_lines)
+        steering_angle_lanes = compute_steering_angle(image, lane_lines)
+        final = display_lanes_and_path(image,steering_angle_lanes, lane_lines)
+
+        filtered = filter_red(image)
+        cropped = region_of_interest(filtered, True)
+        cx, cy = weighted_center(cropped)
+        trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
+        hitch_angle = compute_hitch_angle(image, cx, cy)
+        trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
+
+        final_final = display_trailer_info(final, trailer_angle, trailer_points)
+        #print("processed")
+        
+        
+
+        streamer.stream_image(final_final)
+
+
 

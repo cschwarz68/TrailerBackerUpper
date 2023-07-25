@@ -42,12 +42,12 @@ settings:
 
     #Streaming settings
     streaming:
+        #Enable or disable streaming
+        enabled: true
         #Streaming destination IP address
         destination ip: "192.168.2.185"
         #Streaming destination port. Client is preconfigured with port 25565 by default. 
         destination port: 25565
-        #Enable or disable streaming
-        enabled: false
 
 
 

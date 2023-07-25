@@ -85,5 +85,16 @@ A dedicated thread constantly polls camera for new frames, and any code needing 
 
 HOW TO IMPLEMENT:
 1. Camera: Done (mostly; video writing is broken but I don't really care about it at the moment)
-2. State Handler: Working on [`car_controller.py`](../src/car_controller.py) to keep track of state information; MPC code will poll the Car Controller for its necessary state information
+2. State Handler: Working on [`state_information.py`](../src/state_information.py) to keep track of state information; MPC code will poll the Car Controller for its necessary state information
 3. Model predictive control: Need to discuss with Dr. Schwarz since I am bad at math but this is the basic idea: Get all necessary state information via image processing, center of the two lanes lines is the axis and corrections are made to keep the vehicle alligned with it.
+
+
+EXTREMELY WEIRD ISSUE:
+Streaming multithreadedly causes controller lag?????? I genuinely cannot figure out why. Have reverted to single-threaded streaming.
+
+PROBLEM: Lanes are not detected when using threaded camera.
+More accurately, they are detected for a couple seconds upon entering autonomous mode, then one lane is lost, then both are lost. It is not the case that all image processing is broken. Speed detection has worked just fine, (not yet incorporated into the autonomous modes, but it did work with threaded camera.) Also, in autonomous reverse, the angle of the trailer is aquired with no issue; it is only lane detection that doesn't work. Perhaps the delay in-between frame captures from the camera blocking was beneficial?
+
+UPDATE: It is specifically edge detection that is not working. I'm really not sure why. Other image processing functions appear to work without error, and the raw images (changed to RGB and rotated) look the same visually as the did before.
+
+UPDATE: The Gaussian blur in `edge_detector` makes the lanes (as well as almost anything else) invisible to the canny function. Disabling the results in too many edges being detected (carpet, trailer, things in the office) I'm going home I will deal with this later

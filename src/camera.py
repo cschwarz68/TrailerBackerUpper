@@ -33,7 +33,7 @@ class Camera:
             self.thread = Thread(target=self.update, args = ())
         if not self.camera.is_open:
             self.config = self.camera.create_video_configuration(main= {"size":resolution})
-            self.config["transform"] = libcamera.Transform(hflip=False,vflip=True) 
+            self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) 
             self.camera.configure(self.config)
 
         
@@ -58,9 +58,9 @@ class Camera:
 
         while not self.stopped:
             raw = self.camera.capture_array()
-            rgb = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
-            upright = np.rot90(rgb, 2)
-            self.frame = upright
+            upright = np.rot90(raw, 2)
+            rgb = cv2.cvtColor(upright, cv2.COLOR_BGR2RGB)
+            self.frame = rgb
             # I don't like any image processing happening in this module, will be sure to move it eventually
 
         self.camera.close()
