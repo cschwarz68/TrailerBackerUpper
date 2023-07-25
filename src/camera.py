@@ -57,8 +57,11 @@ class Camera:
     def update(self):
 
         while not self.stopped:
-            
-            self.frame = self.camera.capture_array()
+            raw = self.camera.capture_array()
+            rgb = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
+            upright = np.rot90(rgb, 2)
+            self.frame = upright
+            # I don't like any image processing happening in this module, will be sure to move it eventually
 
         self.camera.close()
         
