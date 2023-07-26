@@ -7,8 +7,9 @@ from camera import Camera
 from speedometer import Speedometer
 
 # TODO: Come up with a nice name for this module and class
+# Working name: StateInformer get it like state informer like a spy? It's so funny.
 
-class CarController:
+class StateInformer:
     def __init__(self):
         self.steering_angle = 0
         self.vel = 0

@@ -25,7 +25,7 @@ from camera import Camera
 #from camera import Camera
 
 from car import Car
-from state_information import CarController
+from state_information import StateInformer
 
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD
@@ -290,8 +290,9 @@ def stream_in_manual():
         if mode != Main_Mode.MANUAL:
             break
         image = cam.read()
+        angle = car.current_steering_angle
         #speed = car_controller.update_vel()
-        #iu.put_text(image,f"speed: {speed}")
+        iu.put_text(image,f"speed: {angle}")
         
         streamer.stream_image(image)
         if recording:

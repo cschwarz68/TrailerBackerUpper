@@ -84,7 +84,7 @@ class Servo:
     """
     def set_angle(self, theta: float):
 
-        pulse_width = theta * 50 / 9 + 1000
+        pulse_width = theta * 50 / 6 + 1000
         self.set_pulse_width(pulse_width)
 
 

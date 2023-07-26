@@ -70,7 +70,7 @@ class Car:
         This is the range of values provided by gamepad analog stick input.
         """
         JOYSTICK_MAX = 32767.0
-        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / 90 # Ensures steering angle ranges from [-90, 90]
+        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / 60 # Ensures steering angle ranges from [-60, 60]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
         self.set_steering_angle(angle)
 
@@ -81,7 +81,7 @@ class Car:
         """
 
         angle = angle + Drive_Params.STEERING_RACK_CENTER
-        angle = clamp_steering_angle(angle) # Angle clamped to smaller bound than [-90, 90] to ensure motor safety.
+        self.current_steering_angle = angle
         self.steer_motor.set_angle(angle)
     
     def stabilize_steering_angle(
@@ -117,6 +117,7 @@ class Car:
         Stop steering and drive motors.
         """
         self.set_steering_angle(0)
+        self.current_steering_angle = 0
         self.steer_motor.stop()
         self.drive_motor.stop()
     
@@ -124,14 +125,6 @@ class Car:
         cleanup()
 
 
-def clamp_steering_angle(angle):
-    """
-    Ensures angles supplied to motor do not exceed bounds set in constants.Drive_Params.
-    """
-
-    angle = Drive_Params.STEERING_RACK_RIGHT if angle >= Drive_Params.STEERING_RACK_RIGHT else angle
-    angle = Drive_Params.STEERING_RACK_LEFT if angle <= Drive_Params.STEERING_RACK_LEFT else angle
-    return angle
 
 
 

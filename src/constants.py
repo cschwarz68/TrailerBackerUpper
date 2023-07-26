@@ -10,8 +10,7 @@ class Main_Mode(Enum):
 class Drive_Params:
     STEERING_RACK_CENTER = steering["center"]
 
-    STEERING_RACK_RIGHT = STEERING_RACK_CENTER + steering["right"]
-    STEERING_RACK_LEFT = STEERING_RACK_CENTER - steering["left"]
+   
     SHARP_TURN_DEGREES = driving["sharp turn threshold"]
     SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
 
