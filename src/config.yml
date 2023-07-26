@@ -6,10 +6,7 @@ settings:
         
         # Motor position in range [0,180] corresponding to centered steering rack
         center: 86
-        # Right bound of steering rack, expressed in degrees from center
-        right: 30
-        # Left bound of steering rack, expressed in degrees from center
-        left: 40
+      
     
     # Camera calibrations
     camera:

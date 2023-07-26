@@ -75,13 +75,18 @@ class Servo:
     def stop(self):
         self.set_pulse_width(0)
 
-    def set_angle(self, theta: float):
-        width = self.degrees_to_pulse_width(theta)
-        self.set_pulse_width(width)
 
-    def degrees_to_pulse_width(self, theta: float):
-        pulse = theta * 100 / 9 + 500
-        return int(pulse)
+    """
+    0    -> 
+    1000 -> full counterclockwise
+    1500 -> center
+    2000 -> full clockwise
+    """
+    def set_angle(self, theta: float):
+
+        pulse_width = theta * 50 / 9 + 1000
+        self.set_pulse_width(pulse_width)
+
 
     """
     0    -> off
