@@ -38,7 +38,7 @@ auto_exit = False
 
 car = Car()
 g = Gamepad()
-cam    = Camera()
+cam    = Camera().start()
 streamer = Streamer()
 #car_controller = CarController()
 

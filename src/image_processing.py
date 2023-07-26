@@ -30,10 +30,11 @@ warnings.simplefilter('ignore', np.RankWarning)
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    #thresh = int(max(gray[0]) * 0.8)
-    #blur = cv2.GaussianBlur(gray, (21, 21), 0)
-    #_, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
-    edges = cv2.Canny(gray, 200, 400)
+    coeff = .5 # higher = ignore more stuff (noise filtering I think?)
+    thresh = int(max(gray[0]) * coeff) 
+    blur = cv2.GaussianBlur(gray, (21, 21), 0)
+    _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
+    edges = cv2.Canny(binary, 200, 400)
     return edges
 
 # Replaces specified fraction of image with white.
@@ -287,6 +288,8 @@ if __name__ == "__main__":
     while True:
         image = cam.read()
         
+        
+        # white = filter_white(image)
         edges = edge_detector(image)
         cropped_edges = region_of_interest(edges)
         line_segments = detect_line_segments(cropped_edges)
@@ -303,10 +306,8 @@ if __name__ == "__main__":
         trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
 
         final_final = display_trailer_info(final, trailer_angle, trailer_points)
-        #print("processed")
         
         
-
         streamer.stream_image(final_final)
 
 
