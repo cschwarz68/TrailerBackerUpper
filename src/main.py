@@ -25,7 +25,7 @@ from camera import Camera
 #from camera import Camera
 
 from car import Car
-from state_information import StateInformer
+from state_informer import StateInformer
 
 # Mutable
 transition_mode = Main_Mode.AUTO_FORWARD

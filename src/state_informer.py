@@ -58,7 +58,7 @@ class StateInformer:
         self.frame = self.cam.read()
 
     def update_state(self):
-        self.read_camera()
+        self.read_camera() # This one needs to be first; the others all rely on it.
         self.update_vel()
         self.update_hitch_angle()
         self.update_steering_angle()
