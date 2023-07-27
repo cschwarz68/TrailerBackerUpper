@@ -14,6 +14,9 @@ _DRIVE_MOTOR_REVERSE_PIN = 5
 steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
 drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
 
+STEERING_RACK_CENTER = Drive_Params.STEERING_RACK_CENTER
+
+
 
 
 class Car:
@@ -70,19 +73,32 @@ class Car:
         This is the range of values provided by gamepad analog stick input.
         """
         JOYSTICK_MAX = 32767.0
-        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / 60 # Ensures steering angle ranges from [-60, 60]
+        MOTOR_MAX = 60
+        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / MOTOR_MAX # Ensures steering angle ranges from [-60, 60]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
         self.set_steering_angle(angle)
 
     def set_steering_angle(self, angle: float):
         """
-        Sets angle of steering rack. Values outside of the bounds [constants.Drive_Params.STEERING_RACK_LEFT, constants.Drive_Params.STEERING_RACK_RIGHT] will be clamped to fit
-        within the bounds. 0 is center, negative values are left, positive values are right.
+        Inputs must range from [-60, 60]. Bad inputs will throw error!
         """
+        if angle > 41:
+            angle = 41
+        elif angle < -61: #goes up to 61 to account for rounding
+            angle = 60
+        
 
-        angle = angle + Drive_Params.STEERING_RACK_CENTER
-        self.current_steering_angle = angle
-        self.steer_motor.set_angle(angle)
+
+       
+
+    
+        
+
+        self.current_steering_angle = angle 
+
+        
+
+        self.steer_motor.set_angle(self.current_steering_angle+STEERING_RACK_CENTER)
     
     def stabilize_steering_angle(
         self, 
@@ -129,3 +145,17 @@ class Car:
 
 
 
+if __name__ == "__main__":
+    from gamepad import Gamepad, Inputs
+    g = Gamepad()
+    car = Car()
+    while True:
+        g.update_input()
+        if g.was_pressed(Inputs.R_BUMPER):
+            car.set_steering_angle(car.current_steering_angle+1)
+            print("angle:",car.current_steering_angle)   
+        elif g.was_pressed(Inputs.L_BUMPER):
+            car.set_steering_angle(car.current_steering_angle-1)
+            print(car.current_steering_angle)   
+        elif g.was_pressed(Inputs.B):
+            break
