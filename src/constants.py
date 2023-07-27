@@ -1,5 +1,24 @@
 from enum import Enum
-from config_parser import driving, steering, camera, streaming
+import yaml
+
+def read_yaml(filename):
+    with open(f'{filename}.yml','r') as f:
+        output = yaml.safe_load(f)
+    return output
+    
+
+config = read_yaml('../TrailerBackerUpper/config')
+del yaml
+
+settings = config['settings']
+
+driving = settings['driving']
+
+steering = settings['steering rack']
+
+camera = settings['camera']
+
+streaming = settings['streaming']
 
 class Main_Mode(Enum):
     MANUAL       = 0
@@ -8,10 +27,10 @@ class Main_Mode(Enum):
     STOPPED = 3
 
 class Drive_Params:
-    STEERING_RACK_CENTER = steering["center"]
+    STEERING_RACK_CENTER       = steering["center"]
 
    
-    SHARP_TURN_DEGREES = driving["sharp turn threshold"]
+    SHARP_TURN_DEGREES         = driving["sharp turn threshold"]
     SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
 
 class Lane_Bounds_Ratio:
@@ -57,4 +76,7 @@ class Reverse_Calibrations:
 class Streaming:
     DESTINATION_ADDRESS = streaming["destination ip"]
     DESTINATION_PORT    = streaming["destination port"]
-    ENABLED           = streaming["enabled"]
+    ENABLED             = streaming["enabled"]
+
+if __name__ == "__main__":
+    print(settings)
