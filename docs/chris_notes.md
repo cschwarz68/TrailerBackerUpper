@@ -97,4 +97,8 @@ More accurately, they are detected for a couple seconds upon entering autonomous
 
 UPDATE: It is specifically edge detection that is not working. I'm really not sure why. Other image processing functions appear to work without error, and the raw images (changed to RGB and rotated) look the same visually as the did before.
 
-UPDATE: The Gaussian blur in `edge_detector` makes the lanes (as well as almost anything else) invisible to the canny function. Disabling the results in too many edges being detected (carpet, trailer, things in the office) I'm going home I will deal with this later
+UPDATE: The Gaussian blur in `edge_detector` makes the lanes (as well as almost anything else) invisible to the canny function. Disabling the blur results in too many edges being detected (carpet, trailer, things in the office) I'm going home I will deal with this later
+
+UPDATE: Adjusted blurring factor (adjusted some constant coefficient I'm not actually sure what its name would be)
+
+CURRENT_STATUS: Fixed
