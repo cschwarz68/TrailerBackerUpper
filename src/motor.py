@@ -77,14 +77,17 @@ class Servo:
 
 
     """
-    0    -> 
-    1000 -> full counterclockwise
-    1500 -> center
-    2000 -> full clockwise
+    0 -> full counterclockwise
+    60 -> center
+    120 -> full clockwise
     """
     def set_angle(self, theta: float):
 
-        pulse_width = theta * 50 / 6 + 1000
+        # Equation derived from relating desired angles to required pulse width.
+        # See: https://en.wikipedia.org/wiki/Servo_control#Pulse_duration
+        # See: https://en.wikipedia.org/wiki/Pulse-width_modulation
+        pulse_width = theta * 25 / 3 + 1000
+
         self.set_pulse_width(pulse_width)
 
 
