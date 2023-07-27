@@ -188,5 +188,4 @@ thing.py
 #Ignoring png because training frames, but training frames should only ever be in src/frames/ so if you need to commit .png remove this
 *.png
 
-#Temporarily ignoring since I have it set up with my IP in there (it is local so it is not the end of the world if it gets committed).
-config.yml
+

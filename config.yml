@@ -5,7 +5,7 @@ settings:
     steering rack: 
         
         # Motor position in range [0,120] corresponding to centered steering rack
-        center: 57
+        center: 52
       
     
     # Camera calibrations
