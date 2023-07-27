@@ -33,7 +33,7 @@ class Camera:
             self.thread = Thread(target=self.update, args = ())
         if not self.camera.is_open:
             self.config = self.camera.create_video_configuration(main= {"size":resolution})
-            self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) 
+            self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) # Seems to do nothing.
             self.camera.configure(self.config)
 
         
@@ -41,8 +41,13 @@ class Camera:
         self.camera.start()
 
         time.sleep(2) # Needs a moment to get ready; doucmentations says to do this.
-        self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate}) 
-        # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for camera control information
+        self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate})
+
+        # AeEnable and AwbEnable control automatic exposure control and automatic white balancing. Picamera2 documentations reccomends these be off for video.
+        # Unsure how much of a performance benefit this gives us.
+        # Gaussian blur settings for lane detection had to be adjusted due to decreased image brightness as a result of changing these settings.
+
+        # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for more camera control information
         # (Appendix C: Camera controls)
 
         self.frame = self.camera.capture_array() # initialize camera with non-None frame
