@@ -173,6 +173,7 @@ cython_debug/
 # Video captures we don't want committed + nerual network training frame directory
 test_captures/
 frames/
+videos/
 
 # Ignore our favorite temp file names
 cache.txt
