@@ -252,7 +252,7 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     final_image = display_lines(img, lane_lines, (255, 0, 0))
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
+    final_image = cv2.putText(final_image, f"Steering Angle: {steering_angle_deg}", 
                               (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
@@ -271,10 +271,10 @@ def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, floa
 
 # To be used in conjunction with `display_lanes_and_path`.
 def display_trailer_info(img: cv2.Mat, 
-                         trailer_angle: float, 
+                         hitch_angle: float, 
                          trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
     final_image = display_lines(img, [trailer_points], (0, 0, 255))
-    final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
+    final_image = cv2.putText(final_image, f"Hitch Angle: {hitch_angle}", 
                               (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
 
