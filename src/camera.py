@@ -41,7 +41,7 @@ class Camera:
         self.camera.start()
 
         time.sleep(2) # Needs a moment to get ready; doucmentations says to do this.
-        self.camera.set_controls({"AeEnable": False, "AwbEnable":False, "FrameRate": framerate})
+        self.camera.set_controls({"AeEnable": False, "AwbEnable": False, "FrameRate": framerate})
 
         # AeEnable and AwbEnable control automatic exposure control and automatic white balancing. Picamera2 documentations reccomends these be off for video.
         # Unsure how much of a performance benefit this gives us.

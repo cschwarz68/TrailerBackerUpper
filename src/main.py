@@ -296,8 +296,8 @@ def stream_in_manual():
         angle = car.current_steering_angle
         #speed = car_controller.update_vel()
         speed = state_informer.get_vel()
-        #iu.put_text(image,f"Steering Angle: {angle}")
-        iu.put_text(image, f"Speed: {speed}")
+        iu.put_text(image,f"Steering Angle: {angle}")
+        iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
         
         streamer.stream_image(image)
         if recording:

@@ -11,9 +11,12 @@ from car import Car
 import numpy as np
 import cv2
 import time
+from gamepad import Gamepad, Inputs
 
 #Local Imports
 import image_utils as iu
+from streaming import Streamer
+#streamer = Streamer()
 
 # Horrible terrible spaghetti code module; will make this all not suck before implementing for real.
 # My plan is to implement the functionality of this module main or maybe image processing and then delete this file
@@ -54,12 +57,14 @@ class Speedometer:
                 self.last_known_vel = 0 # not great
             else:
                 self.current_frame = self.camera.read()
-                image = cv2.cvtColor(self.current_frame, cv2.COLOR_BGR2RGB)
+                image = self.current_frame # cv2.cvtColor(self.current_frame, cv2.COLOR_BGR2RGB)
                 yellow = iu.filter_yellow(image)
                 red = iu.filter_red(image)
                 red_x, red_y = iu.weighted_center(red)
                 yellow_x, yellow_y = iu.weighted_center(yellow)
-                #combined = iu.combine_images([(yellow,1),(red, 1)])
+                combined = iu.combine_images([(yellow,1),(red, 1)])
+                #streamer.stream_image(combined)
+
 
                 
 
@@ -86,6 +91,29 @@ class Speedometer:
                     WHEEL_DIAMETER = 2.5 # inches
                     speed = WHEEL_DIAMETER/self.rotation_time # inches per second
                     self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # positive for forward; negative for reverse
+
+if __name__ == "__main__":
+    cam = Camera().start()
+    speedometer = Speedometer().start()
+    streamer = Streamer()
+    g = Gamepad()
+    car = Car()
+    while True:
+        g.update_input()
+        img = cam.read()
+        speed = speedometer.read()
+        iu.put_text(img, f"Speed: {speed}")
+        streamer.stream_image(img)
+        stick_val = g.get_stick_value(Inputs.LX)
+        trigger_val = g.get_trigger_value()
+        if stick_val is not None:
+            car.gamepad_steer()
+        if trigger_val is not None:
+            car.gamepad_drive()
+        if g.was_pressed(Inputs.B):
+            break
+        
+
                 
             
 
