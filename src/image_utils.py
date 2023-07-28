@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import image_processing as ip
 
 # this was probably a waste of time i will do this later
 
@@ -158,3 +159,35 @@ def weighted_center(img: cv2.Mat) -> tuple[float, float]:
     cx = moments["m10"] / moments["m00"]
     cy = moments["m01"] / moments["m00"]
     return (cx, cy)
+
+
+def cover_portion(image: cv2.Mat, portion: float, color: int) -> cv2.Mat:
+    try:
+        height, width, _  = image.shape
+    except:
+        height, width = image.shape
+    mask = np.zeros_like(image)
+
+    
+    polygon = np.array(
+        [
+            [
+                (0, height * portion), 
+                (width, height * portion), 
+                (width, height), 
+                (0, height)
+            ]
+        ], 
+        np.int32
+    )
+ 
+    cv2.fillPoly(mask, polygon, 255)
+    cropped_edges = combine_images([(image, 1), (mask, 1)])
+    return cropped_edges
+
+
+def midpoint(point1: tuple[ int, int], point2: tuple[int, int]):
+    x1, y1 = point1 
+    x2, y2 = point2 
+
+    return int((x1 + x2) / 2 ), int((y1 + y2) / 2) # no fractional pixels

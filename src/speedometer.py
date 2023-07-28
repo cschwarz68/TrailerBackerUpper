@@ -107,9 +107,9 @@ if __name__ == "__main__":
         stick_val = g.get_stick_value(Inputs.LX)
         trigger_val = g.get_trigger_value()
         if stick_val is not None:
-            car.gamepad_steer()
+            car.gamepad_steer(stick_val)
         if trigger_val is not None:
-            car.gamepad_drive()
+            car.gamepad_drive(trigger_val)
         if g.was_pressed(Inputs.B):
             break
         

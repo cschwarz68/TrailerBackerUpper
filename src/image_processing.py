@@ -160,6 +160,8 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
     # Because lane_lines will only ever have two values, we could return this as a tuple, but that would require unnecessary refactoring.
     return lane_lines
 
+
+
 # Use lane lines to predict the steering angle in degrees.
 # -90 --> left, 0 --> straight, 90 --> right
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, float, float]]) -> float:

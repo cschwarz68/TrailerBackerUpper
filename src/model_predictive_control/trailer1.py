@@ -152,6 +152,7 @@ def plot_states(t, y):
     plt.ylabel("ypos (in)")
     plt.legend()
     plt.show()
+    plt.savefig('path.png')
 
     # angles of car and trailer
     plt.plot(t, theta1 * 180 / pi, label="theta1")
@@ -162,6 +163,7 @@ def plot_states(t, y):
     plt.ylabel("ang (deg)")
     plt.legend()
     plt.show()
+    plt.savefig('angles.png', dpi = 1000)
 
 
 def grid_search(t0, y0, v1, tstep, str0):
@@ -305,7 +307,9 @@ def test_newtons():
     plt.xlabel("time")
     plt.ylabel("steer")
     plt.legend()
-    plt.show()
+  
+        #plt.show()
+    plt.savefig('plot.png')
 
     plot_states(tout, yout)
 

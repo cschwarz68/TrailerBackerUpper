@@ -169,8 +169,7 @@ def auto_reverse():
 
     # Trailer
     filtered = ip.filter_red(image)
-    cropped = ip.region_of_interest(filtered, True)
-    cx, cy = ip.weighted_center(cropped)
+    cx, cy = ip.weighted_center(filtered)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
     hitch_angle = ip.compute_hitch_angle(image, cx, cy)
     trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
@@ -226,6 +225,10 @@ def auto_reverse():
             if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
                 steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
+
+            # if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
+            #     steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+            # If the trailer is not centered, steer to the center
             drive_power = -.7
         
         
