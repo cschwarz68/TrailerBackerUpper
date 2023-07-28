@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import image_processing as ip
 import image_utils as iu
+from threading import Thread
 from car import Car
 from camera import Camera
 from speedometer import Speedometer
@@ -11,6 +12,8 @@ from speedometer import Speedometer
 
 class StateInformer:
     def __init__(self):
+        self.thread = Thread(target = self.poll_state_info)
+        self.stopped=False
         self.steering_angle = 0
         self.vel = 0
         self.hitch_angle = 0
@@ -42,7 +45,7 @@ class StateInformer:
     def update_trailer_pos(self):
         img = self.frame
         red = iu.filter_red(img)
-        trailer_x, trailer_y = ip.weighted_center(red) # relative to frame; needs to be relative to lane center
+        trailer_x, trailer_y = iu.weighted_center(red) # relative to frame; needs to be relative to lane center
         
 
     def get_trailer_pos(self):
@@ -54,18 +57,31 @@ class StateInformer:
     def get_steering_angle(self):
         return self.steering_angle()
     
-    def read_camera(self):
-        self.frame = self.cam.read()
 
     def update_state(self):
-        self.read_camera() # This one needs to be first; the others all rely on it.
+        self.read_camera() # This one needs to be first; the others rely on it.
         self.update_vel()
         self.update_hitch_angle()
         self.update_steering_angle()
         self.update_trailer_pos()
+        
+
+    def read_camera(self):
+        self.frame = self.cam.read()
+
+    def poll_state_info(self):
+        while not self.stopped:
+            self.update_state()
+    
+    def start(self):
+        self.thread.start()
+        return self
 
     def stop(self):
         self.speedometer.stop()
+        self.stopped = True
+        self.thread.join()
+        print("StateInformer resources released.")
 
     
 

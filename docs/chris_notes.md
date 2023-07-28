@@ -102,3 +102,13 @@ UPDATE: The Gaussian blur in `edge_detector` makes the lanes (as well as almost 
 UPDATE: Adjusted blurring factor (adjusted some constant coefficient I'm not actually sure what its name would be)
 
 CURRENT_STATUS: Fixed
+
+NOTE: What we are reffering to as "steering angle" or some variation thereof, is actually the angle we are setting the steering rack motor to, *not* the angle of the wheels.
+
+I'm currently working to make the steering angle refer to the actual wheel angle. I've calculated the steering ratio by moving the motor some amount of degrees, measureing the degree change at the wheel, and dividing the two numbers, as one might expect. However, the ratio when turing right* (approx 60:31), is different than the turning ratio when turning left** (approx 60:21). There is a high possibility for human error here, but the difference seems far too great. It is clear the car can turn right much more sharply than left.
+
+For now, I will simply assume both distinct turning ratios have been correctly measured.
+
+*when the wheel angle is positive, not simply when the wheel is moving to the right
+
+**when the wheel angle is negative, not simply when the wheel is moving to the left

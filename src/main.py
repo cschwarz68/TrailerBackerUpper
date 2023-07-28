@@ -40,7 +40,7 @@ car = Car()
 g = Gamepad()
 cam    = Camera().start()
 streamer = Streamer()
-#car_controller = CarController()
+state_informer = StateInformer().start()
 
 
 
@@ -222,7 +222,10 @@ def auto_reverse():
             steering_angle = steering_angle_lanes 
             drive_power = .7
       else:
-            car.set_steering_angle(-steering_angle_lanes)
+            steering_angle = steering_angle_lanes
+            if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
+                steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            # If the angle of the hitch is too great, reduce it.
             drive_power = -.7
         
         
@@ -292,7 +295,9 @@ def stream_in_manual():
         image = cam.read()
         angle = car.current_steering_angle
         #speed = car_controller.update_vel()
-        iu.put_text(image,f"speed: {angle}")
+        speed = state_informer.get_vel()
+        #iu.put_text(image,f"Steering Angle: {angle}")
+        iu.put_text(image, f"Speed: {speed}")
         
         streamer.stream_image(image)
         if recording:
@@ -368,6 +373,7 @@ def cleanup():
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
     streamer.stop()
+    state_informer.stop()
     car.stop()
     car.cleanup()
     cam.stop()

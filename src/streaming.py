@@ -90,3 +90,4 @@ class Streamer():
         if self.thread.is_alive():
             self.thread.join()
         self.server_socket.close()
+        print("Streamer resources released.")

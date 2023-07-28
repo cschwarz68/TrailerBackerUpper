@@ -73,20 +73,28 @@ class Car:
         This is the range of values provided by gamepad analog stick input.
         """
         JOYSTICK_MAX = 32767.0
-        MOTOR_MAX = 60
-        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / MOTOR_MAX # Ensures steering angle ranges from [-60, 60]
+        STEERIN_RACK_MAX = 21
+        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / STEERIN_RACK_MAX # Ensures steering angle ranges from [-21, 21]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
         self.set_steering_angle(angle)
 
     def set_steering_angle(self, angle: float):
         """
-        Inputs must range from [-60, 60]. Bad inputs will throw error!
+        Inputs must range from [-21, 21]. Bad inputs will be clamped
         """
-        if angle > 41:
-            angle = 41
-        elif angle < -61: #goes up to 61 to account for rounding
-            angle = 60
+
+        LEFT_STEERING_RATIO, RIGHT_STEERING_RATIO = 21/60, 31/60
         
+
+        if angle > 22: # goes up to 22 in case of rounding error
+             angle = 21
+        elif angle < -22: 
+             angle = -21
+        
+        self.current_steering_angle = angle 
+        
+        angle = angle / LEFT_STEERING_RATIO if angle < 0 else angle / RIGHT_STEERING_RATIO
+        self.steer_motor.set_angle(angle+STEERING_RACK_CENTER)
 
 
        
@@ -94,11 +102,9 @@ class Car:
     
         
 
-        self.current_steering_angle = angle 
 
         
 
-        self.steer_motor.set_angle(self.current_steering_angle+STEERING_RACK_CENTER)
     
     def stabilize_steering_angle(
         self, 

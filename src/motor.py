@@ -19,6 +19,7 @@ def cleanup():
     io.stop()
     os.system("systemctl stop pigpiod")
     time.sleep(1)
+    print("GPIO resources released")
 
 class DCMotor:
     """

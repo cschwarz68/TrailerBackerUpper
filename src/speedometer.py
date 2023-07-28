@@ -41,6 +41,7 @@ class Speedometer:
     def stop(self):
         self.stopped = True
         self.thread.join()
+        print("Speedometer resources released.")
     
     def read(self):
         return self.last_known_vel
@@ -84,7 +85,7 @@ class Speedometer:
                 if self.rotation_time != 0: # avoid divide by 0 error
                     WHEEL_DIAMETER = 2.5 # inches
                     speed = WHEEL_DIAMETER/self.rotation_time # inches per second
-                    self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # pos for forward; neg for reverse
+                    self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # positive for forward; negative for reverse
                 
             
 

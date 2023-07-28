@@ -76,7 +76,9 @@ class Camera:
     
     def stop(self):
         self.stopped = True
+        self.camera.stop()
         self.thread.join()
+        print("Camera resources released.")
 
 if __name__ == "__main__":
     
