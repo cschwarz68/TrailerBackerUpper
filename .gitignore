@@ -184,6 +184,7 @@ thing.py
 # DO NOT COMMIT VIDEOS THE REPO IS ALREADY OVER 1GB BECAUSE PEOPLE (NOT ME) COMMITTED VIDEOS AND PICTURES
 *.mp4
 *.avi
+*.h264
 
 #Ignoring png because training frames, but training frames should only ever be in src/frames/ so if you need to commit .png remove this
 *.png
