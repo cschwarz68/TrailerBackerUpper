@@ -10,9 +10,9 @@ import matplotlib.animation as animation
 # L1 = wheelbase of car
 # L2 = 'wheelbase' of trailer
 # M1 = trailer hitch offset
-L1 = 5  # inches # curr: 6
-L2 = 7  # inches # curr: 11.75
-M1 = 1  # inches # curr: 2
+L1 = 6  # inches # curr: 6
+L2 = 11.75  # inches # curr: 11.75
+M1 = 2  # inches # curr: 2
 
 
 def trailer1_step(tspan, y0, u, p, N=10):
@@ -155,6 +155,7 @@ def plot_states(t, y):
     plt.savefig('path.png')
 
     # angles of car and trailer
+    plt.clf()
     plt.plot(t, theta1 * 180 / pi, label="theta1")
     plt.plot(t, theta2 * 180 / pi, label="theta2")
     plt.plot(t, beta2 * 180 / pi, label="beta2")
@@ -214,7 +215,7 @@ def test_grid():
     # time horizon
     tstep = 0.5
     # set constant speed input
-    v1 = -6  # inches per second, negative for reverse
+    v1 = -1.4  # inches per second, negative for reverse
 
     # grid search
     tout = []
@@ -247,6 +248,8 @@ def test_grid():
     plt.ylabel("steer")
     plt.legend()
     plt.show()
+    plt.savefig("steer.png")
+    plt.clf()
 
     plot_states(tout, yout)
 
