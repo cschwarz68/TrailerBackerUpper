@@ -4,7 +4,7 @@ as well as some autonomous driving functionality.
 """
 
 from constants import Drive_Params
-from motor import DCMotor, Servo, cleanup
+from gpio import DCMotor, Servo, cleanup
 
 _SERVO_MOTOR_PIN         = 4
 _DRIVE_MOTOR_POWER_PIN   = 25
@@ -73,8 +73,8 @@ class Car:
         This is the range of values provided by gamepad analog stick input.
         """
         JOYSTICK_MAX = 32767.0
-        STEERIN_RACK_MAX = 21
-        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / STEERIN_RACK_MAX # Ensures steering angle ranges from [-21, 21]
+        STEERING_RACK_MAX = 21
+        ANGLE_NORMALIZATION_CONSTANT = JOYSTICK_MAX / STEERING_RACK_MAX # Ensures steering angle ranges from [-21, 21]
         angle = stick_val / ANGLE_NORMALIZATION_CONSTANT
         self.set_steering_angle(angle)
 
@@ -83,7 +83,7 @@ class Car:
         Inputs must range from [-21, 21]. Bad inputs will be clamped
         """
 
-        LEFT_STEERING_RATIO, RIGHT_STEERING_RATIO = 21/60, 31/60
+        LEFT_STEERING_RATIO, RIGHT_STEERING_RATIO = 21/60, 31/60 # MOVE INTO CONFIG FILE
         
 
         if angle > 22: # goes up to 22 in case of rounding error
