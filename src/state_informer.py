@@ -1,32 +1,55 @@
-import cv2
+import math
+import time
+from imutils import contours, perspective
+from threading import Thread
+from math import dist
 import numpy as np
+import imutils
+import cv2
+# LOCAL IMPORTS
+from constants import ImageProcessingCalibrations as Calibrations
+from speedometer import Speedometer
 import image_processing as ip
 import image_utils as iu
-from threading import Thread
-from car import Car
 from camera import Camera
-from speedometer import Speedometer
+from car import Car
 
 # TODO: Come up with a nice name for this module and class
 # Working name: StateInformer get it like state informer like a spy? It's so funny.
 
+# This module tracks all relevant vehicle state information needed for implemeneting model predictive control
+# as described in http://liu.diva-portal.org/smash/get/diva2:1279885/FULLTEXT01.pdf (pdf available in ../literature)
+
+PIXELS_TO_INCHES_RATIO = Calibrations.PIXELS_TO_INCHES_RATIO
+
 class StateInformer:
     def __init__(self):
-        self.thread = Thread(target = self.poll_state_info)
-        self.stopped=False
-        self.steering_angle = 0
-        self.vel = 0
-        self.hitch_angle = 0
-        self.lane_pos = 0
-        self.trailer_x, self.trailer_y = 0, 0
-        self.car = Car()
-        self.cam = Camera()
-        self.frame = self.cam.read() # ensure frame is non-None at start
-        self.speedometer = Speedometer().start()
-        self.lanes = []
-        self.lane_center: tuple[int, int] = (0,0)
-        self.trailer_deviation = 0
+        # in variable names below, "distance" refers to values in pixels, and "deviation" refers to values in inches
+        self.thread: Thread = Thread(target = self.poll_state_info)
+        self.speedometer: Speedometer = Speedometer().start()
+        self.cam: Camera = Camera()
+        self.car: Car = Car()
 
+        self.lane_center: tuple[int, int] = (0,0)
+        self.lanes: list[tuple[float, float, float, float]] = []
+
+        self.frame: cv2.Mat = self.cam.read() # ensure frame is non-None at start
+        
+        self.steering_angle: float = 0 # alpha
+        self.car_lane_angle: float = 0 # theta0
+        self.car_deviation: float = 0 # y1
+        self.vel: float = 0
+
+        self.trailer_angle: float = 0 # theta1
+        self.hitch_angle: float = 0 # beta 
+        self.trailer_distance_to_car = 0
+        self.trailer_pos: tuple[float, float] = (0, 0)
+        self.trailer_deviation: float = 0 # y2
+
+        self.camera_location = self.frame.shape[1] / 2, self.frame.shape[0]
+        print(self.frame.shape)
+
+        self.stopped: bool = False
 
     def update_vel(self):
         self.vel = self.speedometer.read()
@@ -36,8 +59,9 @@ class StateInformer:
 
     def update_hitch_angle(self):
         img: cv2.Mat = self.frame
+        trailer_x, trailer_y = self.trailer_pos
         origin_x, origin_y = img.shape[1] / 2, img.shape[0]
-        x_offset, y_offset = self.trailer_x - origin_x, origin_y - self.trailer_y
+        x_offset, y_offset = trailer_x - origin_x, origin_y - trailer_y
         angle = np.arctan(x_offset / y_offset)
         angle = np.degrees(angle)
     
@@ -47,14 +71,33 @@ class StateInformer:
     def update_trailer_pos(self):
         img = self.frame
         red = iu.filter_red(img)
-        trailer_x, trailer_y = iu.weighted_center(red)
+        self.trailer_pos = iu.weighted_center(red)
         
     def get_trailer_pos(self):
-        return self.trailer_x, self.trailer_y
+        return self.trailer_pos
     
     def update_trailer_deviation(self):
-        x,y = self.lane_center
-        self.trailer_deviation = self.trailer_x - x
+        self.trailer_deviation = dist(self.trailer_pos, self.lane_center) * PIXELS_TO_INCHES_RATIO
+
+    def update_trailer_distance_to_car(self):
+        self.trailer_distance_to_car = dist(self.trailer_pos, self.camera_location)
+
+    def update_car_lane_angle(self):
+        img = self.frame 
+        
+        frame_center_x, frame_center_y = img.shape[1], img.shape[0]
+        
+        lane_center_x, lane_center_y = self.lane_center
+        
+
+        central_line = math.dist(self.camera_location, self.lane_center)
+        heading_line = math.dist(self.camera_location, (frame_center_x, lane_center_y))
+
+        self.car_lane_angle = math.degrees(math.acos(central_line, heading_line))
+
+    def get_car_lane_angle(self):
+        return self.car_lane_angle
+       
 
 
     def update_steering_angle(self):
@@ -63,7 +106,8 @@ class StateInformer:
     def get_steering_angle(self):
         return self.steering_angle
     
-    def update_lanes(self, img: cv2.Mat):
+    def update_lanes(self):
+        img = self.frame
         edges = ip.edge_detector(img)
         cropped_edges = ip.region_of_interest(edges)
         line_segments = ip.detect_line_segments(cropped_edges)
@@ -84,7 +128,7 @@ class StateInformer:
             lane2_x1, lane2_y1, lane2_x2, lane2_y2 = lane2
             lane2_midpoint = iu.midpoint((lane2_x1, lane2_x2),(lane2_y1, lane2_y2))
 
-            self.lane_center = iu.midpoint(lane1_midpoint, lane2_midpoint)
+            self.lane_center = iu.midpoint(lane1_midpoint, lane2_midpoint) # type: ignore
 
             # I'm not sure if this is really what I want for the lane center. Perhaps the midpoint of the forward most points of the lane
             # would be better because avoiding displacement is better than correcting it.
@@ -126,9 +170,49 @@ class StateInformer:
 
     def stop(self):
         self.speedometer.stop()
+        print("Releasing state informer resources... ", end="")
         self.stopped = True
         self.thread.join()
-        print("StateInformer resources released.")
+        print("DONE")
+
+
+if __name__ == "__main__":
+    this = StateInformer()
+    cam = Camera().start()
+    time.sleep(2)
+    img = cam.read()
+    red = iu.filter_red(img)
+    edges = ip.edge_detector(red)
+    cntrs = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cntrs = imutils.grab_contours(cntrs)
+    (cntrs, _) = contours.sort_contours(cntrs, method = "top_to_bottom")
+    red_tape = cntrs[0]
+    box = cv2.minAreaRect(red_tape)
+    box = cv2.boxPoints(box)
+    box = np.array( box, dtype="int")
+
+    box = perspective.order_points(box)
+    cX = np.average(box[:,0])
+    cY = np.average(box[:,1])
+
+    tl, tr, bl, br = box
+    top_mid = iu.midpoint(tl,tr)
+    bottom_mid = iu.midpoint(bl,br)
+
+    distance  = math.dist(top_mid, bottom_mid)
+
+    ratio = distance / (7/8) # seven eighths inches lol
+
+    print(ratio)
+    print(distance)
+
+
+  
+    cv2.imwrite("contours.png", edges)
+    this.stop()
+    cam.stop()
+
+
 
     
 

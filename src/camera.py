@@ -6,7 +6,6 @@
 from picamera2 import Picamera2
 from threading import Thread 
 import libcamera
-import numpy as np
 import cv2
 
 import time
@@ -27,13 +26,13 @@ class Camera:
    
     def __init__(self, resolution = (640, 480), framerate = 60):
     
-        self.frames=0
         if self.camera is None:
             self.camera = Picamera2()
             self.thread = Thread(target=self.update, args = ())
-        if not self.camera.is_open:
+
+        if not self.camera.started:
             self.config = self.camera.create_video_configuration(main= {"size":resolution})
-            self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) # Seems to do nothing.
+            self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) # 180 degree rotation since the camera is upside-down.
             self.camera.configure(self.config)
 
         
@@ -62,11 +61,9 @@ class Camera:
     def update(self):
 
         while not self.stopped:
-            raw = self.camera.capture_array()
-            upright = np.rot90(raw, 2)
-            rgb = cv2.cvtColor(upright, cv2.COLOR_BGR2RGB)
+            bgr = self.camera.capture_array()
+            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB) # I don't like any image processing happening in this module, might move
             self.frame = rgb
-            # I don't like any image processing happening in this module, will be sure to move it eventually
 
         self.camera.close()
         
@@ -75,10 +72,11 @@ class Camera:
         return self.frame 
     
     def stop(self):
+        print("Releasing camera resources... ", end="")
         self.stopped = True
         self.camera.stop()
         self.thread.join()
-        print("Camera resources released.")
+        print("DONE")
 
 if __name__ == "__main__":
     
@@ -95,6 +93,6 @@ if __name__ == "__main__":
         #cv2.imshow("name",img)
         #print("looping",i)
         i+=1
+    
     camera.stop()
 
-    print(camera.frames)

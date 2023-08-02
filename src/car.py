@@ -3,7 +3,7 @@ This module functions as an abstraction for the car via. the singleton class Car
 as well as some autonomous driving functionality.
 """
 
-from constants import Drive_Params
+from constants import DriveParams
 from gpio import DCMotor, Servo, cleanup
 
 _SERVO_MOTOR_PIN         = 4
@@ -14,7 +14,7 @@ _DRIVE_MOTOR_REVERSE_PIN = 5
 steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
 drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
 
-STEERING_RACK_CENTER = Drive_Params.STEERING_RACK_CENTER
+STEERING_RACK_CENTER = DriveParams.STEERING_RACK_CENTER
 
 
 

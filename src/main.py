@@ -16,42 +16,42 @@ import os
 import glob
 
 # Local Imports
-from constants import Main_Mode, Drive_Params, OpenCV_Settings, Reverse_Calibrations
+from constants import MainMode, DriveParams, OpenCVSettings, ReverseCalibrations
 from gamepad import Gamepad, Inputs, UnpluggedError
-from streaming import Streamer
+from streaming import UDPStreamer, TCPStreamer
 import image_processing as ip
 import image_utils as iu
 from camera import Camera
-#from camera import Camera
 
 from car import Car
 from state_informer import StateInformer
 
 # Mutable
-transition_mode = Main_Mode.AUTO_FORWARD
-mode = Main_Mode.MANUAL
-check_auto_exit_thread = None
+transition_mode = MainMode.AUTO_FORWARD
+mode = MainMode.MANUAL
+check_auto_exit_thread: Thread = None
 recording = False
 frames = []
-manual_streaming_thread = None
+manual_streaming_thread: Thread = None
 auto_exit = False
 
-car = Car()
-g = Gamepad()
-cam    = Camera().start()
-streamer = Streamer()
-state_informer = StateInformer().start()
+car: Car = Car()
+g: Gamepad = Gamepad()
+cam: Camera    = Camera().start()
+streamer: UDPStreamer = UDPStreamer().start()
+#streamer = TCPStreamer()
+state_informer: StateInformer = StateInformer().start()
 
 
 
 # Video. Use VLC Media Player because VSCode's player thinks it's corrupt.
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
 
-# base_height, base_width, _ = cam.read().shape
-# video = cv2.VideoWriter("main_video.avi", 
-#                         fourcc, OpenCV_Settings.RECORDING_FRAMERATE, 
-#                         (base_width, base_height), 
-#                         isColor=True)
+base_height, base_width, _ = cam.read().shape
+video: cv2.VideoWriter = cv2.VideoWriter("main_video.avi", 
+                        fourcc, OpenCVSettings.RECORDING_FRAMERATE, 
+                        (base_width, base_height), 
+                        isColor=True)
 
 # Loops until (b) is pressed.
 done = False
@@ -63,7 +63,7 @@ def handler(signum: signal.Signals, stack_frame):
     done = True
     # print(signum, signal.Signals(signum).name, stack_frame) 
     cleanup()
-signal.signal(signal.SIGINT, handler)
+signal.signal(signal.SIGINT, handler) # type: ignore
 
 def manual():
     global done, mode, transition_mode, recording, check_auto_exit_thread, manual_streaming_thread
@@ -78,10 +78,10 @@ def manual():
     if g.was_pressed(Inputs.B):
         done = True
     elif g.was_pressed(Inputs.X):
-        transition_mode = Main_Mode.AUTO_FORWARD
+        transition_mode = MainMode.AUTO_FORWARD
         print("Transitioned to auto FORWARD. Press START to init.")
     elif g.was_pressed(Inputs.Y):
-        transition_mode = Main_Mode.AUTO_REVERSE
+        transition_mode = MainMode.AUTO_REVERSE
         print("Transitioned to auto REVERESE. Press START to init.")
     elif g.was_pressed(Inputs.START):
         mode = transition_mode
@@ -130,7 +130,7 @@ def auto_forward():
     steering_angle = ip.compute_steering_angle(image, lane_lines)
 
     # Go faster on sharper turns.
-    if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES:
+    if abs(steering_angle) > DriveParams.SHARP_TURN_DEGREES:
         car.set_drive_power(0.9)
     else:
         car.set_drive_power(1.0)
@@ -146,8 +146,8 @@ def auto_forward():
         video.write(visual_image)
 
 def maintain_hitch_angle(hitch_angle):
-     if hitch_angle is not None and abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
-            return hitch_angle * Reverse_Calibrations.TURN_RATIO
+     if hitch_angle is not None and abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD:
+            return hitch_angle * ReverseCalibrations.TURN_RATIO
 
 def auto_reverse():
     global cam, recording, auto_exit
@@ -187,16 +187,16 @@ def auto_reverse():
 
 
 
-        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+        if abs(trailer_deviation) > width * ReverseCalibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * ReverseCalibrations.TURN_RATIO * -1
             # If the trailer is not centered, steer to the center.
 
-        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
-            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
       
-        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
-            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the trailer relative to lane center is too great, reduce it.
         
 
@@ -222,8 +222,8 @@ def auto_reverse():
             drive_power = .7
       else:
             steering_angle = steering_angle_lanes
-            if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
-                steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+            if abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD:
+                steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
 
             # if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
@@ -243,7 +243,7 @@ def auto_reverse():
 
     # Video
     visual_image = ip.display_lanes_and_path(image, -stable_angle, lane_lines)
-    visual_image = ip.display_trailer_info(visual_image, hitch_angle, trailer_points)
+    visual_image = ip.display_trailer_info(visual_image, state_informer.get_vel(), trailer_points)
 
     streamer.stream_image(visual_image)
     if recording:
@@ -257,7 +257,7 @@ def check_auto_exit():
     """
 
     while True:
-        if mode != Main_Mode.MANUAL:
+        if mode != MainMode.MANUAL:
             g.update_input()
             if g.was_pressed(Inputs.B):
                 auto_exit = True
@@ -272,7 +272,7 @@ def check_auto_exit():
 
 def exit_auto():
     global mode, auto_exit
-    mode = Main_Mode.MANUAL
+    mode = MainMode.MANUAL
     car.set_drive_power(0)
     car.set_steering_angle(0)
     check_auto_exit_thread.join()
@@ -293,11 +293,13 @@ def stream_in_manual():
     """
 
     while not done:
-        if mode != Main_Mode.MANUAL:
+        if mode != MainMode.MANUAL:
             break
         image = cam.read()
         angle = car.current_steering_angle
         #speed = car_controller.update_vel()
+        red = iu.filter_red(image)
+        edges = ip.edge_detector(red)
         speed = state_informer.get_vel()
         iu.put_text(image,f"Steering Angle: {angle}")
         iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
@@ -326,9 +328,9 @@ def main():
         if go == "y" or go == "yes":
             go_mode = input("Autonomous Mode. 1 for forward, 2 for reverse: ")
             if go_mode == "1":
-                mode = Main_Mode.AUTO_FORWARD
+                mode = MainMode.AUTO_FORWARD
             elif go_mode == "2":
-                mode = Main_Mode.AUTO_REVERSE
+                mode = MainMode.AUTO_REVERSE
             else:
                 print("Invalid mode.")
                 exit(0)
@@ -341,7 +343,7 @@ def main():
     # Main loop.
     while not done:
         # Detect if controller is plugged in.
-        if mode == Main_Mode.MANUAL:
+        if mode == MainMode.MANUAL:
             try:
                 g.update_input()
             except Exception as e:
@@ -350,12 +352,12 @@ def main():
                 mode = transition_mode
                 print("Entered Mode:", transition_mode)
         
-        if mode == Main_Mode.MANUAL:
+        if mode == MainMode.MANUAL:
             manual()
-        elif mode == Main_Mode.AUTO_FORWARD:
+        elif mode == MainMode.AUTO_FORWARD:
             # Need to move the camera to the front so it can see ahead. Take note of new and former positions!
             auto_forward()
-        elif mode == Main_Mode.AUTO_REVERSE:
+        elif mode == MainMode.AUTO_REVERSE:
             auto_reverse()
 
     
@@ -375,12 +377,11 @@ def cleanup():
     
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
-    streamer.stop()
     state_informer.stop()
     car.stop()
     car.cleanup()
     cam.stop()
-    #car_controller.stop()
+    streamer.stop()
 
     # Video
     # video.release()

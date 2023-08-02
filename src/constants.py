@@ -20,24 +20,25 @@ camera = settings['camera']
 
 streaming = settings['streaming']
 
-class Main_Mode(Enum):
+class MainMode(Enum):
     MANUAL       = 0
     AUTO_FORWARD = 1
     AUTO_REVERSE = 2
     STOPPED = 3
 
-class Drive_Params:
+class DriveParams:
     STEERING_RACK_CENTER       = steering["center"]
 
    
     SHARP_TURN_DEGREES         = driving["sharp turn threshold"]
+    
     SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
 
-class Lane_Bounds_Ratio:
+class LaneBoundsRatio:
     LEFT  = 3 / 4
     RIGHT = 1 / 4
 
-class Image_Processing_Calibrations:
+class ImageProcessingCalibrations:
     """
     IMPORTANT
 
@@ -50,9 +51,10 @@ class Image_Processing_Calibrations:
     This is the original comment from the prior developer:
         "0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right"
     """
-    CAMERA_MID_OFFSET_PERCENT = camera["rear offset"] 
+    CAMERA_MID_OFFSET_PERCENT = camera["rear offset"]
+    PIXELS_TO_INCHES_RATIO    = camera["pixels to inches ratio"] 
 
-class Camera_Settings():
+class CameraSettings():
     # I do not think we use this at all
 
     
@@ -64,10 +66,10 @@ class Camera_Settings():
     FRAMERATE             = 60
     ALPHA                 = 20
 
-class OpenCV_Settings:
+class OpenCVSettings:
     RECORDING_FRAMERATE = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).
 
-class Reverse_Calibrations:
+class ReverseCalibrations:
     POSITION_THRESHOLD         = driving["position threshold"]
     ANGLE_OFF_CENTER_THRESHOLD = driving["trailer angle off center threshold"]
     HITCH_ANGLE_THRESHOLD      = driving["hitch angle threshold"]
@@ -76,7 +78,8 @@ class Reverse_Calibrations:
 class Streaming:
     DESTINATION_ADDRESS = streaming["destination ip"]
     DESTINATION_PORT    = streaming["destination port"]
-    ENABLED             = streaming["enabled"]
+    ENABLED: bool             = streaming["enabled"]
+    WEB_STREAMING       = streaming["web streaming"]
 
 if __name__ == "__main__":
     print(settings)

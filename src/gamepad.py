@@ -56,7 +56,6 @@ _KEYMAP = {
     "ABS_X": Inputs.LX, 
     "ABS_HAT0Y": Inputs.D_PAD_Y, 
     "ABS_HAT0X": Inputs.D_PAD_X, 
-    "SYN_REPORT": Inputs.SYN_REPORT
 }
 
 class Gamepad:

@@ -1,6 +1,6 @@
 import cv2
 import image_processing as ip
-from constants import Reverse_Calibrations
+from constants import ReverseCalibrations
 import os
 
 
@@ -48,16 +48,16 @@ def get_angle(image):
         trailer_deviation = cx - lane_center_x
         _, width, _ = image.shape
 
-        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+        if abs(trailer_deviation) > width * ReverseCalibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * ReverseCalibrations.TURN_RATIO * -1
             # If the trailer is not centered, steer to the center.
 
-        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
-            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
     
-        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
-            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the trailer relative to lane center is too great, reduce it.
     else:
         # If two lanes are not visible.

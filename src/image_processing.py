@@ -15,10 +15,10 @@ import numpy as np
 import cv2
 
 # Local Imports
-from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
+from constants import LaneBoundsRatio, ImageProcessingCalibrations
 from image_utils import weighted_center, filter_red
 from camera import Camera
-from streaming import Streamer
+from streaming import UDPStreamer
 
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)
@@ -29,8 +29,11 @@ warnings.simplefilter('ignore', np.RankWarning)
 
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    coeff = .5 # higher = ignore more stuff (noise filtering I think?)
+    try:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    except:
+        gray = img # already gray if it throws exception I think
+    coeff = .42 # higher = ignore more stuff (noise filtering I think?)
     thresh = int(max(gray[0]) * coeff) 
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
     _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
@@ -76,8 +79,8 @@ def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
                 [
                     (0, height * 1 / 4), 
                     (width, height * 1 / 4), 
-                    (width, height), 
-                    (0, height)
+                    (width, height/2), 
+                    (0, height/2)
                 ]
             ], 
             np.int32
@@ -141,12 +144,12 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
         fit = np.polyfit((x1, x2), (y1, y2), 1)
         slope, intercept = fit
         if ((slope < 0) and 
-            (x1 < Lane_Bounds_Ratio.LEFT * width) and 
-            (x2 < Lane_Bounds_Ratio.LEFT * width)):
+            (x1 < LaneBoundsRatio.LEFT * width) and 
+            (x2 < LaneBoundsRatio.LEFT * width)):
             left_fit.append((slope, intercept))
         elif ((slope > 0) and 
-              (x1 > Lane_Bounds_Ratio.RIGHT * width) and 
-              (x2 > Lane_Bounds_Ratio.RIGHT * width)):
+              (x1 > LaneBoundsRatio.RIGHT * width) and 
+              (x2 > LaneBoundsRatio.RIGHT * width)):
             right_fit.append((slope, intercept))
 
     left_fit_average = np.average(left_fit, axis=0) # Get averages going downward. Collapse into one array.
@@ -180,7 +183,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
         # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
         _, _, left_x2, _ = lane_lines[0]
         _, _, right_x2, _ = lane_lines[1]
-        mid = width / 2 * (1 + Image_Processing_Calibrations.CAMERA_MID_OFFSET_PERCENT)
+        mid = width / 2 * (1 + ImageProcessingCalibrations.CAMERA_MID_OFFSET_PERCENT)
         x_offset = (left_x2 + right_x2) / 2 - mid
 
     """
@@ -243,7 +246,7 @@ def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, 
 # Makes a reduced opacity image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[tuple[float, float, float, float]]) -> cv2.Mat:
     height, width, _ = img.shape
-    steering_angle_radians = math.radians(steering_angle_deg + 90)
+    steering_angle_radians = math.radians(steering_angle_deg + 60)
 
     # Calculations for the center path.
     x1 = width / 2
@@ -284,7 +287,7 @@ def display_trailer_info(img: cv2.Mat,
     
 if __name__ == "__main__":
     cam = Camera().start()
-    streamer = Streamer()
+    streamer = UDPStreamer()
 
     i = 0
     while True:
@@ -293,7 +296,7 @@ if __name__ == "__main__":
         
         # white = filter_white(image)
         edges = edge_detector(image)
-        cropped_edges = region_of_interest(edges)
+        cropped_edges = region_of_interest(edges, True)
         line_segments = detect_line_segments(cropped_edges)
         lane_lines = average_slope_intercept(image, line_segments)
         num_lanes = len(lane_lines)
@@ -310,7 +313,7 @@ if __name__ == "__main__":
         final_final = display_trailer_info(final, trailer_angle, trailer_points)
         
         
-        streamer.stream_image(final_final)
+        streamer.stream_image(cropped_edges)
 
 
 

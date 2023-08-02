@@ -16,7 +16,7 @@ import numpy as np
 import cv2, sys
 
 # Local Imports
-from constants import OpenCV_Settings
+from constants import OpenCVSettings
 import image_processing as ip
 import image_utils as iu
 
@@ -66,8 +66,8 @@ if __name__ == "__main__":
     """
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     base_height, base_width, _ = camera.capture().shape
-    video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, OpenCV_Settings.RECORDING_FRAMERATE, (base_width, base_height), isColor=True)
-    print(f"Recording with dimensions {base_width}x{base_height} with FPS {OpenCV_Settings.RECORDING_FRAMERATE}.")
+    video = cv2.VideoWriter("quick_capture_module_test_video.mp4", fourcc, OpenCVSettings.RECORDING_FRAMERATE, (base_width, base_height), isColor=True)
+    print(f"Recording with dimensions {base_width}x{base_height} with FPS {OpenCVSettings.RECORDING_FRAMERATE}.")
 
     go = input("Mode. 1 --> forward, 2 --> reverse: ")
 

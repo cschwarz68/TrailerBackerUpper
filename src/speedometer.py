@@ -15,11 +15,15 @@ from gamepad import Gamepad, Inputs
 
 #Local Imports
 import image_utils as iu
-from streaming import Streamer
+from streaming import UDPStreamer
 #streamer = Streamer()
 
-# Horrible terrible spaghetti code module; will make this all not suck before implementing for real.
-# My plan is to implement the functionality of this module main or maybe image processing and then delete this file
+# This module calculates the speed of the vehicle by observing a marker on one of the trailer wheels. When the marker
+# passes a refernce point, the time since the last pass is recorded. Speed is calculated by dividing wheel diameter by
+# rotation time.
+# Major limitations:
+#   The speed can only update as fast as the wheel rotates.
+#   At high speeds, the wheel rotates too fast for the camera to process.
 
 class Speedometer:
     
@@ -42,9 +46,10 @@ class Speedometer:
         return self
     
     def stop(self):
+        print("Releasing speedometer resources... ", end="")
         self.stopped = True
         self.thread.join()
-        print("Speedometer resources released.")
+        print("DONE")
     
     def read(self):
         return self.last_known_vel
@@ -95,7 +100,7 @@ class Speedometer:
 if __name__ == "__main__":
     cam = Camera().start()
     speedometer = Speedometer().start()
-    streamer = Streamer()
+    streamer = UDPStreamer()
     g = Gamepad()
     car = Car()
     while True:

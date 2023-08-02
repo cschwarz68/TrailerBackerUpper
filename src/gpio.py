@@ -99,5 +99,6 @@ def cleanup():
     """Releases GPIO resources and stops daemon"""
     print("Releasing GPIO resources... ", end="")
     io.stop()
+    os.system("systemctl kill pigpiod")
     os.system("systemctl stop pigpiod")
     print("DONE")

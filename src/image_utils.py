@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import image_processing as ip
+
 
 # this was probably a waste of time i will do this later
 
@@ -186,8 +186,8 @@ def cover_portion(image: cv2.Mat, portion: float, color: int) -> cv2.Mat:
     return cropped_edges
 
 
-def midpoint(point1: tuple[ int, int], point2: tuple[int, int]):
+def midpoint(point1: tuple[ float, float], point2: tuple[float, float]) -> tuple[ float, float]:
     x1, y1 = point1 
     x2, y2 = point2 
 
-    return int((x1 + x2) / 2 ), int((y1 + y2) / 2) # no fractional pixels
+    return (x1 + x2) * 0.5 , (y1 + y2) * 0.5

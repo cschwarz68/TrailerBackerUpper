@@ -22,6 +22,8 @@ settings:
         rear offset: 0.02
         #Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
         framerate: 10
+        #Ratio of the length of some reference object in pixels to the length of the reference object in inches
+        pixels to inches ratio: 37.714 # Dev note: I apologize for using U.S. customary units; I couldnt find a metric ruler in the office...
 
     #Driving settings
     driving: 
@@ -41,10 +43,13 @@ settings:
     streaming:
         #Enable or disable streaming
         enabled: true
-        #Streaming destination IP address
+        #Streaming destination IP address. UDP Streaming also always streams to localhost.
         destination ip: "192.168.2.185"
         #Streaming destination port. Client is preconfigured with port 25565 by default. 
         destination port: 25565
+        #Stream to web browser (TCP) or the client inluded in this repo (UDP)
+        #NOTE: The web streaming is quite delayed because TCP bad
+        web streaming: true # NOT YET IMPLEMENTED. THIS OPTION DOES NOTHING
 
 
 
