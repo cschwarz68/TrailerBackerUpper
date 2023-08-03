@@ -54,7 +54,7 @@ class ImageProcessingCalibrations:
     CAMERA_MID_OFFSET_PERCENT = camera["rear offset"]
     PIXELS_TO_INCHES_RATIO    = camera["pixels to inches ratio"] 
 
-class CameraSettings():
+class CameraSettings:
     # I do not think we use this at all
 
     
@@ -62,12 +62,12 @@ class CameraSettings():
     # that represents the degree of transparency (or opacity) of a color (i.e., the red, green and blue channels). 
     # It is used to determine how a pixel is rendered when blended with another."
     PREVIEW_CONFIG_FORMAT = "YUV420" # This is a color model different from RGB.
-    RESOLUTION            = (640, 480)
-    FRAMERATE             = 60
+    RESOLUTION: tuple[int, int]            = (camera["resolution width", camera["resolution height"]])
+    FRAMERATE: int             = camera["framerate"]
     ALPHA                 = 20
 
 class OpenCVSettings:
-    RECORDING_FRAMERATE = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).
+    RECORDING_FRAMERATE: int = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).
 
 class ReverseCalibrations:
     POSITION_THRESHOLD         = driving["position threshold"]

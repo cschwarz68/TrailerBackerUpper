@@ -20,10 +20,13 @@ settings:
         front offset: 0.02
         # Offset of rear camera
         rear offset: 0.02
-        #Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
-        framerate: 10
-        #Ratio of the length of some reference object in pixels to the length of the reference object in inches
+        # Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
+        framerate: 60
+        # Ratio of the length of some reference object in pixels to the length of the reference object in inches
         pixels to inches ratio: 37.714 # Dev note: I apologize for using U.S. customary units; I couldnt find a metric ruler in the office...
+        # NOTE: I would not reccomend changing the resolution as no resolutions have been tested other than 640x480
+        resolution width: 640
+        resolution height: 480
 
     #Driving settings
     driving: 

@@ -10,6 +10,8 @@ import cv2
 
 import time
 
+from constants import CameraSettings
+
 
 class Camera:
      
@@ -24,7 +26,7 @@ class Camera:
 
         return cls._self
    
-    def __init__(self, resolution = (640, 480), framerate = 60):
+    def __init__(self, resolution = CameraSettings.RESOLUTION, framerate = CameraSettings.FRAMERATE):
     
         if self.camera is None:
             self.camera = Picamera2()
