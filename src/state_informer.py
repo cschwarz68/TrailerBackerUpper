@@ -1,11 +1,7 @@
-import math
-import time
-from imutils import contours, perspective
 from threading import Thread
-from math import dist
-import numpy as np
-import imutils
+import math
 import cv2
+
 # LOCAL IMPORTS
 from constants import ImageProcessingCalibrations as Calibrations
 from speedometer import Speedometer
@@ -25,28 +21,29 @@ PIXELS_TO_INCHES_RATIO = Calibrations.PIXELS_TO_INCHES_RATIO
 class StateInformer:
     def __init__(self):
         # in variable names below, "distance" refers to values in pixels, and "deviation" refers to values in inches
-        self.thread: Thread = Thread(target = self.poll_state_info)
+        # "pos" refers to coordinates in image of the form (x-pixel, y-pixel)
+        self.thread: Thread = Thread(target = self.update_continuosly)
         self.speedometer: Speedometer = Speedometer().start()
         self.cam: Camera = Camera()
         self.car: Car = Car()
 
-        self.lane_center: tuple[int, int] = (0,0)
+        self.lane_center_pos: tuple[int, int] = (0,0)
         self.lanes: list[tuple[float, float, float, float]] = []
 
         self.frame: cv2.Mat = self.cam.read() # ensure frame is non-None at start
         
         self.steering_angle: float = 0 # alpha
-        self.car_lane_angle: float = 0 # theta0
+        self.car_lane_angle: float = 0 # theta1
         self.car_deviation: float = 0 # y1
-        self.vel: float = 0
+        self.vel: float = 0 #v (assuming that car and trailer velocities are the same) (not how the paper does it)
 
-        self.trailer_angle: float = 0 # theta1
+        self.trailer_lane_angle: float = 0 # theta2
         self.hitch_angle: float = 0 # beta 
         self.trailer_distance_to_car = 0
         self.trailer_pos: tuple[float, float] = (0, 0)
         self.trailer_deviation: float = 0 # y2
 
-        self.camera_location = self.frame.shape[1] / 2, self.frame.shape[0]
+        self.CAMERA_LOCATION = self.frame.shape[1] / 2, self.frame.shape[0]
         print(self.frame.shape)
 
         self.stopped: bool = False
@@ -58,12 +55,20 @@ class StateInformer:
         return self.vel
 
     def update_hitch_angle(self):
-        img: cv2.Mat = self.frame
-        trailer_x, trailer_y = self.trailer_pos
-        origin_x, origin_y = img.shape[1] / 2, img.shape[0]
-        x_offset, y_offset = trailer_x - origin_x, origin_y - trailer_y
-        angle = np.arctan(x_offset / y_offset)
-        angle = np.degrees(angle)
+        trailer_x, trailer_y = self.trailer_pos                                 
+        cam_x, cam_y = self.CAMERA_LOCATION
+        trailer_to_cam_line = math.dist(self.trailer_pos, self.CAMERA_LOCATION)
+        trailer_to_frame_bottom_line = cam_y - trailer_y
+        rad = math.acos(trailer_to_cam_line/trailer_to_frame_bottom_line)
+        self.hitch_angle = math.degrees(rad)
+
+        #          C    Point C: Camera Location (Car rear)
+        #         /|    Point A: Trailer axle location (red marker)
+        #        / |    Point B: Point defined by coordinates (x-coordiante of camera, y-coordinate of trailer) to ensure right triangle angle at all times.               
+        #       /  |        
+        #      /   |    Lengths of CA and CB are calculated. arccos(CB/CA) = angle C                 
+        #     /____|        
+        #    A      B   NOTE: arccos(1) = 0 so there is no problem when len(CA) = len(CB)
     
     def get_hitch_angle(self):
         return self.hitch_angle
@@ -76,27 +81,116 @@ class StateInformer:
     def get_trailer_pos(self):
         return self.trailer_pos
     
-    def update_trailer_deviation(self):
-        self.trailer_deviation = dist(self.trailer_pos, self.lane_center) * PIXELS_TO_INCHES_RATIO
+    def update_trailer_lane_angle(self):
+        trailer_x, trailer_y = self.trailer_pos
+        lane_center_x, lane_center_y = self.lane_center_pos 
+        cam_to_center_line = math.dist(self.CAMERA_LOCATION, (lane_center_x, trailer_y))
+        cam_to_trailer_line = math.dist(self.CAMERA_LOCATION, self.trailer_pos)
+        self.trailer_lane_angle =  math.degrees(math.acos(cam_to_center_line, cam_to_trailer_line))
 
-    def update_trailer_distance_to_car(self):
-        self.trailer_distance_to_car = dist(self.trailer_pos, self.camera_location)
+        #          C    Point C: Camera Location (Car rear)
+        #         /|    Point A: The trailer axle (red marker)
+        #        / |    Point B: Defined by coordinate (x-coordinate of lane_center, y-coordinate of the trailer). Therefore the line CB is a line from camera to the lane center                    
+        #       /  |     
+        #      /   |                      
+        #     /____|    A and B share the same y-coordinate so a right triangle is maintained 
+        #    A      B   
+        #               Finally, arccos(CB/CA) = angle C
+
+
+    
+    def update_trailer_deviation(self):
+        HITCH_TO_AXLE_DIST = 8 # inches
+        rad = math.radians(self.trailer_lane_angle)
+        self.trailer_deviation = math.sin(rad) * HITCH_TO_AXLE_DIST
+
+        #          C    Point C: Camera Location (Car rear)
+        #         /|    Point A: The trailer axle (red marker)
+        #        / |    Point B: Defined by coordinate (x-coordinate of lane_center, y-coordinate of the trailer).                    
+        #       /  |     
+        #      /   |                      
+        #     /____|    A and B share the same y-coordinate so a right triangle is maintained 
+        #    A      B   
+        #               Length of line AB is the horizontal displacement of the trailer from the lane center.
+        #               
+        #               Known values are:
+        #               - Angle C (self.trailer_lane_angle)
+        #               - Length of CA (the physical distance from the hitch to the trailer axle)
+        # 
+        #               Desired value:
+        #               - Length of AB
+        #               
+        #               sin(C) = BA/CA 
+        #               BA = sin(C)*CA
+        #
+
+   
 
     def update_car_lane_angle(self):
-        img = self.frame 
         
-        frame_center_x, frame_center_y = img.shape[1], img.shape[0]
         
-        lane_center_x, lane_center_y = self.lane_center
+        cam_x, cam_y = self.CAMERA_LOCATION
+        
+        lane_center_x, lane_center_y = self.lane_center_pos
         
 
-        central_line = math.dist(self.camera_location, self.lane_center)
-        heading_line = math.dist(self.camera_location, (frame_center_x, lane_center_y))
+        central_line = math.dist(self.CAMERA_LOCATION, self.lane_center_pos)
+        heading_line = cam_y - lane_center_y
 
         self.car_lane_angle = math.degrees(math.acos(central_line, heading_line))
 
+        #          C    Point C: Camera Location (Car rear)
+        #         /|    Point A: The center of the lane
+        #        / |    Point B: Defined by coordinate (x-coordinate of lane_center, y-coordinate of the trailer).                  
+        #       /  |    Therefore the line CB is the line from the camera  
+        #      /   |                      
+        #     /____|    A and B share the same y-coordinate so a right triangle is maintained 
+        #    A      B   
+        #               Finally, arccos(CB/CA) = angle C
+
     def get_car_lane_angle(self):
         return self.car_lane_angle
+    
+    def update_car_deviation(self):
+        # NEGATIVE VALUES ARE NOT CURRENTLY CONSIDERED. THIS WILL BREAK SQRT.
+        # represent left and right both as positive numbers?
+        HITCH_TO_AXLE_DIST = 8 # inches
+        cam_x, cam_y = self.CAMERA_LOCATION
+        center_x, center_y = self.lane_center_pos
+        true_distance_to_center = math.sqrt (HITCH_TO_AXLE_DIST**2 + self.trailer_deviation**2)
+        vertical_distance_to_center = cam_y - center_y
+        horizontal_distance = math.sqrt(true_distance_to_center**2 - vertical_distance_to_center**2)
+        self.car_deviation = horizontal_distance
+
+        #          C______ D    Point C: Camera Location
+        #         / \    |      Point B: Point defined by (x-coordinate of lane center, y-coordinate of trailer)
+        #        /   \   |      Point A: Trailer axle location (red marker)                     
+        #       /     \  |      Point D: x-component of the distance from the car to the lane center
+        #      /       \ |                  
+        #     /_________\|      NOTE: Triangle CBD is right; triangle ABC is a triangle. 
+        #    A           B 
+        #               
+        #                       Known values are:
+        #                       - Length of CA (HITCH_TO_AXLE_DISTANCE)
+        #                       - Length of AB (self.trailer_deviation)
+        #                       - Length of DB (vertical distance from Camera to B)
+        #                           -Given camera coordinates (a,b), and point B coordinates (x,y), y-b = length of DB
+        #                        
+        #                       Desired value:
+        #                       - length of CD
+        #               
+        #                       The following may read like a proof, but it is not; some claims are not backed up.
+        #
+        #                       By pythagorean theorem, length of CB = sqrt(HITCH_TO_AXLE_DISTANCE^2 + self.trailer_deviation^2)
+        #                       
+        #                       There exists a point D such that triangle CBD is a right triangle.
+        #
+        #                       If CB is the distance between the car and lane center, CD is the x-component of that distance .
+        #                       
+        #                       By pythagorean theorem, CB^2 = CD^2 + DB^2
+        #                       CD^2 = CB^2 - DB^2
+        #                       CD = sqrt(CB^2 - DB^2)
+
        
 
 
@@ -128,7 +222,7 @@ class StateInformer:
             lane2_x1, lane2_y1, lane2_x2, lane2_y2 = lane2
             lane2_midpoint = iu.midpoint((lane2_x1, lane2_x2),(lane2_y1, lane2_y2))
 
-            self.lane_center = iu.midpoint(lane1_midpoint, lane2_midpoint) # type: ignore
+            self.lane_center_pos = iu.midpoint(lane1_midpoint, lane2_midpoint) # type: ignore
 
             # I'm not sure if this is really what I want for the lane center. Perhaps the midpoint of the forward most points of the lane
             # would be better because avoiding displacement is better than correcting it.
@@ -146,10 +240,10 @@ class StateInformer:
         #TODO (maybe): I think it would be beneficial if the center of the lanes was the refernce point (perhaps implemented as cartesian origin) for other positions.
 
     def get_lane_center(self):
-        return self.lane_center
+        return self.lane_center_pos
 
     def update_state(self):
-        self.read_camera() # This one needs to be first; the others rely on it.
+        self.update_frame() # This one needs to be first; the others rely on it.
         self.update_vel()
         self.update_lanes()
         self.update_hitch_angle()
@@ -157,10 +251,10 @@ class StateInformer:
         self.update_trailer_pos()
         
 
-    def read_camera(self):
+    def update_frame(self):
         self.frame = self.cam.read()
 
-    def poll_state_info(self):
+    def update_continuosly(self):
         while not self.stopped:
             self.update_state()
     
@@ -176,41 +270,6 @@ class StateInformer:
         print("DONE")
 
 
-if __name__ == "__main__":
-    this = StateInformer()
-    cam = Camera().start()
-    time.sleep(2)
-    img = cam.read()
-    red = iu.filter_red(img)
-    edges = ip.edge_detector(red)
-    cntrs = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cntrs = imutils.grab_contours(cntrs)
-    (cntrs, _) = contours.sort_contours(cntrs, method = "top_to_bottom")
-    red_tape = cntrs[0]
-    box = cv2.minAreaRect(red_tape)
-    box = cv2.boxPoints(box)
-    box = np.array( box, dtype="int")
-
-    box = perspective.order_points(box)
-    cX = np.average(box[:,0])
-    cY = np.average(box[:,1])
-
-    tl, tr, bl, br = box
-    top_mid = iu.midpoint(tl,tr)
-    bottom_mid = iu.midpoint(bl,br)
-
-    distance  = math.dist(top_mid, bottom_mid)
-
-    ratio = distance / (7/8) # seven eighths inches lol
-
-    print(ratio)
-    print(distance)
-
-
-  
-    cv2.imwrite("contours.png", edges)
-    this.stop()
-    cam.stop()
 
 
 
