@@ -33,7 +33,7 @@ def edge_detector(img: cv2.Mat) -> cv2.Mat:
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     except:
         gray = img # already gray if it throws exception I think
-    coeff = .42 # higher = ignore more stuff (noise filtering I think?)
+    coeff = .8 # higher = ignore more stuff (noise filtering I think?)
     thresh = int(max(gray[0]) * coeff) 
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
     _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
