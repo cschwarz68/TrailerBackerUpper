@@ -152,44 +152,43 @@ class StateInformer:
         return self.car_lane_angle
     
     def update_car_deviation(self):
-        # NEGATIVE VALUES ARE NOT CURRENTLY CONSIDERED. THIS WILL BREAK SQRT.
         # represent left and right both as positive numbers?
         HITCH_TO_AXLE_DIST = 8 # inches
-        cam_x, cam_y = self.CAMERA_LOCATION
-        center_x, center_y = self.lane_center_pos
         true_distance_to_center = math.sqrt (HITCH_TO_AXLE_DIST**2 + self.trailer_deviation**2)
-        vertical_distance_to_center = cam_y - center_y
-        horizontal_distance = math.sqrt(true_distance_to_center**2 - vertical_distance_to_center**2)
-        self.car_deviation = horizontal_distance
+        horizontal_distance_to_center = true_distance_to_center * math.sin(self.car_lane_angle)
+        self.car_deviation = horizontal_distance_to_center
 
-        #          C______ D    Point C: Camera Location
-        #         / \    |      Point B: Point defined by (x-coordinate of lane center, y-coordinate of trailer)
-        #        /   \   |      Point A: Trailer axle location (red marker)                     
-        #       /     \  |      Point D: x-component of the distance from the car to the lane center
-        #      /       \ |                  
-        #     /_________\|      NOTE: Triangle CBD is right; triangle ABC is a triangle. 
-        #    A           B 
+
+        #           C
+        #          / \           Point C: Camera Location
+        #         / | \          Point B: Point defined by (x-coordinate of lane center, y-coordinate of trailer)
+        #        /  |  \         Point A: Trailer axle location (red marker)                     
+        #       /   |   \        Point D: Point defining heading line of camera (CD) such that it intersects with AB
+        #      /    |    \                  
+        #     /_____|_____\      NOTE: Triangle CBD is right; triangle ABC is a triangle. 
+        #    A      D      B 
         #               
         #                       Known values are:
         #                       - Length of CA (HITCH_TO_AXLE_DISTANCE)
         #                       - Length of AB (self.trailer_deviation)
-        #                       - Length of DB (vertical distance from Camera to B)
-        #                           -Given camera coordinates (a,b), and point B coordinates (x,y), y-b = length of DB
+        #                       - Angle DCB (self.car_lane_angle)
+        #                         
         #                        
         #                       Desired value:
-        #                       - length of CD
+        #                       - length of DB
         #               
-        #                       The following may read like a proof, but it is not; some claims are not backed up.
+        #                       
         #
         #                       By pythagorean theorem, length of CB = sqrt(HITCH_TO_AXLE_DISTANCE^2 + self.trailer_deviation^2)
         #                       
-        #                       There exists a point D such that triangle CBD is a right triangle.
+        #                       CBD is a right triangle (I'm like 99% sure but I'm not gonna prove it)
         #
-        #                       If CB is the distance between the car and lane center, CD is the x-component of that distance .
+        #                       If CB is the distance between the car and lane center (the x-cooordinate of point B is the lane center x-coordinate),
+        #                       then the x component of CB is the horizontal distance of the car from the center
+        #
+        #                       sin(DCB) = length DB / length CB
+        #                       length CB * sin(DCB) = length DB
         #                       
-        #                       By pythagorean theorem, CB^2 = CD^2 + DB^2
-        #                       CD^2 = CB^2 - DB^2
-        #                       CD = sqrt(CB^2 - DB^2)
 
        
 
