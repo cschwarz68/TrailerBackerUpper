@@ -16,12 +16,12 @@ from car import Car
 # This module tracks all relevant vehicle state information needed for implemeneting model predictive control
 # as described in http://liu.diva-portal.org/smash/get/diva2:1279885/FULLTEXT01.pdf (pdf available in ../literature)
 
-PIXELS_TO_INCHES_RATIO = Calibrations.PIXELS_TO_INCHES_RATIO
 
 class StateInformer:
     def __init__(self):
         # in variable names below, "distance" refers to values in pixels, and "deviation" refers to values in inches
         # "pos" refers to coordinates in image of the form (x-pixel, y-pixel)
+        # NOTE: local function variables may not follow these rules. They should have comments
         self.thread: Thread = Thread(target = self.update_continuosly)
         self.speedometer: Speedometer = Speedometer().start()
         self.cam: Camera = Camera()
@@ -44,6 +44,7 @@ class StateInformer:
         self.trailer_deviation: float = 0 # y2
 
         self.CAMERA_LOCATION = self.frame.shape[1] / 2, self.frame.shape[0]
+        self.HITCH_TO_TRAILER_AXLE_DIST = 8
         print(self.frame.shape)
 
         self.stopped: bool = False
@@ -59,7 +60,7 @@ class StateInformer:
         cam_x, cam_y = self.CAMERA_LOCATION
         trailer_to_cam_line = math.dist(self.trailer_pos, self.CAMERA_LOCATION)
         trailer_to_frame_bottom_line = cam_y - trailer_y
-        rad = math.acos(trailer_to_cam_line/trailer_to_frame_bottom_line)
+        rad = math.acos(trailer_to_cam_line / trailer_to_frame_bottom_line)
         self.hitch_angle = math.degrees(rad)
 
         #          C    Point C: Camera Location (Car rear)
@@ -100,9 +101,8 @@ class StateInformer:
 
     
     def update_trailer_deviation(self):
-        HITCH_TO_AXLE_DIST = 8 # inches
         rad = math.radians(self.trailer_lane_angle)
-        self.trailer_deviation = math.sin(rad) * HITCH_TO_AXLE_DIST
+        self.trailer_deviation = math.sin(rad) * self.HITCH_TO_TRAILER_AXLE_DIST
 
         #          C    Point C: Camera Location (Car rear)
         #         /|    Point A: The trailer axle (red marker)
@@ -153,10 +153,9 @@ class StateInformer:
     
     def update_car_deviation(self):
         # represent left and right both as positive numbers?
-        HITCH_TO_AXLE_DIST = 8 # inches
-        true_distance_to_center = math.sqrt (HITCH_TO_AXLE_DIST**2 + self.trailer_deviation**2)
-        horizontal_distance_to_center = true_distance_to_center * math.sin(math.radians(self.car_lane_angle)) # lol
-        self.car_deviation = horizontal_distance_to_center
+        true_distance_to_center = math.sqrt (self.HITCH_TO_TRAILER_AXLE_DIST**2 + self.trailer_deviation**2) # inches
+        horizontal_distance_to_center = true_distance_to_center * math.sin(math.radians(self.car_lane_angle)) # inches
+        self.car_deviation = horizontal_distance_to_center # inches
 
 
         #           C

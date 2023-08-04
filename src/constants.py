@@ -52,7 +52,6 @@ class ImageProcessingCalibrations:
         "0.0 means car pointing to center, -0.03: car is centered to left, +0.03 means car pointing to right"
     """
     CAMERA_MID_OFFSET_PERCENT = camera["rear offset"]
-    PIXELS_TO_INCHES_RATIO    = camera["pixels to inches ratio"] 
 
 class CameraSettings:
     # I do not think we use this at all
@@ -62,9 +61,9 @@ class CameraSettings:
     # that represents the degree of transparency (or opacity) of a color (i.e., the red, green and blue channels). 
     # It is used to determine how a pixel is rendered when blended with another."
     PREVIEW_CONFIG_FORMAT = "YUV420" # This is a color model different from RGB.
-    RESOLUTION: tuple[int, int]            = (camera["resolution width", camera["resolution height"]])
-    FRAMERATE: int             = camera["framerate"]
-    ALPHA                 = 20
+    RESOLUTION: tuple[int, int] = (camera["resolution width", camera["resolution height"]])
+    FRAMERATE: int              = camera["framerate"]
+    ALPHA                       = 20
 
 class OpenCVSettings:
     RECORDING_FRAMERATE: int = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).
