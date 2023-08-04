@@ -155,7 +155,7 @@ class StateInformer:
         # represent left and right both as positive numbers?
         HITCH_TO_AXLE_DIST = 8 # inches
         true_distance_to_center = math.sqrt (HITCH_TO_AXLE_DIST**2 + self.trailer_deviation**2)
-        horizontal_distance_to_center = true_distance_to_center * math.degrees(math.sin(math.radians(self.car_lane_angle))) # lol
+        horizontal_distance_to_center = true_distance_to_center * math.sin(math.radians(self.car_lane_angle)) # lol
         self.car_deviation = horizontal_distance_to_center
 
 
