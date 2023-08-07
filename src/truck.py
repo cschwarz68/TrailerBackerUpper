@@ -19,7 +19,7 @@ STEERING_RACK_CENTER = DriveParams.STEERING_RACK_CENTER
 
 
 
-class Car:
+class Truck:
     _self = None
 
     """
@@ -154,7 +154,7 @@ class Car:
 if __name__ == "__main__":
     from gamepad import Gamepad, Inputs
     g = Gamepad()
-    car = Car()
+    car = Truck()
     while True:
         g.update_input()
         if g.was_pressed(Inputs.R_BUMPER):
