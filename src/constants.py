@@ -29,7 +29,6 @@ class MainMode(Enum):
 class DriveParams:
     STEERING_RACK_CENTER       = steering["center"]
 
-   
     SHARP_TURN_DEGREES         = driving["sharp turn threshold"]
     
     SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
@@ -61,7 +60,7 @@ class CameraSettings:
     # that represents the degree of transparency (or opacity) of a color (i.e., the red, green and blue channels). 
     # It is used to determine how a pixel is rendered when blended with another."
     PREVIEW_CONFIG_FORMAT = "YUV420" # This is a color model different from RGB.
-    RESOLUTION: tuple[int, int] = (camera["resolution width", camera["resolution height"]])
+    RESOLUTION: tuple[int, int] = (camera["resolution width"], camera["resolution height"])
     FRAMERATE: int              = camera["framerate"]
     ALPHA                       = 20
 

@@ -300,9 +300,15 @@ def stream_in_manual():
         #speed = car_controller.update_vel()
         red = iu.filter_red(image)
         edges = ip.edge_detector(red)
-        speed = state_informer.get_vel()
-        iu.put_text(image,f"Steering Angle: {angle}")
-        iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
+        data = state_informer.get_car_deviation()
+        trailer_line = (state_informer.CAMERA_LOCATION + state_informer.get_trailer_pos())
+        center_line = (state_informer.get_lane_center_pos() + state_informer.CAMERA_LOCATION)
+        lines = state_informer.get_lanes()
+        lines.append(trailer_line)
+        lines.append(center_line)
+        image = ip.display_lines(image, lines, line_color=(255,0,0))
+        iu.put_text(image,f"Trailer Deviation: {data}")
+        #iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
         
         streamer.stream_image(image)
         if recording:
@@ -349,7 +355,8 @@ def main():
             except Exception as e:
                 print("update_input() threw an exception: ", e)
                 traceback.print_exc()
-                mode = transition_mode
+                #mode = transition_mode
+                cleanup()
                 print("Entered Mode:", transition_mode)
         
         if mode == MainMode.MANUAL:

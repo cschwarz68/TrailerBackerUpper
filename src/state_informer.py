@@ -39,12 +39,11 @@ class StateInformer:
 
         self.trailer_lane_angle: float = 0 # theta2
         self.hitch_angle: float = 0 # beta 
-        self.trailer_distance_to_car = 0
         self.trailer_pos: tuple[float, float] = (0, 0)
         self.trailer_deviation: float = 0 # y2
 
         self.CAMERA_LOCATION = self.frame.shape[1] / 2, self.frame.shape[0]
-        self.HITCH_TO_TRAILER_AXLE_DIST = 8
+        self.HITCH_TO_TRAILER_AXLE_DIST = 8 # inches
         print(self.frame.shape)
 
         self.stopped: bool = False
@@ -56,11 +55,13 @@ class StateInformer:
         return self.vel
 
     def update_hitch_angle(self):
+        # Relies on: update_trailer_pos()
+
         trailer_x, trailer_y = self.trailer_pos                                 
         cam_x, cam_y = self.CAMERA_LOCATION
         trailer_to_cam_line = math.dist(self.trailer_pos, self.CAMERA_LOCATION)
         trailer_to_frame_bottom_line = cam_y - trailer_y
-        rad = math.acos(trailer_to_cam_line / trailer_to_frame_bottom_line)
+        rad = math.acos(trailer_to_frame_bottom_line / trailer_to_cam_line)
         self.hitch_angle = math.degrees(rad)
 
         #          C    Point C: Camera Location (Car rear)
@@ -75,6 +76,7 @@ class StateInformer:
         return self.hitch_angle
     
     def update_trailer_pos(self):
+        # Relies on: update_frame()
         img = self.frame
         red = iu.filter_red(img)
         self.trailer_pos = iu.weighted_center(red)
@@ -83,11 +85,14 @@ class StateInformer:
         return self.trailer_pos
     
     def update_trailer_lane_angle(self):
+        # Relies on: update_trailer_pos(), update_lane_center_pos()
         trailer_x, trailer_y = self.trailer_pos
         lane_center_x, lane_center_y = self.lane_center_pos 
         cam_to_center_line = math.dist(self.CAMERA_LOCATION, (lane_center_x, trailer_y))
         cam_to_trailer_line = math.dist(self.CAMERA_LOCATION, self.trailer_pos)
-        self.trailer_lane_angle =  math.degrees(math.acos(cam_to_center_line, cam_to_trailer_line))
+        #print(cam_to_center_line, cam_to_trailer_line)
+        #self.trailer_lane_angle =  math.degrees(math.acos(cam_to_center_line / cam_to_trailer_line))
+        self.trailer_lane_angle = self.hitch_angle - self.car_lane_angle
 
         #          C    Point C: Camera Location (Car rear)
         #         /|    Point A: The trailer axle (red marker)
@@ -98,9 +103,13 @@ class StateInformer:
         #    A      B   
         #               Finally, arccos(CB/CA) = angle C
 
+    def get_trailer_lane_angle(self):
+        return self.trailer_lane_angle
 
     
     def update_trailer_deviation(self):
+        # Relies on: self.update_trailer_lane_angle()
+
         rad = math.radians(self.trailer_lane_angle)
         self.trailer_deviation = math.sin(rad) * self.HITCH_TO_TRAILER_AXLE_DIST
 
@@ -121,13 +130,16 @@ class StateInformer:
         #               - Length of AB
         #               
         #               sin(C) = BA/CA 
-        #               BA = sin(C)*CA
+        #               CA * sin(C) = BA
         #
+
+    def get_trailer_deviation(self):
+        return self.trailer_deviation
 
    
 
     def update_car_lane_angle(self):
-        
+        # Relies on: update_lane_center_pos()
         
         cam_x, cam_y = self.CAMERA_LOCATION
         
@@ -137,7 +149,7 @@ class StateInformer:
         central_line = math.dist(self.CAMERA_LOCATION, self.lane_center_pos)
         heading_line = cam_y - lane_center_y
 
-        self.car_lane_angle = math.degrees(math.acos(central_line, heading_line))
+        self.car_lane_angle = math.degrees(math.acos(heading_line / central_line))
 
         #          C    Point C: Camera Location (Car rear)
         #         /|    Point A: The center of the lane
@@ -152,6 +164,8 @@ class StateInformer:
         return self.car_lane_angle
     
     def update_car_deviation(self):
+        # Relies on: update_trailer_deviation(), update_car_lane_angle()
+
         # represent left and right both as positive numbers?
         true_distance_to_center = math.sqrt (self.HITCH_TO_TRAILER_AXLE_DIST**2 + self.trailer_deviation**2) # inches
         horizontal_distance_to_center = true_distance_to_center * math.sin(math.radians(self.car_lane_angle)) # inches
@@ -189,16 +203,19 @@ class StateInformer:
         #                       length CB * sin(DCB) = length DB
         #                       
 
-       
+    def get_car_deviation(self):
+        return self.car_deviation
 
 
     def update_steering_angle(self):
+        #Relies on: car.set_steering_angle()
         self.steering_angle = self.car.current_steering_angle
     
     def get_steering_angle(self):
         return self.steering_angle
     
     def update_lanes(self):
+        # Relies on: update_frame()
         img = self.frame
         edges = ip.edge_detector(img)
         cropped_edges = ip.region_of_interest(edges)
@@ -209,18 +226,20 @@ class StateInformer:
     def get_lanes(self):
         return self.lanes
     
-    def update_lane_center(self):
+    def update_lane_center_pos(self):
+        #Relies on: update_lanes()
         if len(self.lanes) == 2:
 
             lane1 = self.lanes[0]
             lane1_x1, lane1_y1, lane1_x2, lane1_y2 = lane1
-            lane1_midpoint = iu.midpoint((lane1_x1, lane1_x2), (lane1_y1, lane1_y2))
+            lane1_midpoint = iu.midpoint((lane1_x1, lane1_y1), (lane1_x2, lane1_y2))
 
             lane2 = self.lanes[1]
             lane2_x1, lane2_y1, lane2_x2, lane2_y2 = lane2
-            lane2_midpoint = iu.midpoint((lane2_x1, lane2_x2),(lane2_y1, lane2_y2))
+            lane2_midpoint = iu.midpoint((lane2_x1, lane2_y1),(lane2_x2, lane2_y2))
 
-            self.lane_center_pos = iu.midpoint(lane1_midpoint, lane2_midpoint) # type: ignore
+            #self.lane_center_pos = ((lane1_midpoint[0]+lane2_midpoint[0])/2, 240)
+            self.lane_center_pos = iu.midpoint(lane1_midpoint, lane2_midpoint)
 
             # I'm not sure if this is really what I want for the lane center. Perhaps the midpoint of the forward most points of the lane
             # would be better because avoiding displacement is better than correcting it.
@@ -237,16 +256,27 @@ class StateInformer:
         # I'll get around to this eventually, for now I'll see how well (probably not very well) it works when only updating the lane center when two lanes are visible.
         #TODO (maybe): I think it would be beneficial if the center of the lanes was the refernce point (perhaps implemented as cartesian origin) for other positions.
 
-    def get_lane_center(self):
+    def get_lane_center_pos(self):
         return self.lane_center_pos
 
     def update_state(self):
         self.update_frame() # This one needs to be first; the others rely on it.
+
         self.update_vel()
-        self.update_lanes()
-        self.update_hitch_angle()
-        self.update_steering_angle()
+
         self.update_trailer_pos()
+        
+        self.update_lanes()
+        self.update_lane_center_pos()
+
+
+        self.update_steering_angle()
+        self.update_car_lane_angle()
+        self.update_hitch_angle()
+        self.update_trailer_lane_angle()
+
+        self.update_trailer_deviation()
+        self.update_car_deviation()
         
 
     def update_frame(self):
