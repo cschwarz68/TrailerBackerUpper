@@ -25,7 +25,7 @@ import cv2
 
 # Local Imports
 from NN.src.camera_single_threaded import Camera # This module has not been updated to use multi-threaded camera
-from car import Car
+from truck import Truck
 
 model = load_model('./src/NN/models/straight_line_driver.h5')
 print("model loaded")
@@ -59,7 +59,7 @@ def compute_steering_angle(frame: cv2.Mat):
     return steering_angle
 
 if __name__ == "__main__":
-    car = Car()
+    truck = Truck()
     cam = Camera()
 
     end_time = time.time() + 80
@@ -67,11 +67,11 @@ if __name__ == "__main__":
     while time.time() < end_time:
         image = cam.read()
         steer_angle = compute_steering_angle(image)
-        car.set_steering_angle(steer_angle)
-        car.set_drive_power(-.7)
+        truck.set_steering_angle(steer_angle)
+        truck.set_drive_power(-.7)
 
-    car.set_drive_power(0)
-    car.set_steering_angle(0)
+    truck.set_drive_power(0)
+    truck.set_steering_angle(0)
     
     cam.stop()
-    car.cleanup()
+    truck.cleanup()

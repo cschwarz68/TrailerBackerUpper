@@ -2,7 +2,7 @@
 from time import time
 from threading import Thread
 from camera import Camera
-from car import Car
+from truck import Truck
 
 
 
@@ -29,7 +29,7 @@ class Speedometer:
     
 
     def __init__(self):
-        self.car = Car()
+        self.truck = Truck()
         self.camera = Camera()
         self.last_frame_passed = False
         self.current_frame_passing = False
@@ -58,7 +58,7 @@ class Speedometer:
         while not self.stopped:
                 
             # filter current frame for yellow and red
-            if self.car.current_drive_power == 0:
+            if self.truck.current_drive_power == 0:
                 self.last_known_vel = 0 # not great
             else:
                 self.current_frame = self.camera.read()
@@ -95,14 +95,14 @@ class Speedometer:
                 if self.rotation_time != 0: # avoid divide by 0 error
                     WHEEL_DIAMETER = 2.5 # inches
                     speed = WHEEL_DIAMETER/self.rotation_time # inches per second
-                    self.last_known_vel = speed if self.car.current_drive_power > 0 else speed * -1 # positive for forward; negative for reverse
+                    self.last_known_vel = speed if self.truck.current_drive_power > 0 else speed * -1 # positive for forward; negative for reverse
 
 if __name__ == "__main__":
     cam = Camera().start()
     speedometer = Speedometer().start()
     streamer = UDPStreamer()
     g = Gamepad()
-    car = Car()
+    car = Truck()
     while True:
         g.update_input()
         img = cam.read()

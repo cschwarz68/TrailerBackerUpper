@@ -8,7 +8,7 @@ from speedometer import Speedometer
 import image_processing as ip
 import image_utils as iu
 from camera import Camera
-from car import Car
+from truck import Truck
 
 # TODO: Come up with a nice name for this module and class
 # Working name: StateInformer get it like state informer like a spy? It's so funny.
@@ -25,7 +25,7 @@ class StateInformer:
         self.thread: Thread = Thread(target = self.update_continuosly)
         self.speedometer: Speedometer = Speedometer().start()
         self.cam: Camera = Camera()
-        self.car: Car = Car()
+        self.truck: Truck = Truck()
 
         self.lane_center_pos: tuple[int, int] = (0,0)
         self.lanes: list[tuple[float, float, float, float]] = []
@@ -90,7 +90,7 @@ class StateInformer:
         self.trailer_lane_angle = self.hitch_angle - self.car_lane_angle
 
         # I don't feel like drawing the triangle for this but trust me
-        
+
     def get_trailer_lane_angle(self):
         return self.trailer_lane_angle
 
@@ -197,7 +197,7 @@ class StateInformer:
 
     def update_steering_angle(self):
         #Relies on: car.set_steering_angle()
-        self.steering_angle = self.car.current_steering_angle
+        self.steering_angle = self.truck.current_steering_angle
     
     def get_steering_angle(self):
         return self.steering_angle

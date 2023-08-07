@@ -16,7 +16,7 @@ from mpc import Predicter
 import time
 import matplotlib.pyplot as plt
 
-from car import Car
+from truck import Truck
 from state_informer import StateInformer
 
 def handler(signum: signal.Signals, stack_frame):
@@ -29,14 +29,14 @@ signal.signal(signal.SIGINT, handler) # type: ignore
 
 
 def cleanup():
-    global state_informer, car, cam, streamer
+    global state_informer, truck, cam, streamer
 
     print("Cleaning up...")
 
 
     state_informer.stop()
-    car.stop()
-    car.cleanup()
+    truck.stop()
+    truck.cleanup()
     cam.stop()
     streamer.stop()
 
@@ -49,16 +49,16 @@ def cleanup():
 if __name__ == "__main__":
     predicter = Predicter()
 
-    car = Car()
+    truck = Truck()
     g = Gamepad()
     cam = Camera().start()
     state_informer: StateInformer = StateInformer().start()
     streamer: UDPStreamer = UDPStreamer().start()
     time.sleep(2)
-    car.set_steering_angle(0)
+    truck.set_steering_angle(0)
     start = time.time()
 
-    car.set_drive_power(-.7)
+    truck.set_drive_power(-.7)
     i = 0
     while(True): #(time.time()<start+10):
         streamer.stream_image(state_informer.frame)
@@ -67,8 +67,8 @@ if __name__ == "__main__":
         plt.plot(cost)
         plt.savefig("car_cost" + str(i)+ ".png")
 
-        car.set_steering_angle(angle)
-        car.set_drive_power(-.7)
+        truck.set_steering_angle(angle)
+        truck.set_drive_power(-.7)
         i+=1
     
     cleanup()

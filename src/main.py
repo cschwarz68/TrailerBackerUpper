@@ -22,7 +22,7 @@ import image_processing as ip
 import image_utils as iu
 from camera import Camera
 
-from car import Car
+from truck import Truck
 from state_informer import StateInformer
 
 # Mutable
@@ -34,7 +34,7 @@ frames = []
 manual_streaming_thread: Thread = None
 auto_exit = False
 
-car: Car = Car()
+truck: Truck = Truck()
 g: Gamepad = Gamepad()
 cam: Camera    = Camera().start()
 streamer: UDPStreamer = UDPStreamer().start()
@@ -106,9 +106,9 @@ def manual():
     steer_value = g.get_stick_value(Inputs.LX)
     drive_value = g.get_trigger_value()
     if steer_value is not None:
-        car.gamepad_steer(steer_value)
+        truck.gamepad_steer(steer_value)
     if drive_value is not None:
-        car.gamepad_drive(drive_value)
+        truck.gamepad_drive(drive_value)
 
 
 
@@ -130,11 +130,11 @@ def auto_forward():
 
     # Go faster on sharper turns.
     if abs(steering_angle) > DriveParams.SHARP_TURN_DEGREES:
-        car.set_drive_power(0.9)
+        truck.set_drive_power(0.9)
     else:
-        car.set_drive_power(1.0)
-    stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
-    car.set_steering_angle(stable_angle)
+        truck.set_drive_power(1.0)
+    stable_angle = truck.stabilize_steering_angle(steering_angle, num_lanes)
+    truck.set_steering_angle(stable_angle)
 
     # Video
     
@@ -180,7 +180,7 @@ def auto_reverse():
         _, width, _ = image.shape
 
         if(abs(hitch_angle) > 30):
-            car.jackknifed = True
+            truck.jackknifed = True
 
        
 
@@ -199,24 +199,24 @@ def auto_reverse():
             # If the angle of the trailer relative to lane center is too great, reduce it.
         
 
-        if(car.jackknifed): #if jackknifed, start driving forward to fix, will implement forward camera once we get USB adapter.
+        if(truck.jackknifed): #if jackknifed, start driving forward to fix, will implement forward camera once we get USB adapter.
             steering_angle = steering_angle_lanes 
             drive_power = .7
             if abs(hitch_angle < 1):
-                car.jackknifed = False #once angle is reduced, car will start reverse driving again
+                truck.jackknifed = False #once angle is reduced, car will start reverse driving again
          
         else:
-            car.set_steering_angle(-steering_angle_lanes)
+            truck.set_steering_angle(-steering_angle_lanes)
             drive_power = -.7
         
 
     else: #code reuse because i still am not 100% sure how to handle 1 lane detected. Thinking 
       if(abs(hitch_angle) > 30):
-            car.jackknifed = True
+            truck.jackknifed = True
             
-      if(car.jackknifed):
+      if(truck.jackknifed):
             if abs(hitch_angle < 5):
-                car.jackknifed = False
+                truck.jackknifed = False
             steering_angle = steering_angle_lanes 
             drive_power = .7
       else:
@@ -236,9 +236,9 @@ def auto_reverse():
     # if abs(steering_angle) > Drive_Params.SHARP_TURN_DEGREES_REVERSE:
     #     car.set_drive_power(-.7)
     # else:
-    car.set_drive_power(drive_power)
-    stable_angle = car.stabilize_steering_angle(steering_angle, num_lanes)
-    car.set_steering_angle(-stable_angle)
+    truck.set_drive_power(drive_power)
+    stable_angle = truck.stabilize_steering_angle(steering_angle, num_lanes)
+    truck.set_steering_angle(-stable_angle)
 
     # Video
     visual_image = ip.display_lanes_and_path(image, -stable_angle, lane_lines)
@@ -275,8 +275,8 @@ def check_auto_exit():
 def exit_auto():
     global mode, auto_exit
     mode = MainMode.MANUAL
-    car.set_drive_power(0)
-    car.set_steering_angle(0)
+    truck.set_drive_power(0)
+    truck.set_steering_angle(0)
     check_auto_exit_thread.join()
     auto_exit = False
     
@@ -298,7 +298,7 @@ def stream_in_manual():
         if mode != MainMode.MANUAL:
             break
         image = cam.read()
-        angle = car.current_steering_angle
+        angle = truck.current_steering_angle
         #speed = car_controller.update_vel()
         red = iu.filter_red(image)
         edges = ip.edge_detector(red)
@@ -382,14 +382,14 @@ def main():
 
 def cleanup():
     
-    global cam, car, video, streamer, frames, manual_streaming_thread
+    global cam, truck, video, streamer, frames, manual_streaming_thread
     print("Cleaning up...")
     
     if (manual_streaming_thread is not None) and (manual_streaming_thread.is_alive()):
         manual_streaming_thread.join()
     state_informer.stop()
-    car.stop()
-    car.cleanup()
+    truck.stop()
+    truck.cleanup()
     cam.stop()
     streamer.stop()
 
