@@ -85,24 +85,12 @@ class StateInformer:
         return self.trailer_pos
     
     def update_trailer_lane_angle(self):
-        # Relies on: update_trailer_pos(), update_lane_center_pos()
-        trailer_x, trailer_y = self.trailer_pos
-        lane_center_x, lane_center_y = self.lane_center_pos 
-        cam_to_center_line = math.dist(self.CAMERA_LOCATION, (lane_center_x, trailer_y))
-        cam_to_trailer_line = math.dist(self.CAMERA_LOCATION, self.trailer_pos)
-        #print(cam_to_center_line, cam_to_trailer_line)
-        #self.trailer_lane_angle =  math.degrees(math.acos(cam_to_center_line / cam_to_trailer_line))
+        # Relies on: update_hitch_angle, update_car_lane_angle()
+
         self.trailer_lane_angle = self.hitch_angle - self.car_lane_angle
 
-        #          C    Point C: Camera Location (Car rear)
-        #         /|    Point A: The trailer axle (red marker)
-        #        / |    Point B: Defined by coordinate (x-coordinate of lane_center, y-coordinate of the trailer). Therefore the line CB is a line from camera to the lane center                    
-        #       /  |     
-        #      /   |                      
-        #     /____|    A and B share the same y-coordinate so a right triangle is maintained 
-        #    A      B   
-        #               Finally, arccos(CB/CA) = angle C
-
+        # I don't feel like drawing the triangle for this but trust me
+        
     def get_trailer_lane_angle(self):
         return self.trailer_lane_angle
 
