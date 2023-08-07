@@ -181,6 +181,8 @@ def grid_search(t0, y0, v1, tstep, str0):
     imin = np.argmin(cost)
     str_min = int(steer[imin])
 
+
+    
     # fine grid search
     str_vec_fine = np.linspace(str_min - 4, str_min + 4, 9)
     cost_fine = []
@@ -202,7 +204,7 @@ def grid_search(t0, y0, v1, tstep, str0):
     # print(
     #     f"str = {str_min:.2f}, cost = {f:.2f}, direction ok is {direction_ok}, suggest str = {str_next:.2f}"
     # )
-    return t, y, str_min_fine
+    return t, y, str_min_fine, cost
 
 
 def test_grid():
@@ -222,8 +224,8 @@ def test_grid():
     time = []
     steer = []
     str0 = 20  # degrees
-    for _ in range(100):
-        [t, y, str_min] = grid_search(t0, y0, v1, tstep, str0)
+    for i in range(5):
+        [t, y, str_min, cost] = grid_search(t0, y0, v1, tstep, str0)
         print(f"t0 = {t0}, str = {str_min}")
         # build up time and state
         if len(yout) == 0:
@@ -240,6 +242,9 @@ def test_grid():
         t0 = tfinal
         y0 = yfinal
         str0 = str_min
+
+        plt.plot(cost)
+        plt.savefig("cost" +str(i) + ".png")
 
     # angles of car and trailer
     plt.plot(time, steer, label="steer")

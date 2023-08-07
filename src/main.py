@@ -12,13 +12,12 @@ import signal, traceback
 
 # Package Imports
 import cv2
-import os
-import glob
+
 
 # Local Imports
 from constants import MainMode, DriveParams, OpenCVSettings, ReverseCalibrations
 from gamepad import Gamepad, Inputs, UnpluggedError
-from streaming import UDPStreamer, TCPStreamer
+from streaming import UDPStreamer
 import image_processing as ip
 import image_utils as iu
 from camera import Camera
@@ -245,7 +244,10 @@ def auto_reverse():
     visual_image = ip.display_lanes_and_path(image, -stable_angle, lane_lines)
     visual_image = ip.display_trailer_info(visual_image, state_informer.get_vel(), trailer_points)
 
-    streamer.stream_image(visual_image)
+    stream = raw_image
+    speed = state_informer.get_vel()
+    iu.put_text(stream,f"Spped: {speed}")
+    streamer.stream_image(stream)
     if recording:
         video.write(raw_image)
 
@@ -307,7 +309,8 @@ def stream_in_manual():
         lines.append(trailer_line)
         lines.append(center_line)
         image = ip.display_lines(image, lines, line_color=(255,0,0))
-        iu.put_text(image,f"Trailer Deviation: {data}")
+        speed = state_informer.get_vel()
+        iu.put_text(image,f"Spped: {data}")
         #iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
         
         streamer.stream_image(image)
