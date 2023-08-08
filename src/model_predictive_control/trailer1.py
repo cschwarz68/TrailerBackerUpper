@@ -1,4 +1,5 @@
 from math import sin, cos, tan, pi
+import sys
 import numpy as np
 from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
@@ -105,7 +106,7 @@ def compute_cost(y):
     return cost
 
 
-def func_eval(t0, y0, u, tstep=1):
+def func_eval(t0, y0, u, tstep):
     # estimate func derivative with small steering deviation
     eps = pi / 180  # 1 degree change in steering
     u_eps = [u[0], u[1] + eps]
@@ -121,8 +122,8 @@ def func_eval(t0, y0, u, tstep=1):
     f_deriv = f_delta / eps
     # suggest next steering input with newton's method
     str = u[1]
-    str_next = (str - f / f_deriv) * 180 / pi
-    str_next = -str_next  # negate to put back into steering reference frame
+    str_next = str - f / f_deriv
+    # print(f"str={str*180/pi} str_next={str_next*180/pi} f={f} f'={f_deriv}")
     return t, y, f, str_next
 
 
@@ -172,61 +173,55 @@ def grid_search(t0, y0, v1, tstep, str0):
     # str_vec = np.linspace(-40, 40, 20)
     cost = []
     steer = []
+    str_pred = []
     for str in str_vec:
-        u = [v1, -str * pi / 180]
+        u = [v1, str * pi / 180]
         [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
+        str_next = str_next * 180 / pi
         cost.append(f)
         steer.append(str)
+        str_pred.append(str_next)
         # print(f"str = {str:.2f}, cost = {f:.2f}, suggest str = {str_next:.2f}")
     imin = np.argmin(cost)
     str_min = int(steer[imin])
 
-
-    
     # fine grid search
     str_vec_fine = np.linspace(str_min - 4, str_min + 4, 9)
     cost_fine = []
     steer_fine = []
+    str_pred = []
     for str in str_vec_fine:
         # if np.sign(str) != sgn:
         #     continue
-        u = [v1, -str * pi / 180]
+        u = [v1, str * pi / 180]
         [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
+        str_next = str_next * 180 / pi
         cost_fine.append(f)
         steer_fine.append(str)
         # print(f"str = {str:.2f}, cost = {f:.2f}, suggest str = {str_next:.2f}")
     imin = np.argmin(cost_fine)
     str_min_fine = int(steer_fine[imin])
+    str_min_fine = str_min
 
     # print("done searching. run once more with str_min")
-    u = [v1, -str_min_fine * pi / 180]
+    u = [v1, str_min_fine * pi / 180]
     [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
     # print(
     #     f"str = {str_min:.2f}, cost = {f:.2f}, direction ok is {direction_ok}, suggest str = {str_next:.2f}"
     # )
-    return t, y, str_min_fine, cost
+    return t, y, str_min_fine, str_vec, cost, str_pred
 
 
-def test_grid():
-    # initial state
-    t0 = 0
-    # y0 = [0, 10, -10 * pi / 180, -5 * pi / 180]
-    y0 = [0, -10, -10 * pi / 180, -5 * pi / 180]
-
-    # time horizon
-    tstep = 0.5
-    # set constant speed input
-    v1 = -1.4  # inches per second, negative for reverse
-
+def test_grid(t0, y0, tstep, v1):
     # grid search
     tout = []
     yout = []
     time = []
     steer = []
-    str0 = 20  # degrees
-    for i in range(5):
-        [t, y, str_min, cost] = grid_search(t0, y0, v1, tstep, str0)
-        print(f"t0 = {t0}, str = {str_min}")
+    str = 0  # degrees
+    for _ in range(100):
+        [t, y, str_next, str_vec, cost, str_pred] = grid_search(t0, y0, v1, tstep, str)
+        print(f"t0 = {t0}, str = {str_next}")
         # build up time and state
         if len(yout) == 0:
             tout = t
@@ -235,16 +230,18 @@ def test_grid():
             tout = np.concatenate((tout, t), axis=0)
             yout = np.concatenate((yout, y), axis=1)
         time.append(t0)
-        steer.append(str_min)
+        steer.append(str_next)
         # prepare for next loop
         tfinal = t[-1]
         yfinal = [y[0, -1], y[1, -1], y[2, -1], y[3, -1]]
         t0 = tfinal
         y0 = yfinal
-        str0 = str_min
+        str = str_next
 
-        plt.plot(cost)
-        plt.savefig("cost" +str(i) + ".png")
+        # plt.plot(str_vec, cost)
+        # plt.show()
+        # plt.plot(str_vec, str_pred)
+        # plt.show()
 
     # angles of car and trailer
     plt.plot(time, steer, label="steer")
@@ -258,42 +255,78 @@ def test_grid():
     plot_states(tout, yout)
 
 
-def test_newtons():
-    # initial state
-    t0 = 0
-    # y0 = [0, 10, -10 * pi / 180, -5 * pi / 180]
-    y0 = [0, -10, -10 * pi / 180, -5 * pi / 180]
-
-    # time horizon
-    tstep = 0.5
-    # set constant speed input
-    v1 = -6  # inches per second, negative for reverse
-
-    str0 = 20
-    u = [v1, -str0 * pi / 180]
-    [t, y, f1, str_next1] = func_eval(t0, y0, u, tstep)
-    print(f"str = {str0:.2f}, cost = {f1:.2f}, suggest str = {str_next1:.2f}")
-
-    str0 = -20
-    u = [v1, -str0 * pi / 180]
-    [t, y, f2, str_next2] = func_eval(t0, y0, u, tstep)
-    print(f"str = {str0:.2f}, cost = {f2:.2f}, suggest str = {str_next2:.2f}")
-
-    if f1 < f2:
-        str_next = str_next1
-    else:
-        str_next = str_next2
-
+def newton(str, v1, t0, y0, tstep):
+    steps = 0
+    f_prev = 9999
     # Newton's method
+    # print("newton")
+    while True:
+        u = [v1, str * pi / 180]
+        [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
+        steps = steps + 1
+        str_next = str_next * 180 / pi
+        if f > f_prev:
+            break
+        str_prev = str
+        str = str_next
+        f_prev = f
+
+    # the cost function may not intersect 0 which screws with Newton
+    # use bisection to narrow in on the minimum
+    # ignore new str_next return values for this part
+    # print("bisection")
+    strv = [str_prev, str]
+    fv = [f_prev, f]
+    while True:
+        if abs(strv[1] - strv[0]) < 0.5:
+            break
+        str = 0.5 * (strv[0] + strv[1])
+        strv.append(str)
+        u = [v1, str * pi / 180]
+        [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
+        steps = steps + 1
+        fv.append(f)
+        i = np.argmax(fv)
+        if i == 2:
+            break
+        strv.pop(i)
+        fv.pop(i)
+
+    i = np.argmin(fv)
+    str_next = strv[i]
+
+    return t, y, f, str_next, steps
+
+
+def grid_eval(str, v1, t0, y0, tstep):
+    str_vec = np.linspace(str - 2, str + 2, 21)
+    cost = []
+    print()
+    for str in str_vec:
+        u = [v1, str * pi / 180]
+        [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
+        str_next = str_next * 180 / pi
+        cost.append(f)
+    print()
+    plt.figure(0)
+    plt.plot(str_vec, cost)
+    plt.savefig("grid.jpg")
+
+
+def test_newtons(t0, y0, tstep, v1):
+    # newton's method
     tout = []
     yout = []
     time = []
     steer = []
-    for i in range(5):
-        str = str_next
-        u = [v1, -str * pi / 180]
-        [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
-        print(f"str = {str:.2f}, cost = {f:.2f}, suggest str = {str_next:.2f}")
+    str = 0  # degrees
+    for _ in range(100):
+        # Newton's method
+        # grid_eval(str, v1, t0, y0, tstep)
+        [t, y, f, str_next, steps] = newton(str, v1, t0, y0, tstep)
+        print(
+            f"{steps} steps taken. str = {str:.2f}, cost = {f:.2f}, suggest str = {str_next:.2f}"
+        )
         # build up time and state
         if len(yout) == 0:
             tout = t
@@ -301,13 +334,14 @@ def test_newtons():
         else:
             tout = np.concatenate((tout, t), axis=0)
             yout = np.concatenate((yout, y), axis=1)
-        time.append(t0)
-        steer.append(str)
+        time.append(t[0])
+        steer.append(str_next)
         # prepare for next loop
         tfinal = t[-1]
         yfinal = [y[0, -1], y[1, -1], y[2, -1], y[3, -1]]
         t0 = tfinal
         y0 = yfinal
+        str = str_next
 
     # angles of car and trailer
     plt.plot(time, steer, label="steer")
@@ -315,7 +349,7 @@ def test_newtons():
     plt.ylabel("steer")
     plt.legend()
   
-        #plt.show()
+    #plt.show()
     plt.savefig('plot.png')
 
     plot_states(tout, yout)
@@ -436,5 +470,15 @@ def test1():
 
 
 if __name__ == "__main__":
-    # test_newtons()
-    test_grid()
+    # initial state
+    t0 = 0
+    # y0 = [0, 10, -10 * pi / 180, -5 * pi / 180]
+    y0 = [0, -10, -10 * pi / 180, -5 * pi / 180]
+
+    # time horizon
+    tstep = 0.5
+    # set constant speed input
+    v1 = -6  # inches per second, negative for reverse
+
+    test_newtons(t0, y0, tstep, v1)
+    # test_grid(t0, y0, tstep, v1)
