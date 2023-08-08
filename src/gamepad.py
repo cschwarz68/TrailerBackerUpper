@@ -73,7 +73,7 @@ class Gamepad:
             return self.input
 
     def was_pressed(self, button: int) -> bool:
-        if button not in range(1, 12): # Appropriate range of buttons in Gamepad class above.
+        if button not in range(1, 12): # Appropriate range of buttons in Inputs class above.
             raise Exception("Invalid button! See gamepad.Gamepad!")
         elif self.input is not None:
             return (self.input[0] == button) and (self.input[1] == State.PRESSED)
