@@ -249,6 +249,7 @@ def test_grid(t0, y0, tstep, v1):
 def newton(str, v1, t0, y0, tstep):
     steps = 0
     f_prev = 9999
+    delta_str = 9999
     # Newton's method
     # print("newton")
     while True:
@@ -256,6 +257,12 @@ def newton(str, v1, t0, y0, tstep):
         [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
         steps = steps + 1
         str_next = str_next * 180 / pi
+        if abs(str_next - str) > 2.0 * delta_str:
+            sgn = np.sign(str_next - str)
+            str_next = str + sgn * min(2.0, 2.0 * delta_str)
+        else:
+            if steps > 1:
+                delta_str = abs(str_next - str)
         if f > f_prev:
             break
         str_prev = str
