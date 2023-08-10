@@ -10,7 +10,7 @@ import matplotlib.animation as animation
 # L1 = wheelbase of car
 # L2 = 'wheelbase' of trailer
 # M1 = trailer hitch offset
-L1 = 6  # inches # curr: 6
+L1 = 6.25  # inches # curr: 6
 L2 = 11.75  # inches # curr: 11.75
 M1 = 2  # inches # curr: 2
 
@@ -32,7 +32,7 @@ def trailer1_step(tspan, y0, u, p, N=10):
         # p = [L1, M1, L2]
         L1 = p[0]
         M1 = p[1]
-        L2 = p[2] 
+        L2 = p[2]
 
         # why ???
 
@@ -96,7 +96,7 @@ def compute_cost(y):
     theta2_target = y2[0]
     beta2_target = 0
 
-    w = [0, 1, 0.5]
+    w = [.5, 1, 1]
 
     cost = (
         w[0] * (y2_final - y2_target) ** 2
@@ -258,6 +258,7 @@ def test_grid(t0, y0, tstep, v1):
 def newton(str, v1, t0, y0, tstep):
     steps = 0
     f_prev = 9999
+    delta_str = 9999
     # Newton's method
     # print("newton")
     while True:
@@ -265,6 +266,12 @@ def newton(str, v1, t0, y0, tstep):
         [t, y, f, str_next] = func_eval(t0, y0, u, tstep)
         steps = steps + 1
         str_next = str_next * 180 / pi
+        if abs(str_next - str) > 2.0 * delta_str:
+            sgn = np.sign(str_next - str)
+            str_next = str + sgn * min(2.0, 2.0 * delta_str)
+        else:
+            if steps > 1:
+                delta_str = abs(str_next - str)
         if f > f_prev:
             break
         str_prev = str

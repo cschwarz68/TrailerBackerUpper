@@ -194,6 +194,11 @@ def auto_reverse():
             steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
       
+        
+        # if abs(trailer_deviation) > width * ReverseCalibrations.POSITION_THRESHOLD:
+        #     steering_angle = steering_angle_lanes 
+        #     # If the trailer is not centered, steer to the center.
+
         if abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD:
             steering_angle = trailer_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the trailer relative to lane center is too great, reduce it.
@@ -242,12 +247,12 @@ def auto_reverse():
 
     # Video
     visual_image = ip.display_lanes_and_path(image, -stable_angle, lane_lines)
-    visual_image = ip.display_trailer_info(visual_image, state_informer.get_vel(), trailer_points)
+    visual_image = ip.display_trailer_info(visual_image, state_informer.get_hitch_angle(), trailer_points)
 
     stream = raw_image
-    speed = state_informer.get_vel()
-    iu.put_text(stream,f"Spped: {speed}")
-    streamer.stream_image(stream)
+    hitch_angle = state_informer.get_hitch_angle()
+    iu.put_text(stream,f"Hitch Angle: {hitch_angle}")
+    streamer.stream_image(visual_image)
     if recording:
         video.write(raw_image)
 
@@ -301,17 +306,23 @@ def stream_in_manual():
         angle = truck.current_steering_angle
         #speed = car_controller.update_vel()
         red = iu.filter_red(image)
-        edges = ip.edge_detector(red)
+        edges = ip.edge_detector(image)
+        cropped_edges = ip.region_of_interest(edges)
         data = state_informer.get_car_deviation()
         trailer_line = (state_informer.CAMERA_LOCATION + state_informer.get_trailer_pos())
         center_line = (state_informer.get_lane_center_pos() + state_informer.CAMERA_LOCATION)
         lines = state_informer.get_lanes()
-        lines.append(trailer_line)
-        lines.append(center_line)
         image = ip.display_lines(image, lines, line_color=(255,0,0))
+        lines = [trailer_line]
+        image = ip.display_lines(image, lines, line_color=(0,0,255))
+        lines= [center_line]
+        image = ip.display_lines(image, lines, line_color=(0,255,0))
+    
         speed = state_informer.get_vel()
-        iu.put_text(image,f"Spped: {data}")
-        #iu.put_text(image, f"Speed: {speed}", pos = (25, 50))
+        iu.put_text(image,f"Theta1: {state_informer.get_car_lane_angle()}")
+        iu.put_text(image, f"Alpha: {angle}", pos = (25, 50))
+        iu.put_text(image, f"Theta2: {state_informer.get_trailer_lane_angle()}", pos = (25, 75))
+        iu.put_text(image, f"Beta: {state_informer.get_hitch_angle()}", pos = (25, 100))
         
         streamer.stream_image(image)
         if recording:
@@ -350,6 +361,7 @@ def main():
     
     
     # Main loop.
+
     while not done:
         # Detect if controller is plugged in.
         if mode == MainMode.MANUAL:

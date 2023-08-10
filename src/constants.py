@@ -34,8 +34,8 @@ class DriveParams:
     SHARP_TURN_DEGREES_REVERSE = driving["sharp turn reverse threshold"]
 
 class LaneBoundsRatio:
-    LEFT  = 3 / 4
-    RIGHT = 1 / 4
+    LEFT  = 1 / 2
+    RIGHT = 1 / 2
 
 class ImageProcessingCalibrations:
     """

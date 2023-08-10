@@ -15,6 +15,7 @@ from camera import Camera
 from mpc import Predicter
 import time
 import matplotlib.pyplot as plt
+from math import pi
 
 from truck import Truck
 from state_informer import StateInformer
@@ -47,12 +48,12 @@ def cleanup():
     exit(0)
 
 if __name__ == "__main__":
-    predicter = Predicter()
 
     truck = Truck()
     g = Gamepad()
     cam = Camera().start()
     state_informer: StateInformer = StateInformer().start()
+    predicter = Predicter(state_informer)
     streamer: UDPStreamer = UDPStreamer().start()
     time.sleep(2)
     truck.set_steering_angle(0)
@@ -61,14 +62,16 @@ if __name__ == "__main__":
     truck.set_drive_power(-.7)
     i = 0
     while(True): #(time.time()<start+10):
+        state_vector = [0, state_informer.trailer_deviation, state_informer.trailer_lane_angle * pi / 180, state_informer.hitch_angle * pi / 180]
         streamer.stream_image(state_informer.frame)
         #car.set_drive_power(0)
-        angle, cost = predicter.predict(state_informer)
-        plt.plot(cost)
-        plt.savefig("car_cost" + str(i)+ ".png")
+        t, y, f, angle, next = predicter.predict_fast(truck.current_steering_angle, 1.4, 0, state_vector, 0.5)
+        #plt.plot(cost)
+        #plt.savefig("car_cost" + str(i)+ ".png")
 
+        #print(angle)
         truck.set_steering_angle(angle)
-        truck.set_drive_power(-.7)
+        truck.set_drive_power(-.75)
         i+=1
     
     cleanup()
