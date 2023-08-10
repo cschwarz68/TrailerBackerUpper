@@ -189,5 +189,6 @@ temp.py
 
 #Ignoring png because training frames, but training frames should only ever be in src/frames/ so if you need to commit .png remove this
 *.png
+*.jpg
 
 
