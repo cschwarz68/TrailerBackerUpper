@@ -72,13 +72,18 @@ class Camera:
         
             
     def read(self) -> cv2.Mat:
+        if not self.thread.is_alive():
+            bgr = self.camera.capture_array()
+            rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+            self.frame = rgb
         return self.frame 
     
     def stop(self):
         print("Releasing camera resources... ", end="")
         self.stopped = True
         self.camera.stop()
-        self.thread.join()
+        if self.thread.is_alive():
+            self.thread.join()
         print("DONE")
 
 if __name__ == "__main__":
