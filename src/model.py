@@ -10,9 +10,6 @@ It can take many hours to train from a couple minutes of video, so actually sitt
 
 I would train it on the pc that I do my work on, but they stole my graphics card to use in someone else's pc!!!! Those monsters!!!!
 Don't they know this robot is the most important thing we do in this office???
-
-
-
 """
 
 import time
