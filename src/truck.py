@@ -1,5 +1,5 @@
 """
-This module functions as an abstraction for the car via. the singleton class Car. It provides control over drive and steering rack motors, 
+This module functions as an abstraction for the Truck via. the singleton class Truck. It provides control over drive and steering rack motors, 
 as well as some autonomous driving functionality.
 """
 
