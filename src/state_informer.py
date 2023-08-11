@@ -1,4 +1,5 @@
 from threading import Thread
+import numpy as np
 import math
 import cv2
 
@@ -45,6 +46,9 @@ class StateInformer:
         print(self.frame.shape)
 
         self.stopped: bool = False
+        filepath = './src/camera_calibration/calibrations/'
+        self.camera_matrix =  np.load(filepath+"matrix.npz")['arr_0']
+        self.distortion_coefficients = np.load(filepath+"distortion.npz")['arr_0']
 
     def update_vel(self):
         self.vel = self.speedometer.read()
@@ -218,8 +222,8 @@ class StateInformer:
         # Relies on: update_frame()
         img = self.frame
         edges = ip.edge_detector(img)
-        cropped_edges = ip.region_of_interest(edges)
-        line_segments = ip.detect_line_segments(cropped_edges)
+        #cropped_edges = ip.region_of_interest(edges)
+        line_segments = ip.detect_line_segments(edges)
         lane_lines = ip.average_slope_intercept(img, line_segments)
         self.lanes = lane_lines
     
@@ -286,7 +290,16 @@ class StateInformer:
         
 
     def update_frame(self):
-        self.frame = self.cam.read()
+        #self.frame = self.cam.read()
+        distorted = self.cam.read()
+        h, w = distorted.shape[:2]
+	
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.camera_matrix, self.distortion_coefficients, (w,h), 1, (w,h))
+        undistorted = cv2.undistort(distorted, self.camera_matrix, self.distortion_coefficients, None, newcameramtx)
+        x,y,w,h = roi
+        
+        undistorted = undistorted[y:y+h, x:x+w]
+        self.frame = undistorted
 
     def update_continuosly(self):
         while not self.stopped:
@@ -315,4 +328,5 @@ class StateInformer:
     
 
         
-
+if __name__ == "__main__":
+    s = StateInformer()
