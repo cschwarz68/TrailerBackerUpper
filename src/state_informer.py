@@ -46,9 +46,15 @@ class StateInformer:
         print(self.frame.shape)
 
         self.stopped: bool = False
+        
+        # image correction
         filepath = './src/camera_calibration/calibrations/'
-        self.camera_matrix =  np.load(filepath+"matrix.npz")['arr_0']
-        self.distortion_coefficients = np.load(filepath+"distortion.npz")['arr_0']
+        camera_matrix =  np.load(filepath+"matrix1600x1200.npz")['arr_0']
+        distortion_coefficients = np.load(filepath+"distortion1600x1200.npz")['arr_0']
+
+        h, w = self.frame.shape[:2]
+        newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coefficients, (w,h), 1, (w,h))
+        self.image_remap_x, self.image_remap_y = cv2.initUndistortRectifyMap(camera_matrix, distortion_coefficients, None, newcameramtx, (w,h), 5)
 
     def update_vel(self):
         self.vel = self.speedometer.read()
@@ -290,16 +296,11 @@ class StateInformer:
         
 
     def update_frame(self):
-        #self.frame = self.cam.read()
-        distorted = self.cam.read()
-        h, w = distorted.shape[:2]
-	
-        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(self.camera_matrix, self.distortion_coefficients, (w,h), 1, (w,h))
-        undistorted = cv2.undistort(distorted, self.camera_matrix, self.distortion_coefficients, None, newcameramtx)
-        x,y,w,h = roi
-        
-        undistorted = undistorted[y:y+h, x:x+w]
-        self.frame = undistorted
+        img = self.cam.read()
+        self.frame = iu.undistort(img, self.image_remap_x, self.image_remap_y, self.roi)
+    
+    def get_frame(self):
+        return self.frame
 
     def update_continuosly(self):
         while not self.stopped:

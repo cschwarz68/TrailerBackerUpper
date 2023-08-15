@@ -23,8 +23,8 @@ settings:
         # Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
         framerate: 60
         # NOTE: I would not reccomend changing the resolution as no resolutions have been tested other than 640x480
-        resolution width: 640
-        resolution height: 480
+        resolution width: 1600
+        resolution height: 1200
 
     #Driving settings
     driving: 

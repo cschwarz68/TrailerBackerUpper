@@ -154,29 +154,29 @@ def auto_reverse():
         exit_auto()
         return
 
-    image = cam.read()
+    image = state_informer.get_frame()
    
     raw_image = image
 
     # Lanes
     edges = ip.edge_detector(image)
-    cropped_edges = ip.region_of_interest(edges)
-    line_segments = ip.detect_line_segments(cropped_edges)
-    lane_lines = ip.average_slope_intercept(image, line_segments)
+    #cropped_edges = ip.region_of_interest(edges)
+    #line_segments = ip.detect_line_segments(cropped_edges)
+    lane_lines = state_informer.get_lanes()
     num_lanes = len(lane_lines)
-    steering_angle_lanes = ip.compute_steering_angle(image, lane_lines)
+    steering_angle_lanes = state_informer.get_car_lane_angle()
 
     # Trailer
-    filtered = ip.filter_red(image)
-    cx, cy = ip.weighted_center(filtered)
-    trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
-    hitch_angle = ip.compute_hitch_angle(image, cx, cy)
-    trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
+    #filtered = ip.filter_red(image)
+    tx, ty = state_informer.get_trailer_pos()
+    trailer_points = (image.shape[1] / 2, image.shape[0], tx, ty)
+    hitch_angle = state_informer.get_hitch_angle()
+    trailer_angle = state_informer.get_trailer_lane_angle()
 
     steering_angle = 0
     if num_lanes == 2:
-        lane_center_x = (lane_lines[0][2] + lane_lines[1][2]) / 2
-        trailer_deviation = cx - lane_center_x
+        lane_center_x, lane_center_y = state_informer.get_lane_center_pos()
+        trailer_deviation = state_informer.get_trailer_deviation()
         _, width, _ = image.shape
 
         if(abs(hitch_angle) > 30):
@@ -194,10 +194,6 @@ def auto_reverse():
             steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
       
-        
-        # if abs(trailer_deviation) > width * ReverseCalibrations.POSITION_THRESHOLD:
-        #     steering_angle = steering_angle_lanes 
-        #     # If the trailer is not centered, steer to the center.
 
         if abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD:
             steering_angle = trailer_angle * ReverseCalibrations.TURN_RATIO
@@ -302,10 +298,11 @@ def stream_in_manual():
     while not done:
         if mode != MainMode.MANUAL:
             break
-        image = cam.read()
+        image = state_informer.get_frame()
+        raw_image = image
         angle = truck.current_steering_angle
         #speed = car_controller.update_vel()
-        red = iu.filter_red(image)
+        #red = iu.filter_red(image)
         edges = ip.edge_detector(image)
         cropped_edges = ip.region_of_interest(edges)
         data = state_informer.get_car_deviation()
@@ -318,19 +315,20 @@ def stream_in_manual():
         lines= [center_line]
         image = ip.display_lines(image, lines, line_color=(0,255,0))
     
+    
         speed = state_informer.get_vel()
         iu.put_text(image,f"Theta1: {state_informer.get_car_lane_angle()}")
         iu.put_text(image, f"Alpha: {angle}", pos = (25, 50))
         iu.put_text(image, f"Theta2: {state_informer.get_trailer_lane_angle()}", pos = (25, 75))
         iu.put_text(image, f"Beta: {state_informer.get_hitch_angle()}", pos = (25, 100))
         
-        streamer.stream_image(image)
+        streamer.stream_image(edges)
         if recording:
             frames.append(image)
     
        
         
-        
+
 def main():
     print("STARTING MAIN")
 

@@ -6,6 +6,8 @@ sys.path.insert(0,"./src/") # gamepad and camera are located in parent directory
 from gamepad import Gamepad, Inputs
 from camera import Camera
 
+# This module reads camera matrix and distortion coefficients from src/calibrations/, captures images, applies undistortion to them, and saves the images to src/corrected_images/
+
 if __name__ == "__main__":
     cam = Camera() # not threaded
     g = Gamepad()

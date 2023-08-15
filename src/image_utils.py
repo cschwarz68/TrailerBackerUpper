@@ -18,52 +18,6 @@ class Line:
     def to_tuple(self):
         return self.x1, self.y1, self.x2, self.y2
 
-class RGBColor:
-    def __init__(self, R: int, G: int, B: int):
-        self.R = R
-        self.G = G
-        self.B = B
-
-    def toHSV(self):
-
-        # I didn't want to type `self.` a million times
-        R = self.R 
-        G = self.G 
-        B = self.B 
-        maximum = max((R, G, B))
-        minimum = min((R, G, B))
-
-        math_that_i_use_twice = np.arccos((R - G/2 - B/2) / np.sqrt(R**2 + G**2 + B ** 2 - R*G - R*B - G*B)) * 180/np.pi
-
-        H =  math_that_i_use_twice/2 if G >= B else (360 - math_that_i_use_twice)/2 # divide by 2 because opencv HSV range is [0,180]
-        S = (1 - minimum/maximum) * 255 if maximum > 0 else 0
-        V = maximum
-
-        # Source: https://www.had2know.org/technology/hsv-rgb-conversion-formula-calculator.html
-
-        return HSVColor(int(H), int(S), int(V))
-    
-    def get_tuple(self):
-        return (self.R, self.G, self.B)
-    
-class HSVColor:
-    def __init__(self, H: int, S: int, V: int):
-        self.H = H
-        self.S = S 
-        self.V = V
-    
-    def get_tuple(self):
-        return self.H, self.S, self.V
-    
-    def toRGB(self):
-       H = self.H 
-       S = self.S
-       V = self.V
-       maximum = 255*self 
-    
-    def invert(self):
-        pass
-
 
 # Returns a black image with dimensions identical to that of the given image.
 def zero_image(frame: cv2.Mat) -> cv2.Mat:
@@ -82,6 +36,15 @@ def combine_images(pairs: list[tuple[cv2.Mat, float]]) -> cv2.Mat:
         # The last parameter is gamma, and is for adjusting the overall brightness.
         base = cv2.addWeighted(base, 1, image, weight, 0)
     return base
+
+
+def undistort(distorted: cv2.Mat, image_remap_x, image_remap_y, roi)-> cv2.Mat:
+        
+        undistorted = cv2.remap(distorted, image_remap_x, image_remap_y, cv2.INTER_LINEAR)
+        # crop the image
+        x, y, w, h = roi
+        undistorted = undistorted[y:y+h, x:x+w]
+        return undistorted
 
     
  
@@ -112,33 +75,6 @@ def filter_yellow(img: cv2.Mat) -> cv2.Mat:
     # Clamp to certain cyan shades.
     mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
     return mask
-
-def filter_for_color(img : cv2.Mat, lower_color: HSVColor, upper_color: HSVColor):
-    # Filters an image for a specified color. `ranges`
-
-    # Get inverse of color and convert to HSV since we look at the inverted image below
-    def get_HSV_of_inverse(color: RGBColor):
-        R, G, B = color.get_tuple()
-        inverse_color = (~R, ~G, ~B)
-        H,S,V = RGBColor(*inverse_color).toHSV().get_tuple()
-        return H,S,V
-    
-    lower_H, lower_S, lower_V = get_HSV_of_inverse(lower_color)
-    upper_H, upper_S, upper_V = get_HSV_of_inverse(upper_color)
-    
-    
-
-
-    # Bitwise complement operator. Flips each bit for each element in the matrix.
-    invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_bound = np.array([lower_H, lower_S, lower_V]) # Lower bound of HSV values to include in mask
-    upper_bound = np.array([upper_H, upper_S, upper_V]) # Upper bound of HSV values to include in mask
-    # Clamp to colors in between bounds
-    mask = cv2.inRange(hsv, lower_bound, upper_bound)
-    return mask
-
-
 
 
 # Finds the weighted center of the image. Images filtered for certain colors should be passed here to find the coordinates of colored markers.

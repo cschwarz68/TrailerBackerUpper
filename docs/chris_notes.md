@@ -91,6 +91,7 @@ HOW TO IMPLEMENT:
 
 EXTREMELY WEIRD ISSUE:
 Streaming multithreadedly causes controller lag?????? I genuinely cannot figure out why. Have reverted to single-threaded streaming.
+UPDATE: Switched back to multithreaded without changing anything else (I think) and it started workign again somehow.
 
 PROBLEM: Lanes are not detected when using threaded camera.
 More accurately, they are detected for a couple seconds upon entering autonomous mode, then one lane is lost, then both are lost. It is not the case that all image processing is broken. Speed detection has worked just fine, (not yet incorporated into the autonomous modes, but it did work with threaded camera.) Also, in autonomous reverse, the angle of the trailer is aquired with no issue; it is only lane detection that doesn't work. Perhaps the delay in-between frame captures from the camera blocking was beneficial?

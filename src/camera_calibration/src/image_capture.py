@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
 
     filepath = "./src/camera_calibration/calibration_images/"
-    image_num = ord('j')
+    image_num = ord('a')
     print("STARTED")
     while True:
         g.update_input()
@@ -27,7 +27,7 @@ if __name__ == "__main__":
         if g.was_pressed(Inputs.A):
             img = cam.read()
             
-            filename = "calibration_image_"+chr(image_num)+".jpg"
+            filename = "sample_image_"+chr(image_num)+".jpg"
             
             cv2.imwrite(filepath + filename, img)
             print("Saved file:", filepath + filename)
