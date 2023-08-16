@@ -65,8 +65,8 @@ def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
         polygon = np.array(
             [
                 [
-                    (0, height / 5), 
-                    (width, height / 5), 
+                    (0, height / 4), 
+                    (width, height / 4), 
                     (width, height), 
                     (0, height)
                 ]

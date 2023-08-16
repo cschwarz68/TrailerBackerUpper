@@ -1,6 +1,14 @@
-from inputs import get_gamepad, UnpluggedError
+from inputs import get_gamepad, UnpluggedError # Though UnpluggedError may appear unused in this module, I leave it imported so that it can be further imported into modules which
+# may need to handle it.
+
+"""
+The gamepad module provides an abstraction of gamepad control via class `Gamepad`. Class `Inputs` acts as an enumeration of possible inputs, giving them more readable names.
+"""
 
 class Inputs:
+    """
+    Assigns more human-readable names to inputs.
+    """
     SYN_REPORT = 0
     # Buttons
     A = 1
@@ -25,16 +33,15 @@ class Inputs:
     D_PAD_Y = 18
     D_PAD_X = 19
 
-class State:
-    # Constants for input state.
-    PRESSED = 1
-    RELEASED = 0
 
-    LEFT = -1
-    UP = -1
-    DOWN = 1
-    RIGHT = 1
+PRESSED = 1
+RELEASED = 0
 
+LEFT = -1
+UP = -1
+DOWN = 1
+RIGHT = 1
+# Keymap is a dictionary which maps Linux input codes for different gamepad inputs to values in the Inputs class.
 _KEYMAP = {
     "BTN_SOUTH": Inputs.A, 
     "BTN_EAST": Inputs.B, 
@@ -64,21 +71,33 @@ class Gamepad:
     """
 
     def __init__(self):
+        """
+        Initializes gamepad.
+        """
         self.input = None
 
     def update_input(self):
+        """
+        Update input requests the last input given to the gamepad. This function must be called prior (in the same loop) to calling any of methods which check the value of certain inputs.
+        """
         events = get_gamepad()
         for event in events:
             self.input = (_KEYMAP[event.code], event.state)
             return self.input
 
     def was_pressed(self, button: int) -> bool:
+        """
+        Returns true if the button corresponding to parameter `button` was pressed, otherwise returns false.
+        """
         if button not in range(1, 12): # Appropriate range of buttons in Inputs class above.
             raise Exception("Invalid button! See gamepad.Gamepad!")
         elif self.input is not None:
-            return (self.input[0] == button) and (self.input[1] == State.PRESSED)
+            return (self.input[0] == button) and (self.input[1] == PRESSED)
 
     def get_stick_value(self, stick_axis: int) -> int:
+        """
+        Returns the value of the specified stick axis.
+        """
         if stick_axis not in range (12, 16):
             raise Exception("Invalid stick input! See gamepad.Gamepad!")
         elif self.input is not None:
@@ -86,6 +105,9 @@ class Gamepad:
                 return self.input[1]
             
     def get_trigger_value(self) -> int:
+        """
+        Returns the current value of either stick. Left stick's values range from [-255, 0], right stick's values range from [0, 255].
+        """
         if self.input is not None:
             if self.input[0] == Inputs.R_TRIGGER:
                 return self.input[1]

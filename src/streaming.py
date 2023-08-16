@@ -43,6 +43,9 @@ class FrameSegment:
             count -= 1
 
 class HelperObject:
+    """
+    For use with TCP streamer.
+    """
     def __init__(self):
         self.stopped=False
         self.camera = Camera()
@@ -61,6 +64,7 @@ class HelperObject:
             
 helper = HelperObject()
 class TCPStreamer:
+    """WIP web streaming using flask. Is slow"""
 
     app = Flask(__name__)
     def __init__(self):
@@ -90,7 +94,7 @@ class TCPStreamer:
 
 class UDPStreamer():
 
-   
+    """Used for streaming video over UDP. Client available at src/streaming_client/client.py"""
     streaming_enabled = Streaming.ENABLED
     
     def __init__(self):
@@ -111,11 +115,15 @@ class UDPStreamer():
         
 
     def stream_image(self, image):
+        "Pass your image here to stream it to the client."
         self.frame=image
         if not self.threaded:
             self.frame_segment.udp_frame(image)
 
     def _send(self):
+        """
+        Target of streaming thread.
+        """
         while self.streaming_enabled and (not self.stopped):
                 self.frame_segment.udp_frame(self.frame)
 
@@ -123,6 +131,9 @@ class UDPStreamer():
     # controller behavior (see ../docs.chris_notes.md). For now, you can just not call the start method, and the Streamer will operate in the thread wherein it was instantiated.
     # Note: Whether or not the Streamer thread has started, you should still call stop() after you are done so the socket can be closed.
     def start(self):
+        """Enables threaded mode for the Streamer. This seemed to have been working fine but then I started seeing weird
+        controller behavior (see ../docs.chris_notes.md). For now, you can just not call the start method, and the Streamer will operate in the thread wherein it was instantiated.
+        Note: Whether or not the Streamer thread has started, you should still call stop() after you are done so the socket can be closed."""
         self.threaded = True
         if self.streaming_enabled:
             self.thread.start()
@@ -131,6 +142,7 @@ class UDPStreamer():
     
 
     def stop(self):
+        """Closes socket and stops thread, if it is alive."""
         print("Releasing streaming resources... ", end = "")
         self.stopped = True
         if self.thread.is_alive():

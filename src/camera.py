@@ -3,6 +3,10 @@
 # for coding poorly. In any case, the interface for controlling the camera's settings is very confusing.
 # Please consult https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf before making any crazy changes in this module.
 
+"""
+This module provides an interface to the Raspberry Pi Camera via the Camera class.
+"""
+
 from picamera2 import Picamera2
 from threading import Thread 
 import libcamera
@@ -14,6 +18,9 @@ from constants import CameraSettings
 
 
 class Camera:
+    """
+    Camera acts encapsulates the onboard camera of the Raspberry Pi. The camera can operate in both blocking and non-blocking modes. See Camera.start()
+    """
      
     _self = None
     camera = None
@@ -26,13 +33,16 @@ class Camera:
 
         return cls._self
    
-    def __init__(self, resolution = CameraSettings.RESOLUTION, framerate = CameraSettings.FRAMERATE):
-    
+    def __init__(self):
+        """
+        Constructs a camera object. Framerate and resolution will be set according to values in the project's config.yml file.
+        """
         if self.camera is None:
             self.camera = Picamera2()
-            self.thread = Thread(target=self.update, args = ())
+            self.thread = Thread(target=self._update, args = ())
 
         if not self.camera.started:
+            resolution = CameraSettings.RESOLUTION
             self.config = self.camera.create_video_configuration(main= {"size":resolution})
             self.config["transform"] = libcamera.Transform(hflip=True,vflip=True) # 180 degree rotation since the camera is upside-down.
             self.camera.configure(self.config)
@@ -42,27 +52,28 @@ class Camera:
         self.camera.start()
 
         time.sleep(2) # Needs a moment to get ready; doucmentations says to do this.
-        self.camera.set_controls({"AeEnable": True, "AwbEnable": True, "FrameRate": framerate})
+        self.camera.set_controls({"AeEnable": True, "AwbEnable": True, "FrameRate": CameraSettings.FRAMERATE})
 
-        # AeEnable and AwbEnable control automatic exposure control and automatic white balancing. Picamera2 documentations reccomends these be off for video.
-        # Unsure how much of a performance benefit this gives us.
-        # Gaussian blur settings for lane detection had to be adjusted due to decreased image brightness as a result of changing these settings.
-
+      
         # See page 69 (ha) of https://datasheets.raspberrypi.com/camera/picamera2-manual.pdf for more camera control information
         # (Appendix C: Camera controls)
 
         bgr= self.camera.capture_array() # initialize camera with non-None frame
-        self.frame = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        self.frame = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB) # change to RGB color scheme
         self.stopped = False
     
     def start(self):
-        # If the camera is to be used by multiple python modules, only the *first* one should call `start()`, the others can
-        # simply instantiate the class, as all instances of this class are the same object.
+        """
+        This method starts a thread for camera updating. See `Camera.update()`
+        """
         self.thread.start()
         return self 
     
-    def update(self):
-
+    def _update(self):
+        """
+        This method is the target of `Camera.thread`. While the thread is active, the camera will continuosly read frames.
+        `Camera.frame` will always be the latest frame captured.
+        """
         while not self.stopped:
             bgr = self.camera.capture_array()
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB) # I don't like any image processing happening in this module, might move
@@ -72,6 +83,10 @@ class Camera:
         
             
     def read(self) -> cv2.Mat:
+        """
+        This method is the outside interface for reading the frame from the camera. If the camera thread has been started, this method will return the
+        latest captured frame. If the camera is operating in the same thread as this method call, the function will block until a frame has been returned.
+        """
         if not self.thread.is_alive():
             bgr = self.camera.capture_array()
             rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
@@ -79,6 +94,9 @@ class Camera:
         return self.frame 
     
     def stop(self):
+        """
+        This function shuts down the camera and joins the camera thread, if it exists.
+        """
         print("Releasing camera resources... ", end="")
         self.stopped = True
         self.camera.stop()

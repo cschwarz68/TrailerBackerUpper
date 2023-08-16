@@ -3,6 +3,10 @@ from model_predictive_control.trailer1 import func_eval
 import numpy as np
 from math import pi
 
+"""
+This module attemtps to implement grid search and newtons method search from src/trailer1.py for controlling of the car. WIP
+"""
+
 class Predicter:
     def __init__(self, state_informer: StateInformer):
         self.state_informer = state_informer

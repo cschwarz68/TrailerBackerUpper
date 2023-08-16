@@ -24,11 +24,11 @@ Library: ~~matplotlib~~ (unused)
 Library: ~~RPi.GPIO~~ [`pigpio`](http://abyz.me.uk/rpi/pigpio/)\
 	This package provides a Python module to control the GPIO on a Raspberry Pi.
 
-Module: ~~drive_module~~ --> [`car`](../src/car.py)\
+Module: ~~drive_module~~ --> [`truck`](../src/truck.py)\
 	Controls drivetrain with PWM.
 	The functionality of this module has been deprecated by car.py.
 
-Module: ~~steer_module~~ --> [`car`](../src/car.py)\
+Module: ~~steer_module~~ --> [`truck`](../src/truck.py)\
 	Controls steering with servo.
 	The functionality of this module has been deprecated by car.py
 

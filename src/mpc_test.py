@@ -20,6 +20,8 @@ from math import pi
 from truck import Truck
 from state_informer import StateInformer
 
+"""This module tests implementation of model predictive control"""
+
 def handler(signum: signal.Signals, stack_frame):
     global done
     print("\nKeyboard interrupt detected.")

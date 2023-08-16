@@ -1,5 +1,17 @@
 
-settings: 
+settings:
+
+    gpio:
+
+        # GPIO pin controlling drive motor power
+        drive motor power: 25
+        # GPIO pin controlling forward driving
+        drive motor forward: 6
+        # GPIO pin controlling reverse driving
+        drive motor reverse: 5
+        # GPIO pin controlling steering rack servo
+        servo motor: 4
+
     
     # Steering rack calibrations
     steering rack: 

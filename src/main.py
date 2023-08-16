@@ -4,7 +4,7 @@ There are three modes: manual, forward autonomous, and reverse autonomous.
 
 Also contains streaming and recording capabilities.
 
-Exit manual mode / the program by pressing (B).
+Exit autonomous mode / the program by pressing (B).
 """
 
 from threading import Thread
@@ -301,6 +301,7 @@ def stream_in_manual():
         image = state_informer.get_frame()
         raw_image = image
         angle = truck.current_steering_angle
+        # Streaming a bunch of stuff right now for debugging
         #speed = car_controller.update_vel()
         #red = iu.filter_red(image)
         edges = ip.edge_detector(image)

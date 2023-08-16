@@ -3,25 +3,19 @@ This module functions as an abstraction for the Truck via. the singleton class T
 as well as some autonomous driving functionality.
 """
 
-from constants import DriveParams
+from constants import DriveParams, GPIO
 from gpio import DCMotor, Servo, cleanup
 
-_SERVO_MOTOR_PIN         = 4
-_DRIVE_MOTOR_POWER_PIN   = 25
-_DRIVE_MOTOR_FORWARD_PIN = 6
-_DRIVE_MOTOR_REVERSE_PIN = 5
 
-steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
-drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
 
-STEERING_RACK_CENTER = DriveParams.STEERING_RACK_CENTER
+
+
 
 
 
 
 class Truck:
     _self = None
-
     """
     The car class controls driving and steering of the car. Should only instantiate once.
     """
@@ -40,8 +34,8 @@ class Truck:
         self.current_steering_angle = 0
         self.current_drive_power = 0
 
-        self.steer_motor: Servo = Servo(_SERVO_MOTOR_PIN)
-        self.drive_motor: DCMotor = DCMotor(_DRIVE_MOTOR_POWER_PIN,_DRIVE_MOTOR_FORWARD_PIN,_DRIVE_MOTOR_REVERSE_PIN)
+        self.steer_motor: Servo = Servo(GPIO.SERVO_MOTOR_PIN)
+        self.drive_motor: DCMotor = DCMotor(GPIO.DRIVE_MOTOR_POWER_PIN, GPIO.DRIVE_MOTOR_FORWARD_PIN, GPIO.DRIVE_MOTOR_REVERSE_PIN)
         self.jackknifed = False
 
     def gamepad_drive(self, trigger_val: int):
@@ -61,9 +55,9 @@ class Truck:
         if power < 0:
             self.drive_motor.reverse()
         elif power > 0:
-            drive_motor.forward()
+            self.drive_motor.forward()
         else:
-            drive_motor.stop_rotation()
+            self.drive_motor.stop_rotation()
         self.current_drive_power = power
         self.drive_motor.set_power(duty_cycle)
 
@@ -80,7 +74,7 @@ class Truck:
 
     def set_steering_angle(self, angle: float):
         """
-        Inputs must range from [-21, 21]. Bad inputs will be clamped
+        Inputs must range from [-21, 21]. Bad inputs will be clamped.
         """
 
         LEFT_STEERING_RATIO, RIGHT_STEERING_RATIO = 21/60, 31/60 # MOVE INTO CONFIG FILE
@@ -94,7 +88,7 @@ class Truck:
         self.current_steering_angle = angle 
         
         angle = angle / LEFT_STEERING_RATIO if angle < 0 else angle / RIGHT_STEERING_RATIO
-        self.steer_motor.set_angle(angle+STEERING_RACK_CENTER)
+        self.steer_motor.set_angle(angle+DriveParams.STEERING_RACK_CENTER)
 
 
        

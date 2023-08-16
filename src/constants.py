@@ -1,6 +1,11 @@
 from enum import Enum
 import yaml
 
+"""
+This module stores constants used throughout the project. The majority of these constants can be configured via `config.yml`.
+Descriptions of these constants can be found in the config file as well.
+"""
+
 def read_yaml(filename):
     with open(f'{filename}.yml','r') as f:
         output = yaml.safe_load(f)
@@ -20,7 +25,12 @@ camera = settings['camera']
 
 streaming = settings['streaming']
 
+gpio = settings['gpio']
+
 class MainMode(Enum):
+    """
+    Enumeration for the different driving modes
+    """
     MANUAL       = 0
     AUTO_FORWARD = 1
     AUTO_REVERSE = 2
@@ -36,6 +46,13 @@ class DriveParams:
 class LaneBoundsRatio:
     LEFT  = 1 / 2
     RIGHT = 1 / 2
+
+class GPIO:
+    SERVO_MOTOR_PIN         = gpio["servo motor"]
+    DRIVE_MOTOR_POWER_PIN   = gpio["drive motor power"]
+    DRIVE_MOTOR_FORWARD_PIN = gpio["drive motor forward"]
+    DRIVE_MOTOR_REVERSE_PIN = gpio["drive motor reverse"]
+
 
 class ImageProcessingCalibrations:
     """
@@ -53,16 +70,10 @@ class ImageProcessingCalibrations:
     CAMERA_MID_OFFSET_PERCENT = camera["rear offset"]
 
 class CameraSettings:
-    # I do not think we use this at all
 
-    
-    # "The alpha channel (also called alpha planes) is a color component 
-    # that represents the degree of transparency (or opacity) of a color (i.e., the red, green and blue channels). 
-    # It is used to determine how a pixel is rendered when blended with another."
-    PREVIEW_CONFIG_FORMAT = "YUV420" # This is a color model different from RGB.
     RESOLUTION: tuple[int, int] = (camera["resolution width"], camera["resolution height"])
     FRAMERATE: int              = camera["framerate"]
-    ALPHA                       = 20
+
 
 class OpenCVSettings:
     RECORDING_FRAMERATE: int = camera["framerate"] # Arbitrary (this number does affect the frame rate, but the number you put here is not the true framerate and we don't know why).

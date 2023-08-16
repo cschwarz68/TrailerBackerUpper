@@ -18,12 +18,15 @@ import image_utils as iu
 from streaming import UDPStreamer
 #streamer = Streamer()
 
-# This module calculates the speed of the vehicle by observing a marker on one of the trailer wheels. When the marker
-# passes a refernce point, the time since the last pass is recorded. Speed is calculated by dividing wheel diameter by
-# rotation time.
-# Major limitations:
-#   The speed can only update as fast as the wheel rotates.
-#   At high speeds, the wheel rotates too fast for the camera to process.
+"""This module calculates the speed of the vehicle by observing a marker on one of the trailer wheels. When the marker
+passes a refernce point, the time since the last pass is recorded. Speed is calculated by dividing wheel diameter by
+rotation time.
+Major limitations:
+  The speed can only update as fast as the wheel rotates.
+  At high speeds, the wheel rotates too fast for the camera to process.
+
+  NOTE: This might be broken right now.
+  """
 
 class Speedometer:
     

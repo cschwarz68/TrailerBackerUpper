@@ -14,8 +14,8 @@ from truck import Truck
 # TODO: Come up with a nice name for this module and class
 # Working name: StateInformer get it like state informer like a spy? It's so funny.
 
-# This module tracks all relevant vehicle state information needed for implemeneting model predictive control
-# as described in http://liu.diva-portal.org/smash/get/diva2:1279885/FULLTEXT01.pdf (pdf available in ../literature)
+"""This module tracks all relevant vehicle state information needed for implemeneting model predictive control
+as described in http://liu.diva-portal.org/smash/get/diva2:1279885/FULLTEXT01.pdf (pdf available in ../literature)"""
 
 
 class StateInformer:
@@ -228,8 +228,8 @@ class StateInformer:
         # Relies on: update_frame()
         img = self.frame
         edges = ip.edge_detector(img)
-        #cropped_edges = ip.region_of_interest(edges)
-        line_segments = ip.detect_line_segments(edges)
+        cropped_edges = ip.region_of_interest(edges)
+        line_segments = ip.detect_line_segments(cropped_edges)
         lane_lines = ip.average_slope_intercept(img, line_segments)
         self.lanes = lane_lines
     
@@ -297,7 +297,8 @@ class StateInformer:
 
     def update_frame(self):
         img = self.cam.read()
-        self.frame = iu.undistort(img, self.image_remap_x, self.image_remap_y, self.roi)
+        #self.frame = iu.undistort(img, self.image_remap_x, self.image_remap_y, self.roi)
+        self.frame = img
     
     def get_frame(self):
         return self.frame
