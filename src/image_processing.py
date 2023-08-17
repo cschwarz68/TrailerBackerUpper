@@ -166,7 +166,6 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 
 
 # Use lane lines to predict the steering angle in degrees.
-# -90 --> left, 0 --> straight, 90 --> right
 def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, float, float]]) -> float:
     if len(lane_lines) == 0:
         # Continue straight if no lines are present...
@@ -217,7 +216,6 @@ def compute_hitch_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
 """
 
 Everything beneath this comment is for testing.
-Run `quick_capture_module.py` for unit tests.
 
 """
 

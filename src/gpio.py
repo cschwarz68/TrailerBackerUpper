@@ -5,7 +5,9 @@ This module provides abstractions of servos and DC motors.
 from pigpio import pi, OUTPUT, LOW, HIGH
 import time
 import os
-
+"""
+pigpio daemon is started and stopped alongside the program.
+It causes performance issues if left running."""
 os.system("systemctl start pigpiod")
 time.sleep(1) # Daemon needs a second to warm up.
 

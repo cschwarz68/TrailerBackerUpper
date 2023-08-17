@@ -8,8 +8,7 @@ from truck import Truck
 
 
 # Package Imports
-import numpy as np
-import cv2
+
 import time
 from gamepad import Gamepad, Inputs
 
@@ -26,6 +25,7 @@ Major limitations:
   At high speeds, the wheel rotates too fast for the camera to process.
 
   NOTE: This might be broken right now.
+  NOTE: I WOULD LOVE TO REPLACE THIS SYSTEM WITH A WHEEL ENCODER!!!!!!!!!!!!
   """
 
 class Speedometer:
