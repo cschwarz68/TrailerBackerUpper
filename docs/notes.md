@@ -18,28 +18,21 @@ Library: cv2
 Library: numpy  
 	The fundamental package for scientific computing with Python.
 
-Library: ~~matplotlib~~ (unused)  
+Library: matplotlib
 	Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.
 
-Library: ~~RPi.GPIO~~ pigpio  
+Library: pigpio  
 	This package provides a Python module to control the GPIO on a Raspberry Pi.
 
-Module: ~~drive_module~~ --> car  
-	Controls drivetrain with PWM.
-	This is being refactored and further developed by Chris.
+Module: truck
+	This module controls drivetrain and steering of the vehicle.
 
-Module: ~~steer_module~~ --> car  
-	Controls steering with servo.
-	This is being refactored and further developed by Chris.
-
-Module: ~~image_processing_module~~ image processing
+Module: image_processing
 	Processes images with OpenCV2.
 
-Module: ~~quick_capture_module~~ camera
+Module: camera
 	Captures images from the camera to be fed into the image processing module.
 
-Module: car  
-	Contains abstractions for drivetrain. Deprecates drive and steering modules.
 
 FILES
 
@@ -82,34 +75,8 @@ File: `main.py`
 		11. Start GPIO daemon with OS commands. This is for hardware-level GPIO control / more finegrained servo control.
 		12. And more.
 
-File: `drive_module.py` (DEPRECATED)
 
-	(Chris is further developing and refactoring this now.)
-
-	To Do:
-		1. Clean up comments.
-		2. Reorderings.
-		3. Rename variables if necessary.
-		4. Refine unit tests.
-
-	Questions:
-		1. Wiring and ports. DONE
-		2. Why disable warning?
-			Answer: Possibly for former debugging purposes.
-		3. Calibration setting parameters, again.
-			Answer: Working on it.
-		4. Video capture not working..?
-			Anwer: Doesn't work.
-
-	Essential Modifications:
-		1. Changed variable name dc to duty_cycle. More clear as to the intention of the code.
-		2. New modeling and abstractions for physical components.
-
-File: `steer_module.py` (DEPRECATED)
-
-	(Chris.)
-
-File: ~~`image_processing_module.py`~~ `image_processing.py`
+File: `image_processing.py`
 
 	To Do:
 		1. Better type comments. Also apply to other modules. DONE
@@ -134,7 +101,7 @@ File: ~~`image_processing_module.py`~~ `image_processing.py`
 		7. Changed to use -90, 0, 90 system for steering.
 		8. And more.
 
-File: ~~`quick_capture_module.py`~~ `camera.py`
+File: `camera.py`
 
 	To Do:
 		1. Clean up comments. DONE
