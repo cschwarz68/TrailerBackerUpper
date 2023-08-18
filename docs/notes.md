@@ -1,5 +1,5 @@
 # PROJECT DOCUMENTATION
->This project is not in a complete state. If you are continuing this work, and find this documentation confusing or lacking, please email Christopher Nair at [cnair@uiowa.edu]
+>This project is not in a complete state. If you are continuing this work, and find this documentation confusing or lacking, please email Christopher Nair at [cnair@uiowa.edu](mailto:cnair@uiowa.edu) with questions.
 
 
 
