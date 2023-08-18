@@ -23,40 +23,40 @@ Library: [`pigpio`](http://abyz.me.uk/rpi/pigpio/)\
 	This package provides a Python module to control the GPIO on a Raspberry Pi.
 
 
-Module [`truck`](../src/truck.py)\
+Module [`truck`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/truck.py)\
 	Controls driving and steering of the car via the Truck singleton class.
 
-Module: [`image_processing`](../src/image_processing.py)\
+Module: [`image_processing`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/image_processing.py)\
 	Processes images with OpenCV2.
 
-Module: [`camera`](../src/camera.py)\
+Module: [`camera`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/camera.py)\
 	Captures images from the camera to be fed into the image processing module.
 
-Module: [`gpio`](../src/gpio.py)\
+Module: [`gpio`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/gpio.py)\
 This module controls DC Motors and Servos. It is imported by the `truck` module. If you are about to use something in this module directly, check `truck` first, as it is pretty complete.
 
-Module: [`gamepad`](../src/gamepad.py)\
+Module: [`gamepad`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/gamepad.py)\
 `gamepad` provides an interface for a connected x-input gamepad/controller.
 
-Module: [`image_utils`](../src/image_utils.py)\
+Module: [`image_utils`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/image_utils.py)\
 This module contains general image processing functions. Unlike those in image_processing, these do not do any calculations regarding control of the vehicle.
 
-Module: [`model.py`](../src/model.py)\
+Module: [`model.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/model.py)\
 This module is mostly a relic from before my time. There is a hope to train a neural network to control the robot one day, and this code is for that.
 
-Modules: [`mpc.py`](../src/mpc.py) and [`mpc_test.py`](../src/mpc_test.py)\
+Modules: [`mpc.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/mpc.py) and [`mpc_test.py`](../src/mpc_test.py)\
 `mpc.py` is an implementation of model predictive control using live state information from the vehicle. `mpc_test.py` is being used for basic testing. Functionality should eventually be moved and `mpc_test` deprecated/removed.
 
-Module: [`speedometer.py`](../src/speedometer.py)\
+Module: [`speedometer.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/speedometer.py)\
 This module calculates the speed of the car by looking at a yellow marker on the trailer wheel. A wheel encoder would be better and easier.
 
-Module:[`state_informer.py`](../src/state_informer.py)\
+Module:[`state_informer.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/state_informer.py)\
 This module is responsible for calculating and providing all required state information for implementing model predictive control.
 
 
 # THINGS TO DO
 
-File: [`main.py`](../src/main.py)
+File: [`main.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/main.py)
 
 To Do:
 1. Implement model predictive control
@@ -64,16 +64,16 @@ To Do:
 
 Elaboration: \
 Model predictive control has been implemented in Python by Dr. Schwarz in 
-[`trailer1.py`](../src/model_predictive_control/trailer1.py).
- In [`mpc.py`](../src/mpc.py), this has been adapted to use real information
+[`trailer1.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/model_predictive_control/trailer1.py).
+ In [`mpc.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/mpc.py), this has been adapted to use real information
  about the state of the truck and trailer system.
- The file [`mpc_test.py`](../src/mpc_test.py) contains is a preliminary attempt
+ The file [`mpc_test.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/mpc_test.py) contains is a preliminary attempt
  at actually using the model to control the vehicle. This should eventually be
  done in the main loop of the program. See documentation for `image_processing`
  for the current obstacles to doing this.
 
 
-File: [`image_processing.py`](../src/image_processing.py)
+File: [`image_processing.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/image_processing.py)
 
 To Do:
 1. Image processing has been left almost unchanged since before we started trying
@@ -85,11 +85,11 @@ and navigate quite well, even in sharp turns. However, In reverse driving, we mu
 1. Seeing the lane well
 2. Straight lines are not a good approximation of curves anymore
 
-I've attempted to use perspective transforms and fisheye distortion correction to get a better view of the lane at a distance. This seems to work quite well, but when put into the image processing pipeline, performance becomes far too slow. I believe this is because of the additional processing requirement of performing these image transformations, and also because a much higher image resolution is needed to get an acceptable reslution following the transformations. See [`camera_calibration`](../src/camera_calibration/src/)'s files for more specific information (these features are in `camera_calibration` as I was still experimenting with them and didn't actually put them in `image_processing`).
+I've attempted to use perspective transforms and fisheye distortion correction to get a better view of the lane at a distance. This seems to work quite well, but when put into the image processing pipeline, performance becomes far too slow. I believe this is because of the additional processing requirement of performing these image transformations, and also because a much higher image resolution is needed to get an acceptable reslution following the transformations. See [`camera_calibration`](https://github.com/cschwarz68/TrailerBackerUpper/tree/main/src/camera_calibration/src)'s files for more specific information (these features are in `camera_calibration` as I was still experimenting with them and didn't actually put them in `image_processing`).
 
 
 
-File: [`state_informer.py`](../src/state_informer.py)
+File: [`state_informer.py`](https://github.com/cschwarz68/TrailerBackerUpper/blob/main/src/state_informer.py)
 
 To Do:
 1. The primary issue with the system is lane detection in reverse driving, as touched on in the above section regarding `image_processing.py`.
