@@ -24,8 +24,7 @@ We're developing a 1/10th scale truck with a trailer that can be used to demonst
 
 
 ## Project Status
-The vehicle can autonomously navigate forward. Autonomous reverse navigation functions with a straight lane, but still has room for improvement when the lane greatly curves.  
-Currently, a planned neural network was trained for forward navigation, but the models are now insufficient. We have plans to implement machine learning later.
+The vehicle can autonomously navigate forward. The current goal is to finish implementing model predictive control for reverse driving. The current obstacles to this goal are image processing and performance related. Please see this repositories GitHub pages site for general information, and documentation in each file source for more specific information..
 
 ## Acknowledgements
 - [Image Processing for Autonomous Driving - David Tian](https://github.com/dctian/DeepPiCar)  
