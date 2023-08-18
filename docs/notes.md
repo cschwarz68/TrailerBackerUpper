@@ -18,7 +18,7 @@ Library: [`cv2`](https://opencv.org/)\
 Library: [`numpy`](https://numpy.org)\
 	The fundamental package for scientific computing with Python.
 
-Library: ~~matplotlib~~ (unused)  
+Library: matplotlib
 	Matplotlib is a comprehensive library for creating static, animated, and interactive visualizations in Python. Matplotlib makes easy things easy and hard things possible.
 
 Library: ~~RPi.GPIO~~ [`pigpio`](http://abyz.me.uk/rpi/pigpio/)\
@@ -83,7 +83,6 @@ Essential Modifications:
 	11. Start GPIO daemon with OS commands. This is for hardware-level GPIO control / more finegrained servo control.
 	12. And more.
 
-File: `drive_module.py` (DEPRECATED)
 
 Deprecated. See notes for `car.py`
 
