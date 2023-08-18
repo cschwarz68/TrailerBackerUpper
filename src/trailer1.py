@@ -5,19 +5,12 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-# TODO: Make better documentation after discussing with Dr. Schwarz
-
-# This module is an implementation of model predictive control for truck-and-trailer systems as described by http://liu.diva-portal.org/smash/get/diva2:1279885/FULLTEXT01.pdf
-
-# Developed by Dr. Chris Schwarz, University of Iowa Driving Safety Research Institute
-
-
 # L1 = wheelbase of car
 # L2 = 'wheelbase' of trailer
 # M1 = trailer hitch offset
-L1 = 6.25  # inches # curr: 6
-L2 = 11.75  # inches # curr: 11.75
-M1 = 2  # inches # curr: 2
+L1 = 5  # inches
+L2 = 7  # inches
+M1 = 1  # inches
 
 
 def trailer1_step(tspan, y0, u, p, N=10):
@@ -38,8 +31,6 @@ def trailer1_step(tspan, y0, u, p, N=10):
         L1 = p[0]
         M1 = p[1]
         L2 = p[2]
-
-        # why ???
 
         # u = [v1 steer]
         v1 = u[0]
@@ -101,7 +92,7 @@ def compute_cost(y):
     theta2_target = y2[0]
     beta2_target = 0
 
-    w = [.5, 1, 1]
+    w = [0, 1, 0.5]
 
     cost = (
         w[0] * (y2_final - y2_target) ** 2
@@ -157,10 +148,8 @@ def plot_states(t, y):
     plt.ylabel("ypos (in)")
     plt.legend()
     plt.show()
-    plt.savefig('path.png')
 
     # angles of car and trailer
-    plt.clf()
     plt.plot(t, theta1 * 180 / pi, label="theta1")
     plt.plot(t, theta2 * 180 / pi, label="theta2")
     plt.plot(t, beta2 * 180 / pi, label="beta2")
@@ -169,7 +158,6 @@ def plot_states(t, y):
     plt.ylabel("ang (deg)")
     plt.legend()
     plt.show()
-    plt.savefig('angles.png', dpi = 1000)
 
 
 def grid_search(t0, y0, v1, tstep, str0):
@@ -254,8 +242,6 @@ def test_grid(t0, y0, tstep, v1):
     plt.ylabel("steer")
     plt.legend()
     plt.show()
-    plt.savefig("steer.png")
-    plt.clf()
 
     plot_states(tout, yout)
 
@@ -360,9 +346,7 @@ def test_newtons(t0, y0, tstep, v1):
     plt.xlabel("time")
     plt.ylabel("steer")
     plt.legend()
-  
-    #plt.show()
-    plt.savefig('plot.png')
+    plt.show()
 
     plot_states(tout, yout)
 

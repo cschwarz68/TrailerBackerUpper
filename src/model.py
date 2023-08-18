@@ -1,27 +1,30 @@
 """
-Neural Network Independent Module (Legacy)
+Autonomous A.I. navigation module.
 
-Autonomous A.I. navigation.
+This is legacy code (updated to use pigpiod insted of RPi.GPIO, but that's it).
 
-IMPORTANT
-This module's drivetrain code relies on legacy modules.
-Remember to disable the gpio daemon, otherwise nothing will move.
+I will maybe eventually document how to supply training frames to Google Colab as well as document the functionality of this module.
+
+Neural Network is once again being put aside, this time because of colabs requirements to be present while connected to one of their remote runtimes.
+It can take many hours to train from a couple minutes of video, so actually sitting and waiting for it isn't very fun.
+
+I would train it on the pc that I do my work on, but they stole my graphics card to use in someone else's pc!!!! Those monsters!!!!
+Don't they know this robot is the most important thing we do in this office???
 """
 
 import time
 
 # Package Imports
 from keras.models import load_model
-from picamera2 import Picamera2
 import numpy as np
 import cv2
 
-# Local Imports (Legacy)
-from car import Car
-from camera import Camera
-from motor import cleanup
 
-model = load_model('/home/nads/Documents/Python/TrailerBackerUpper/src/NN/models/straight_line_driver.h5')
+# Local Imports
+from NN.src.camera_single_threaded import Camera # This module has not been updated to use multi-threaded camera
+from truck import Truck
+
+model = load_model('./src/NN/models/straight_line_driver.h5')
 print("model loaded")
 
 def img_preprocess(image: cv2.Mat) -> cv2.Mat:
@@ -53,19 +56,19 @@ def compute_steering_angle(frame: cv2.Mat):
     return steering_angle
 
 if __name__ == "__main__":
-    car = Car()
+    truck = Truck()
     cam = Camera()
 
     end_time = time.time() + 80
 
     while time.time() < end_time:
-        image = cam.capture()
+        image = cam.read()
         steer_angle = compute_steering_angle(image)
-        car.set_steering_angle(steer_angle)
-        car.set_drive_power(-.7)
+        truck.set_steering_angle(steer_angle)
+        truck.set_drive_power(-.7)
 
-    car.set_drive_power(0)
-    car.set_steering_angle(0)
+    truck.set_drive_power(0)
+    truck.set_steering_angle(0)
     
     cam.stop()
-    cleanup()
+    truck.cleanup()

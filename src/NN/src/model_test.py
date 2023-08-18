@@ -7,13 +7,14 @@ Reads a video and prints the predicted steering angles.
 # Package Imports
 from keras.models import load_model
 import numpy as np
+from NN.src.camera_single_threaded import Camera
 import cv2
 
-model = load_model('models/lane_navigation_final_2.h5')
+model = load_model('/home/nads2/TrailerBackerUpper/src/NN/models/lane_navigation_final_2.h5')
 
-video_directory = "nn_captures"
+video_directory = "/home/nads2/TrailerBackerUpper/src/NN/nn_captures"
 
-stream = cv2.VideoCapture(video_directory + "capture_test.h264")
+
 
 def img_preprocess(image: cv2.Mat) -> cv2.Mat:
     # Remove top half of the image, as it is not relavant for lane following.
@@ -44,11 +45,14 @@ def compute_steering_angle(frame: cv2.Mat):
     return steering_angle
 
 if __name__ == "__main__":
+    stream = Camera()
+
     try:
         i = 0
-        while stream.isOpened():
+        while True:
             _, frame = stream.read() 
-            angle = compute_steering_angle(frame)
+            angle = compute_steering_angle(frame)-90
             print(angle)
     finally:
-        stream.release()
+        pass
+        #stream.release()

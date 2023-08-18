@@ -8,23 +8,33 @@ All images are represented by OpenCV matrices, which are aliases of numpy arrays
 
 import warnings
 import math
+import time
 
 # Package Imports
 import numpy as np
 import cv2
 
 # Local Imports
-from constants import Lane_Bounds_Ratio, Image_Processing_Calibrations
+from constants import LaneBoundsRatio, ImageProcessingCalibrations
+from image_utils import weighted_center, filter_red
+from camera import Camera
+from streaming import UDPStreamer
 
 # Global Configuration
 warnings.simplefilter('ignore', np.RankWarning)
 # Ignoring Polyfit warning because it's bothersome.
 # Supposedly we can resolve it by decreasing the order (third argument), but it's already at 1 here...
 
+
+
 # Returns an image filtered for edges.
 def edge_detector(img: cv2.Mat) -> cv2.Mat:
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    thresh = int(max(gray[0]) * 0.8)
+    try:
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    except:
+        gray = img # already gray if it throws exception I think
+    coeff = .85 # higher = ignore more stuff (noise filtering I think?)
+    thresh = int(max(gray[0]) * coeff) 
     blur = cv2.GaussianBlur(gray, (21, 21), 0)
     _, binary = cv2.threshold(blur, thresh, 255, cv2.THRESH_BINARY)
     edges = cv2.Canny(binary, 200, 400)
@@ -45,15 +55,18 @@ The y-axis coordinate starts from the top of the image, while the x-axis starts 
 Leaving polygons embedded here for clarity.
 """
 def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
-    height, width = edges.shape
+    try:
+        height, width, _  = edges.shape
+    except:
+        height, width = edges.shape
     mask = np.zeros_like(edges)
     # Focus on bottom half.
     if not reverse:
         polygon = np.array(
             [
                 [
-                    (0, height / 2), 
-                    (width, height / 2), 
+                    (0, height / 4), 
+                    (width, height / 4), 
                     (width, height), 
                     (0, height)
                 ]
@@ -66,8 +79,8 @@ def region_of_interest(edges: cv2.Mat, reverse=False) -> cv2.Mat:
                 [
                     (0, height * 1 / 4), 
                     (width, height * 1 / 4), 
-                    (width, height), 
-                    (0, height)
+                    (width, height/2), 
+                    (0, height/2)
                 ]
             ], 
             np.int32
@@ -96,7 +109,8 @@ def detect_line_segments(img: cv2.Mat) -> np.ndarray:
     rho = 1             # Distance precision in pixels, i.e. 1 pixel.
     angle = np.pi / 180 # Angular precision in radians, i.e. 1 degree (radians = degrees * pi / 180).
     min_threshold = 10  # Minimal of votes for a line to be counted.
-    line_segments = cv2.HoughLinesP(
+    
+    line_segments = cv2.HoughLinesP( # Detect lines using probabalistic Hough transform. More info: https://en.wikipedia.org/wiki/Hough_transform
         img, rho, angle, min_threshold, np.array([]), minLineLength=8, maxLineGap=4
     )
     return line_segments
@@ -130,12 +144,12 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
         fit = np.polyfit((x1, x2), (y1, y2), 1)
         slope, intercept = fit
         if ((slope < 0) and 
-            (x1 < Lane_Bounds_Ratio.LEFT * width) and 
-            (x2 < Lane_Bounds_Ratio.LEFT * width)):
+            (x1 < LaneBoundsRatio.LEFT * width) and 
+            (x2 < LaneBoundsRatio.LEFT * width)):
             left_fit.append((slope, intercept))
         elif ((slope > 0) and 
-              (x1 > Lane_Bounds_Ratio.RIGHT * width) and 
-              (x2 > Lane_Bounds_Ratio.RIGHT * width)):
+              (x1 > LaneBoundsRatio.RIGHT * width) and 
+              (x2 > LaneBoundsRatio.RIGHT * width)):
             right_fit.append((slope, intercept))
 
     left_fit_average = np.average(left_fit, axis=0) # Get averages going downward. Collapse into one array.
@@ -148,6 +162,8 @@ def average_slope_intercept(frame: cv2.Mat, line_segments: np.ndarray) -> list[t
 
     # Because lane_lines will only ever have two values, we could return this as a tuple, but that would require unnecessary refactoring.
     return lane_lines
+
+
 
 # Use lane lines to predict the steering angle in degrees.
 # -90 --> left, 0 --> straight, 90 --> right
@@ -167,7 +183,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
         # x-coordinates and the measured camera position. Note that the camera position may have to be recalibrated.
         _, _, left_x2, _ = lane_lines[0]
         _, _, right_x2, _ = lane_lines[1]
-        mid = width / 2 * (1 + Image_Processing_Calibrations.CAMERA_MID_OFFSET_PERCENT)
+        mid = width / 2 * (1 + ImageProcessingCalibrations.CAMERA_MID_OFFSET_PERCENT)
         x_offset = (left_x2 + right_x2) / 2 - mid
 
     """
@@ -178,8 +194,8 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
       Car Front
         /| --> angle_to_mid_radian
        / |                       |
-      /  | }--> y_offset         V
-     /   |                       Convert to degrees and add turn straight angle.
+      /  | --> y_offset         V
+     /   |                       Convert to degrees 
     /____|
    x_offset
     """
@@ -188,37 +204,7 @@ def compute_steering_angle(frame: cv2.Mat, lane_lines: list[tuple[float, float, 
     angle_to_mid_deg = math.degrees(angle_to_mid_radian)
     return angle_to_mid_deg
 
-# Filters image for red by inverting image so red --> cyan. 
-# Uses HSV format to be able to only include certain saturation and brightness of cyan.
-def filter_red(img: cv2.Mat) -> cv2.Mat:
-    
-    # Bitwise complement operator. Flips each bit for each element in the matrix.
-    invert = ~img
-    hsv = cv2.cvtColor(invert, cv2.COLOR_BGR2HSV)
-    lower_cyan = np.array([85, 150, 40])
-    upper_cyan = np.array([95, 255, 255])
-    # Clamp to certain cyan shades.
-    mask = cv2.inRange(hsv, lower_cyan, upper_cyan)
-    return mask
 
-# Finds the center of the red tape.
-def center_red(img: cv2.Mat) -> tuple[float, float]:
-
-    # Contour: structural outlines.
-    # Ignoring hierarchy (second return value).
-    contours, _ = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours)>0:
-        big_contour = max(contours, key=cv2.contourArea)
-    else:
-        return(img.shape[1] / 2, img.shape[0] / 2) #temp fix; bad
-
-    # Moment: imagine the image is a 2D object of varying density. Find the "center of mass" / weighted center of the image.
-    moments = cv2.moments(big_contour)
-    if (moments["m00"] == 0) or (moments["m00"] == 0):
-        return(img.shape[1] / 2, img.shape[0] / 2)
-    cx = moments["m10"] / moments["m00"]
-    cy = moments["m01"] / moments["m00"]
-    return (cx, cy)
 
 # Finds the angle between the bottom center point and middle of the detected red zone / tape.
 def compute_hitch_angle(frame: cv2.Mat, cx: float, cy: float) -> float:
@@ -235,19 +221,7 @@ Run `quick_capture_module.py` for unit tests.
 
 """
 
-# Returns a black image with dimensions identical to that of the given image.
-def zero_image(frame: cv2.Mat) -> cv2.Mat:
-    return np.zeros_like(frame)
 
-# Combines images together, where weight of each image can be adjusted.
-# Images later in the list take z-axis priority.
-def combine_images(pairs: list[tuple[cv2.Mat, float]]) -> cv2.Mat:
-    # Throw exception if no images are provided.
-    base = zero_image(pairs[0][0])
-    for image, weight in pairs:
-        # The last parameter is gamma, and is for adjusting the overall brightness.
-        base = cv2.addWeighted(base, 1, image, weight, 0)
-    return base
 
 # Adds lines to image. Color is in RGB format.
 def display_lines(img: cv2.Mat, lines: list[tuple[float, float, float, float]], line_color=(255, 255, 255), line_width=2) -> cv2.Mat:
@@ -272,7 +246,7 @@ def steering_info(img: cv2.Mat) -> tuple[float, list[tuple[float, float, float, 
 # Makes a reduced opacity image containing lane lines and the calculated path. 
 def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: list[tuple[float, float, float, float]]) -> cv2.Mat:
     height, width, _ = img.shape
-    steering_angle_radians = math.radians(steering_angle_deg + 90)
+    steering_angle_radians = math.radians(steering_angle_deg + 60)
 
     # Calculations for the center path.
     x1 = width / 2
@@ -283,10 +257,12 @@ def display_lanes_and_path(img: cv2.Mat, steering_angle_deg: float, lane_lines: 
     final_image = display_lines(img, lane_lines, (255, 0, 0))
     final_image = display_lines(final_image, [(x1, y1, x2, y2)], (0, 255, 0))
 
-    final_image = cv2.putText(final_image, f"Steering Angle from Straight: {steering_angle_deg}", 
+    final_image = cv2.putText(final_image, f"Steering Angle: {steering_angle_deg}", 
                               (25, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return final_image
+
+
 
 # `steering_info` but with the red angle and coordinates.
 # Should be identical to the steps in main, but separate for testing.
@@ -294,15 +270,47 @@ def steering_info_reverse(img: cv2.Mat) -> tuple[float, tuple[float, float, floa
     origin_x, origin_y = img.shape[1] / 2, img.shape[0]
     filtered = filter_red(img)
     cropped = region_of_interest(filtered)
-    cx, cy = center_red(cropped)
+    cx, cy = weighted_center(cropped)
     angle = compute_hitch_angle(img, cx, cy)
     return (angle, (origin_x, origin_y, cx, cy))
 
 # To be used in conjunction with `display_lanes_and_path`.
 def display_trailer_info(img: cv2.Mat, 
-                         trailer_angle: float, 
+                         hitch_angle: float, 
                          trailer_points: tuple[float, float, float, float]) -> cv2.Mat:
     final_image = display_lines(img, [trailer_points], (0, 0, 255))
-    final_image = cv2.putText(final_image, f"Trailer Angle from Straight: {trailer_angle}", 
+    final_image = cv2.putText(final_image, f"Hitch Angle: {hitch_angle}", 
                               (25, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
     return final_image
+
+
+    
+if __name__ == "__main__":
+    cam = Camera().start()
+    streamer = UDPStreamer()
+
+    i = 0
+    while True:
+        image = cam.read()
+        
+        
+        # white = filter_white(image)
+        edges = edge_detector(image)
+        cropped_edges = region_of_interest(edges, True)
+        line_segments = detect_line_segments(cropped_edges)
+        lane_lines = average_slope_intercept(image, line_segments)
+        num_lanes = len(lane_lines)
+        steering_angle_lanes = compute_steering_angle(image, lane_lines)
+        final = display_lanes_and_path(image,steering_angle_lanes, lane_lines)
+
+        filtered = filter_red(image)
+        cropped = region_of_interest(filtered, True)
+        cx, cy = weighted_center(cropped)
+        trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
+        hitch_angle = compute_hitch_angle(image, cx, cy)
+        trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
+
+        final_final = display_trailer_info(final, trailer_angle, trailer_points)
+        
+        
+        streamer.stream_image(cropped_edges)

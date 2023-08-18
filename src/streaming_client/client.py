@@ -9,6 +9,11 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from numpy import fromstring, uint8
 from struct import unpack
 
+# Change this value if you would like to use a different port (default is 25565).
+PORT = 25565
+# NOTE: You cannot run this program and play multiplayer Minecraft at the same time if you are using port 25565.
+
+
 MAX_DGRAM = 2 ** 16
 
 def dump_buffer(s: socket):
@@ -24,7 +29,7 @@ def main():
     # Get image UDP frame & concatenate before decoding and outputting the image.
     # Set up socket.
     s = socket(AF_INET, SOCK_DGRAM)
-    s.bind(('0.0.0.0', 25565)) # Minecraft port (picked arbitrarily).
+    s.bind(('0.0.0.0', PORT)) # Minecraft port (picked arbitrarily).
     dat = b''
     dump_buffer(s)
 

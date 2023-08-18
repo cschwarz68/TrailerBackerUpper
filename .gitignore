@@ -1,3 +1,6 @@
+# Note from Chris: The vast majority of this gitignore was here when I joined the project, and a lot of it seems
+# like it is no longer necessary, but I am just going to leave all the old stuff as is. Everything added after I joiend is the stuff after the line of hashtags
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -165,14 +168,27 @@ cython_debug/
 # Adi's DS_Store
 /.DS_Store
 
-# Custom
+##################################################
+
+# Video captures we don't want committed + nerual network training frame directory
 test_captures/
 frames/
+videos/
+
+# Ignore our favorite temp file names
 cache.txt
 temp.txt
 test.py
 thing.py
+temp.py
+
+# DO NOT COMMIT VIDEOS THE REPO IS ALREADY OVER 1GB BECAUSE PEOPLE (NOT ME) COMMITTED VIDEOS AND PICTURES
 *.mp4
 *.avi
+*.h264
+
+#Ignoring png because training frames, but training frames should only ever be in src/frames/ so if you need to commit .png remove this
 *.png
 *.jpg
+
+

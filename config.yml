@@ -1,0 +1,70 @@
+
+settings:
+
+    gpio:
+
+        # GPIO pin controlling drive motor power
+        drive motor power: 25
+        # GPIO pin controlling forward driving
+        drive motor forward: 6
+        # GPIO pin controlling reverse driving
+        drive motor reverse: 5
+        # GPIO pin controlling steering rack servo
+        servo motor: 4
+
+    
+    # Steering rack calibrations
+    steering rack: 
+        
+        # Motor position in range [0,120] corresponding to centered steering rack
+        center: 52
+      
+    
+    # Camera calibrations
+    camera:
+
+        # Camera offsets from center, expressed as percent
+        # =0% --> Camera is exactly in the middle.
+        # >0% --> Camera is skewed towards the left.
+        # <0% --> Camera is skewed towards the right.
+
+        # Offset of front camera
+        front offset: 0.02
+        # Offset of rear camera
+        rear offset: 0.02
+        # Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
+        framerate: 60
+        # NOTE: I would not reccomend changing the resolution as no resolutions have been tested other than 640x480
+        resolution width: 1600
+        resolution height: 1200
+
+    #Driving settings
+    driving: 
+        sharp turn threshold: 7.5
+        #threshold of front
+        sharp turn reverse threshold: 20
+        #threshold of back
+        position threshold : 0.03125        #1/60
+        #angle of trailer relative to center of lane
+        trailer angle off center threshold : 1
+        #amount of degrees before trailer correction
+        hitch angle threshold : 1
+        
+        turn ratio : 2.5
+
+    #Streaming settings
+    streaming:
+        #Enable or disable streaming
+        enabled: true
+        #Streaming destination IP address. UDP Streaming also always streams to localhost.
+        destination ip: "192.168.2.185"
+        #Streaming destination port. Client is preconfigured with port 25565 by default. 
+        destination port: 25565
+        #Stream to web browser (TCP) or the client inluded in this repo (UDP)
+        #NOTE: The web streaming is quite delayed because TCP bad
+        web streaming: true # NOT YET IMPLEMENTED. THIS OPTION DOES NOTHING
+
+
+
+    
+    

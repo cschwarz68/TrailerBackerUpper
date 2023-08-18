@@ -1,7 +1,11 @@
 import cv2
 import image_processing as ip
-from constants import Reverse_Calibrations
+from constants import ReverseCalibrations
 import os
+
+
+# TODO: This can probably go into model.py at some point
+# ALSO TODO: actually make the neural network work in some nontrivial way...
 
 def create_frame(source_file):
     cap = cv2.VideoCapture(source_file)
@@ -11,7 +15,7 @@ def create_frame(source_file):
         while cap.isOpened():
             _, image = cap.read()
             angle = get_angle(image)
-            os.chdir('/home/nads/Documents/Python/TrailerBackerUpper/src/frames2')
+            os.chdir('./src/frames') 
             cv2.imwrite("%s_%03d_%03d.png" % (source_file, i, angle), image)
             os.chdir('..')
             i += 1
@@ -33,7 +37,7 @@ def get_angle(image):
     # Trailer
     filtered = ip.filter_red(image)
     cropped = ip.region_of_interest(filtered, True)
-    cx, cy = ip.center_red(cropped)
+    cx, cy = ip.weighted_center(cropped)
     trailer_points = (image.shape[1] / 2, image.shape[0], cx, cy)
     hitch_angle = ip.compute_hitch_angle(image, cx, cy)
     trailer_angle = hitch_angle - steering_angle_lanes # Angle of the trailer relative to the lane center.
@@ -44,16 +48,16 @@ def get_angle(image):
         trailer_deviation = cx - lane_center_x
         _, width, _ = image.shape
 
-        if abs(trailer_deviation) > width * Reverse_Calibrations.POSITION_THRESHOLD:
-            steering_angle = steering_angle_lanes * Reverse_Calibrations.TURN_RATIO * -1
+        if abs(trailer_deviation) > width * ReverseCalibrations.POSITION_THRESHOLD:
+            steering_angle = steering_angle_lanes * ReverseCalibrations.TURN_RATIO * -1
             # If the trailer is not centered, steer to the center.
 
-        if abs(hitch_angle) > Reverse_Calibrations.HITCH_ANGLE_THRESHOLD:
-            steering_angle = hitch_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD:
+            steering_angle = hitch_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the hitch is too great, reduce it.
     
-        if abs(trailer_angle) > Reverse_Calibrations.ANGLE_OFF_CENTER_THRESHOLD:
-            steering_angle = trailer_angle * Reverse_Calibrations.TURN_RATIO
+        if abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD:
+            steering_angle = trailer_angle * ReverseCalibrations.TURN_RATIO
             # If the angle of the trailer relative to lane center is too great, reduce it.
     else:
         # If two lanes are not visible.
