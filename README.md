@@ -7,7 +7,7 @@ This project contains Python source code for a manually and autonomously control
 > Also see software documentation.
 
 ## Table of Contents
-- [Documentation](https://cschwarz68.github.io/TrailerBackerUpper/))
+- [Documentation](https://cschwarz68.github.io/TrailerBackerUpper/)
 - [General Info](#general-information)
 - [Technologies Used](#technologies-used)
 - [Project Status](#project-status)
