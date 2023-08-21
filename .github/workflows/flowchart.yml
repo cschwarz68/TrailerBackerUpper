@@ -21,4 +21,4 @@ jobs:
       run: pip list
 
     - name: Transpile.
-      run: sh ./.github/workflows/flowchart.sh
+      run: sh .github/workflows/flowchart.sh
