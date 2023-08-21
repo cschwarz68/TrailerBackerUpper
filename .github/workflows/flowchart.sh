@@ -6,8 +6,8 @@ echo $FILES
 
 for FILE in $FILES; do
     if [ -f $FILE ]; then
-        OUTPUT="docs/flowcharts/$(echo $FILE | tr "/." "_").html"
-        touch "../${OUTPUT}"
+        OUTPUT="../docs/flowcharts/$(echo $FILE | tr "/." "_").html"
+        touch $OUTPUT
         echo "Transpiling ${FILE} to ${OUTPUT}."
         python3 -m pyflowchart $FILE -o $OUTPUT
     fi
