@@ -13,7 +13,7 @@ jobs:
     - uses: actions/setup-python@v4
     
     - name: Install pyflowchart
-    - run: pip install pyflowchart
+      run: pip install pyflowchart
     
     - name: Verify Installation
-    - run: pip list
+      run: pip list
