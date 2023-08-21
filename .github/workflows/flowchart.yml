@@ -13,9 +13,12 @@ jobs:
 
     steps:
     - uses: actions/setup-python@v4
-    
+
     - name: Install pyflowchart.
       run: pip install pyflowchart
 
     - name: Echo installation.
       run: pip list
+
+    - name: Transpile.
+      run: sh ./.github/workflows/flowchart.sh
