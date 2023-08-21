@@ -10,9 +10,9 @@ jobs:
   pyflowchart:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/setup-python@v4
     
     - name: Install pyflowchart
-    - uses: actions/setup-python@v4
     - run: pip install pyflowchart
     
     - name: Verify Installation
