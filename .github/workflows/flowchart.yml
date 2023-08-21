@@ -12,8 +12,13 @@ jobs:
     steps:
     - uses: actions/setup-python@v4
     
-    - name: Install pyflowchart
+    - name: Install pyflowchart.
       run: pip install pyflowchart
     
-    - name: Verify Installation
+    - name: Verify installation.
       run: pip list
+    
+    - name: Generate flowchart for each file.
+      run: |
+        echo test
+        echo test2
