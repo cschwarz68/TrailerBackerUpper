@@ -8,12 +8,8 @@ on:
 
 jobs:
   pyflowchart:
+  
     runs-on: ubuntu-latest
-    steps:
-    - name: Install Python.
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9.2
     
     - name: Install pyflowchart
       run: pip install pyflowchart
