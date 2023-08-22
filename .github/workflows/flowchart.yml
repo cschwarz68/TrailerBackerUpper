@@ -24,7 +24,7 @@ jobs:
     - name: Transpile.
       run: sh .github/workflows/flowchart.sh
 
-    - name: Push
+    - name: Push.
       run: >
         git config --local user.name "NADS Bot" 
         && git status 
