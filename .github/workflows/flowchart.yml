@@ -3,7 +3,7 @@ name: Docs - Transpile Python to Flowchart
 on:
   push:
     branches:
-    - main
+    - staging
     - workflow
 
 jobs:
