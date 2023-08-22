@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>main_py.html</title>
+        <style type="text/css">
+          .end-element { fill : #FFCCFF; }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+        <!-- <script src="../release/flowchart.min.js"></script> -->
+        <script>
+
+            window.onload = function () {
+                var btn = document.getElementById("run"),
+                    cd = document.getElementById("code"),
+                    chart;
+					
+                (btn.onclick = function () {
+                    var code = cd.value;
+
+                    if (chart) {
+                      chart.clean();
+                    }
+
+                    chart = flowchart.parse(code);
+                    chart.drawSVG('canvas', {
+                      'x': 0,
+                      'y': 0,
+                      'line-width': 3,
+                      //'maxWidth': 15,//ensures the flowcharts fits within a certain width
+                      'line-length': 50,
+                      'text-margin': 10,
+                      'font-size': 14,
+                      'font': 'normal',
+                      'font-family': 'Helvetica',
+                      'font-weight': 'normal',
+                      'font-color': 'black',
+                      'line-color': 'black',
+                      'element-color': 'black',
+                      'fill': 'white',
+                      'yes-text': 'yes',
+                      'no-text': 'no',
+                      'arrow-end': 'block',
+                      'scale': 1,
+                      'symbols': {
+                        'start': {
+						  'font-size': 14,
+                          'font-color': 'yellow',
+                          'element-color': 'blue',
+                          'fill': 'green',
+						  'class': 'start-element'
+                        },
+                        'inputoutput': {
+                          'font-color': 'black',
+                          'element-color': 'black',
+                          'fill': 'bisque'
+                        },
+                        'operation': {
+                          'font-color': 'black',
+                          'element-color': 'black',
+                          'fill': 'linen'
+                        },
+                        'subroutine': {
+                          'font-color': 'black',
+                          'element-color': 'blue',
+                          'fill': 'lightgreen'
+                        },
+                        'condition': {
+                          'font-color': 'red',
+						  'element-color': 'black',
+                          'fill': 'yellow'
+                        },
+                        'end':{
+						  'font-size': 20,
+                          'class': 'end-element'
+                        }
+                      },
+                      'flowstate' : {
+                        //'past' : { 'fill' : '#CCCCCC', 'font-size' : 12},
+                        //'current' : {'fill' : 'yellow', 'font-color' : 'red', 'font-weight' : 'bold'},
+                        //'future' : { 'fill' : '#FFFF99'},
+                        'request' : { 'fill' : 'blue'},
+                        'invalid': {'fill' : '#444444'},
+                        'approved' : { 'fill' : '#58C4A3', 'font-size' : 12, 'yes-text' : 'APPROVED', 'no-text' : 'n/a' },
+                        'rejected' : { 'fill' : '#C45879', 'font-size' : 12, 'yes-text' : 'n/a', 'no-text' : 'REJECTED' }
+                      }
+                    });
+					//create base64 encoding of SVG to generate download link for title(without html or htm).SVG
+					var currentCanvasDIV = document.getElementById('canvas')
+					var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+
+					const OUTsvgBASE64 = btoa(currentDrawSVG)
+					doctitle = document.title.replace('.html','');
+					doctitle = doctitle.replace('.htm','');
+
+
+					var currentCanvasDIV = document.getElementById('canvas')
+					var currentDrawSVG = currentCanvasDIV.innerHTML.replaceAll('ë','e');
+					svgSource = currentDrawSVG
+					svgXML = currentDrawSVG;
+					// Use SVG Height and Width from the SVG XML to set canvas size
+					svgXMLsubstringHeight = svgXML.substring(svgXML.indexOf('height='), svgXML.indexOf('version='));
+					svgXMLsubstringWidth = svgXML.substring(svgXML.indexOf('width='), svgXML.indexOf('xmlns='));
+					HeightValue = svgXMLsubstringHeight.substring(svgXMLsubstringHeight.indexOf('"')+1,svgXMLsubstringHeight.lastIndexOf('"'));
+					WidthValue = svgXMLsubstringWidth.substring(svgXMLsubstringWidth.indexOf('"')+1,svgXMLsubstringWidth.lastIndexOf('"'));
+					HeightValueInt = Math.round(HeightValue)
+					WidthValueInt = Math.round(WidthValue)
+					// setup input for base64SvgToBase64Png
+					let svgSrc = "data:image/svg+xml;base64,"+OUTsvgBASE64;
+					var pngBase
+					imageUtil.base64SvgToBase64Png(svgSrc, WidthValueInt, HeightValueInt).then(pngSrc => {
+					pngBase = pngSrc
+					// output download link for base64 PNG converted on download from base64
+					var pngOutHtml = `<a href="${pngBase}" download="${doctitle}.png">PNG - Click here to download current rendered flowchart as ${doctitle}.png</a>`
+					document.getElementById("pngbase64").innerHTML=pngOutHtml;
+					});	
+					// output download link for base64 SVG converted on download from base64
+					var svgOutHtml = `<a href="data:image/svg+xml;base64,${OUTsvgBASE64}" download=${doctitle}.svg>SVG - Click here to download current rendered flowchart as ${doctitle}.svg</a> `
+						document.getElementById("svgbase64").innerHTML=svgOutHtml;
+					})();
+
+							};
+				 
+
+// derived from https://stackoverflow.com/a/64800570
+// we need to use web browser canvas to generate a image. In this case png
+let imageUtil = {};
+/**
+ * converts a base64 encoded data url SVG image to a PNG image
+ * @param originalBase64 data url of svg image
+ * @param width target width in pixel of PNG image
+ * @param secondTry used internally to prevent endless recursion
+ * @return {Promise<unknown>} resolves to png data url of the image
+ */
+imageUtil.base64SvgToBase64Png = function (originalBase64, width, height, secondTry) {
+    return new Promise(resolve => {
+		let img = document.createElement('img');
+        img.onload = function () {
+            if (!secondTry && (img.naturalWidth === 0 || img.naturalHeight === 0)) {
+                let svgDoc = base64ToSvgDocument(originalBase64);
+                let fixedDoc = fixSvgDocumentFF(svgDoc);
+                return imageUtil.base64SvgToBase64Png(svgDocumentToBase64(fixedDoc), width, height, true).then(result => {
+                    resolve(result);
+                });
+            }
+            //document.body.appendChild(img);
+            let canvas2 = document.createElement("canvas");
+            //document.body.removeChild(img);
+            canvas2.width = width;
+            canvas2.height = height;
+            let ctx = canvas2.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas2.width, canvas2.height);
+            try {
+                let data = canvas2.toDataURL('image/png');
+                resolve(data);
+            } catch (e) {
+                resolve(null);
+            }
+        };
+        img.src = originalBase64;
+    });
+}
+
+//needed because Firefox doesn't correctly handle SVG with size = 0, see https://bugzilla.mozilla.org/show_bug.cgi?id=700533
+function fixSvgDocumentFF(svgDocument) {
+    try {
+        let widthInt = parseInt(svgDocument.documentElement.width.baseVal.value) || 500;
+        let heightInt = parseInt(svgDocument.documentElement.height.baseVal.value) || 500;
+        svgDocument.documentElement.width.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, widthInt);
+        svgDocument.documentElement.height.baseVal.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, heightInt);
+        return svgDocument;
+    } catch (e) {
+        return svgDocument;
+    }
+}
+
+function svgDocumentToBase64(svgDocument) {
+    try {
+        let base64EncodedSVG = btoa(new XMLSerializer().serializeToString(svgDocument));
+        return 'data:image/svg+xml;base64,' + base64EncodedSVG;
+    } catch (e) {
+        return null;
+    }
+}
+
+function base64ToSvgDocument(base64) {
+    let svg = atob(base64.substring(base64.indexOf('base64,') + 7));
+    svg = svg.substring(svg.indexOf('<svg'));
+    let parser = new DOMParser();
+    return parser.parseFromString(svg, "image/svg+xml");
+} 
+        </script>
+
+		<script>
+			function HelpText() {
+			  var x = document.getElementById("HelpTextBlock");
+			  if (x.style.display === "none") {
+				x.style.display = "block";
+			  } else {
+				x.style.display = "none";
+			  }
+			}
+		</script>
+    </head>
+    <body>
+        <div><textarea id="code" style="width: 100%;" rows="11">op2=>operation: '\nThis is the main program.\nThere are three modes: manual, forward autonomous, and reverse autonomous.\n\nAlso contains streaming and recording capabilities.\n\nExit autonomous mode / the program by pressing (B).\n'
+op4=>operation: from threading import Thread
+op6=>operation: import signal, traceback
+op8=>operation: import cv2
+op10=>operation: from constants import MainMode, DriveParams, OpenCVSettings, ReverseCalibrations
+op12=>operation: from gamepad import Gamepad, Inputs, UnpluggedError
+op14=>operation: from streaming import UDPStreamer
+op16=>operation: import image_processing as ip
+op18=>operation: import image_utils as iu
+op20=>operation: from camera import Camera
+op22=>operation: from truck import Truck
+op24=>operation: from state_informer import StateInformer
+op26=>operation: transition_mode = MainMode.AUTO_FORWARD
+op28=>operation: mode = MainMode.MANUAL
+op30=>operation: check_auto_exit_thread: Thread = None
+op32=>operation: recording = False
+op34=>operation: frames = []
+op36=>operation: manual_streaming_thread: Thread = None
+op38=>operation: auto_exit = False
+op40=>operation: truck: Truck = Truck()
+op42=>operation: g: Gamepad = Gamepad()
+op44=>operation: cam: Camera = Camera().start()
+op46=>operation: streamer: UDPStreamer = UDPStreamer().start()
+op48=>operation: state_informer: StateInformer = StateInformer().start()
+op50=>operation: fourcc = cv2.VideoWriter_fourcc(*'XVID')
+op52=>operation: (base_height, base_width, _) = cam.read().shape
+op54=>operation: video: cv2.VideoWriter = cv2.VideoWriter('main_video.avi', fourcc, OpenCVSettings.RECORDING_FRAMERATE, (base_width, base_height), isColor=True)
+op56=>operation: done = False
+st59=>start: start handler
+io61=>inputoutput: input: signum, stack_frame
+op64=>operation: global done
+sub66=>subroutine: print('\nKeyboard interrupt detected.')
+op68=>operation: done = True
+sub70=>subroutine: cleanup()
+e72=>end: end handler
+sub75=>subroutine: signal.signal(signal.SIGINT, handler)
+st78=>start: start manual
+io80=>inputoutput: input: 
+op83=>operation: global done, mode, transition_mode, recording, check_auto_exit_thread, manual_streaming_thread
+cond86=>condition: if ((manual_streaming_thread is None) or (not manual_streaming_thread.is_alive()))
+op90=>operation: manual_streaming_thread = Thread(target=stream_in_manual)
+sub92=>subroutine: manual_streaming_thread.start()
+cond98=>condition: if g.was_pressed(Inputs.B)
+op102=>operation: done = True
+op182=>operation: steer_value = g.get_stick_value(Inputs.LX)
+op184=>operation: drive_value = g.get_trigger_value()
+cond187=>operation: truck.gamepad_steer(steer_value) if  (steer_value is not None)
+cond198=>operation: truck.gamepad_drive(drive_value) if  (drive_value is not None)
+e208=>end: end manual
+st212=>start: start auto_forward
+io214=>inputoutput: input: 
+op217=>operation: global cam, recording, auto_exit
+cond220=>condition: if auto_exit
+sub224=>subroutine: exit_auto()
+e227=>end: end function return
+op233=>operation: image = cam.read()
+op235=>operation: edges = ip.edge_detector(image)
+op237=>operation: cropped_edges = ip.region_of_interest(edges)
+op239=>operation: line_segments = ip.detect_line_segments(cropped_edges)
+op241=>operation: lane_lines = ip.average_slope_intercept(image, line_segments)
+op243=>operation: num_lanes = len(lane_lines)
+op245=>operation: steering_angle = ip.compute_steering_angle(image, lane_lines)
+cond248=>condition: if (abs(steering_angle) > DriveParams.SHARP_TURN_DEGREES)
+sub252=>subroutine: truck.set_drive_power(0.9)
+op259=>operation: stable_angle = truck.stabilize_steering_angle(steering_angle, num_lanes)
+sub261=>subroutine: truck.set_steering_angle(stable_angle)
+op263=>operation: visual_image = ip.display_lanes_and_path(image, steering_angle, lane_lines)
+sub265=>subroutine: streamer.stream_image(visual_image)
+cond268=>operation: video.write(visual_image) if  recording
+e278=>end: end auto_forward
+st282=>start: start maintain_hitch_angle
+io284=>inputoutput: input: hitch_angle
+cond288=>condition: if ((hitch_angle is not None) and (abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD))
+io295=>inputoutput: output:  (hitch_angle * ReverseCalibrations.TURN_RATIO)
+e293=>end: end function return
+e301=>end: end maintain_hitch_angle
+st305=>start: start auto_reverse
+io307=>inputoutput: input: 
+op310=>operation: global cam, recording, auto_exit
+cond313=>condition: if auto_exit
+sub317=>subroutine: exit_auto()
+e320=>end: end function return
+op326=>operation: image = state_informer.get_frame()
+op328=>operation: raw_image = image
+op330=>operation: edges = ip.edge_detector(image)
+op332=>operation: lane_lines = state_informer.get_lanes()
+op334=>operation: num_lanes = len(lane_lines)
+op336=>operation: steering_angle_lanes = state_informer.get_car_lane_angle()
+op338=>operation: (tx, ty) = state_informer.get_trailer_pos()
+op340=>operation: trailer_points = ((image.shape[1] / 2), image.shape[0], tx, ty)
+op342=>operation: hitch_angle = state_informer.get_hitch_angle()
+op344=>operation: trailer_angle = state_informer.get_trailer_lane_angle()
+op346=>operation: steering_angle = 0
+cond349=>condition: if (num_lanes == 2)
+op353=>operation: (lane_center_x, lane_center_y) = state_informer.get_lane_center_pos()
+op355=>operation: trailer_deviation = state_informer.get_trailer_deviation()
+op357=>operation: (_, width, _) = image.shape
+cond360=>operation: truck.jackknifed = True if  (abs(hitch_angle) > 30)
+cond371=>operation: steering_angle = ((steering_angle_lanes * ReverseCalibrations.TURN_RATIO) * (- 1)) if  (abs(trailer_deviation) > (width * ReverseCalibrations.POSITION_THRESHOLD))
+cond382=>operation: steering_angle = (hitch_angle * ReverseCalibrations.TURN_RATIO) if  (abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD)
+cond393=>operation: steering_angle = (trailer_angle * ReverseCalibrations.TURN_RATIO) if  (abs(trailer_angle) > ReverseCalibrations.ANGLE_OFF_CENTER_THRESHOLD)
+cond404=>condition: if truck.jackknifed
+op408=>operation: steering_angle = steering_angle_lanes
+op410=>operation: drive_power = 0.7
+cond413=>operation: truck.jackknifed = False if  abs((hitch_angle < 1))
+sub482=>subroutine: truck.set_drive_power(drive_power)
+op484=>operation: stable_angle = truck.stabilize_steering_angle(steering_angle, num_lanes)
+sub486=>subroutine: truck.set_steering_angle((- stable_angle))
+op488=>operation: visual_image = ip.display_lanes_and_path(image, (- stable_angle), lane_lines)
+op490=>operation: visual_image = ip.display_trailer_info(visual_image, state_informer.get_hitch_angle(), trailer_points)
+op492=>operation: stream = raw_image
+op494=>operation: hitch_angle = state_informer.get_hitch_angle()
+sub496=>subroutine: iu.put_text(stream, f'Hitch Angle: {hitch_angle}')
+sub498=>subroutine: streamer.stream_image(visual_image)
+cond501=>operation: video.write(raw_image) if  recording
+e511=>end: end auto_reverse
+st515=>start: start check_auto_exit
+io517=>inputoutput: input: 
+op520=>operation: global mode, recording, auto_exit
+op522=>operation: '\n    The initial function of this function was to listen for presses of B and return to manual mode if B was pressed.\n    It now also allows enabling and disabling of recording while in autonomous driving modes. Should be renamed accordingly at some point\n    '
+cond525=>condition: while True
+cond579=>condition: if (mode != MainMode.MANUAL)
+sub583=>subroutine: g.update_input()
+cond586=>condition: if g.was_pressed(Inputs.B)
+op590=>operation: auto_exit = True
+e593=>end: end function return
+cond600=>condition: if g.was_pressed(Inputs.A)
+cond605=>condition: if (not recording)
+op609=>operation: recording = True
+sub611=>subroutine: print('Started Recording')
+op615=>operation: recording = False
+sub617=>subroutine: print('Stopped Recording')
+e628=>end: end check_auto_exit
+st632=>start: start exit_auto
+io634=>inputoutput: input: 
+op637=>operation: global mode, auto_exit
+op639=>operation: mode = MainMode.MANUAL
+sub641=>subroutine: truck.set_drive_power(0)
+sub643=>subroutine: truck.set_steering_angle(0)
+sub645=>subroutine: check_auto_exit_thread.join()
+op647=>operation: auto_exit = False
+sub649=>subroutine: print('Returning To:', mode)
+e651=>end: end exit_auto
+st655=>start: start stream_in_manual
+io657=>inputoutput: input: 
+op660=>operation: global recording, done, frames
+op662=>operation: '\n    This function is the targert of manual_streaming_thread.\n\n    Because get_gamepad() is a blocking function, images cannot be read from the camera unless an input occurs. This thread allows get gamepad to block all it wants\n    in manual() while still allowing reading of frames\n\n    This function also records if recording is enabled. May need to rename it to something more general.\n    '
+cond665=>condition: while (not done)
+cond733=>operation: break if  (mode != MainMode.MANUAL)
+op743=>operation: image = state_informer.get_frame()
+op745=>operation: raw_image = image
+op747=>operation: angle = truck.current_steering_angle
+op749=>operation: edges = ip.edge_detector(image)
+op751=>operation: cropped_edges = ip.region_of_interest(edges)
+op753=>operation: data = state_informer.get_car_deviation()
+op755=>operation: trailer_line = (state_informer.CAMERA_LOCATION + state_informer.get_trailer_pos())
+op757=>operation: center_line = (state_informer.get_lane_center_pos() + state_informer.CAMERA_LOCATION)
+op759=>operation: lines = state_informer.get_lanes()
+op761=>operation: image = ip.display_lines(image, lines, line_color=(255, 0, 0))
+op763=>operation: lines = [trailer_line]
+op765=>operation: image = ip.display_lines(image, lines, line_color=(0, 0, 255))
+op767=>operation: lines = [center_line]
+op769=>operation: image = ip.display_lines(image, lines, line_color=(0, 255, 0))
+op771=>operation: speed = state_informer.get_vel()
+sub773=>subroutine: iu.put_text(image, f'Theta1: {state_informer.get_car_lane_angle()}')
+sub775=>subroutine: iu.put_text(image, f'Alpha: {angle}', pos=(25, 50))
+sub777=>subroutine: iu.put_text(image, f'Theta2: {state_informer.get_trailer_lane_angle()}', pos=(25, 75))
+sub779=>subroutine: iu.put_text(image, f'Beta: {state_informer.get_hitch_angle()}', pos=(25, 100))
+sub781=>subroutine: streamer.stream_image(edges)
+cond784=>operation: frames.append(image) if  recording
+e796=>end: end stream_in_manual
+st800=>start: start main
+io802=>inputoutput: input: 
+sub805=>subroutine: print('STARTING MAIN')
+op807=>operation: global done, mode, check_auto_exit_thread, manual_streaming_thread
+op809=>operation: try:
+    g.update_input()
+except UnpluggedError:
+    go = input('Are you sure you want to start without gamepad? Will automatically enter autonomous mode: ').casefold()
+    if ((go == 'y') or (go == 'yes')):
+        go_mode = input('Autonomous Mode. 1 for forward, 2 for reverse: ')
+        if (go_mode == '1'):
+            mode = MainMode.AUTO_FORWARD
+        elif (go_mode == '2'):
+            mode = MainMode.AUTO_REVERSE
+        else:
+            print('Invalid mode.')
+            exit(0)
+    else:
+        print('Plug in gamepad and restart program to use.')
+        cleanup()
+cond812=>condition: while (not done)
+cond860=>operation: try:
+    g.update_input()
+except Exception as e:
+    print('update_input() threw an exception: ', e)
+    traceback.print_exc()
+    cleanup()
+    print('Entered Mode:', transition_mode) if  (mode == MainMode.MANUAL)
+cond871=>condition: if (mode == MainMode.MANUAL)
+sub875=>subroutine: manual()
+cond880=>condition: if (mode == MainMode.AUTO_FORWARD)
+sub884=>subroutine: auto_forward()
+cond889=>operation: auto_reverse() if  (mode == MainMode.AUTO_REVERSE)
+sub903=>subroutine: cleanup()
+e905=>end: end main
+st909=>start: start cleanup
+io911=>inputoutput: input: 
+op914=>operation: global cam, truck, video, streamer, frames, manual_streaming_thread
+sub916=>subroutine: print('Cleaning up...')
+cond919=>operation: manual_streaming_thread.join() if  ((manual_streaming_thread is not None) and manual_streaming_thread.is_alive())
+sub929=>subroutine: state_informer.stop()
+sub931=>subroutine: truck.stop()
+sub933=>subroutine: truck.cleanup()
+sub935=>subroutine: cam.stop()
+sub937=>subroutine: streamer.stop()
+sub939=>subroutine: print('Cleaned up.')
+sub941=>subroutine: exit(0)
+e943=>end: end cleanup
+cond947=>operation: main() if  (__name__ == '__main__')
+sub425=>subroutine: truck.set_steering_angle((- steering_angle_lanes))
+op427=>operation: drive_power = (- 0.7)
+cond433=>operation: truck.jackknifed = True if  (abs(hitch_angle) > 30)
+cond444=>condition: if truck.jackknifed
+cond449=>operation: truck.jackknifed = False if  abs((hitch_angle < 5))
+op459=>operation: steering_angle = steering_angle_lanes
+op461=>operation: drive_power = 0.7
+op465=>operation: steering_angle = steering_angle_lanes
+cond468=>operation: steering_angle = (hitch_angle * ReverseCalibrations.TURN_RATIO) if  (abs(hitch_angle) > ReverseCalibrations.HITCH_ANGLE_THRESHOLD)
+op478=>operation: drive_power = (- 0.7)
+sub256=>subroutine: truck.set_drive_power(1.0)
+cond107=>condition: if g.was_pressed(Inputs.X)
+op111=>operation: transition_mode = MainMode.AUTO_FORWARD
+sub113=>subroutine: print('Transitioned to auto FORWARD. Press START to init.')
+cond118=>condition: if g.was_pressed(Inputs.Y)
+op122=>operation: transition_mode = MainMode.AUTO_REVERSE
+sub124=>subroutine: print('Transitioned to auto REVERESE. Press START to init.')
+cond129=>condition: if g.was_pressed(Inputs.START)
+op133=>operation: mode = transition_mode
+cond136=>operation: manual_streaming_thread.join() if  ((manual_streaming_thread is not None) and manual_streaming_thread.is_alive())
+op146=>operation: check_auto_exit_thread = Thread(target=check_auto_exit)
+sub148=>subroutine: check_auto_exit_thread.start()
+sub150=>subroutine: print('Entered Mode:', transition_mode)
+cond155=>condition: if g.was_pressed(Inputs.A)
+cond160=>condition: if (not recording)
+op164=>operation: recording = True
+sub166=>subroutine: print('Started Recording')
+op170=>operation: recording = False
+sub172=>subroutine: print('Stopped Recording')
+
+op2->op4
+op4->op6
+op6->op8
+op8->op10
+op10->op12
+op12->op14
+op14->op16
+op16->op18
+op18->op20
+op20->op22
+op22->op24
+op24->op26
+op26->op28
+op28->op30
+op30->op32
+op32->op34
+op34->op36
+op36->op38
+op38->op40
+op40->op42
+op42->op44
+op44->op46
+op46->op48
+op48->op50
+op50->op52
+op52->op54
+op54->op56
+op56->st59
+st59->io61
+io61->op64
+op64->sub66
+sub66->op68
+op68->sub70
+sub70->e72
+e72->sub75
+sub75->st78
+st78->io80
+io80->op83
+op83->cond86
+cond86(yes)->op90
+op90->sub92
+sub92->cond98
+cond98(yes)->op102
+op102->op182
+op182->op184
+op184->cond187
+cond187->cond198
+cond198->e208
+e208->st212
+st212->io214
+io214->op217
+op217->cond220
+cond220(yes)->sub224
+sub224->e227
+cond220(no)->op233
+op233->op235
+op235->op237
+op237->op239
+op239->op241
+op241->op243
+op243->op245
+op245->cond248
+cond248(yes)->sub252
+sub252->op259
+op259->sub261
+sub261->op263
+op263->sub265
+sub265->cond268
+cond268->e278
+e278->st282
+st282->io284
+io284->cond288
+cond288(yes)->io295
+io295->e293
+cond288(no)->e301
+e301->st305
+st305->io307
+io307->op310
+op310->cond313
+cond313(yes)->sub317
+sub317->e320
+cond313(no)->op326
+op326->op328
+op328->op330
+op330->op332
+op332->op334
+op334->op336
+op336->op338
+op338->op340
+op340->op342
+op342->op344
+op344->op346
+op346->cond349
+cond349(yes)->op353
+op353->op355
+op355->op357
+op357->cond360
+cond360->cond371
+cond371->cond382
+cond382->cond393
+cond393->cond404
+cond404(yes)->op408
+op408->op410
+op410->cond413
+cond413->sub482
+sub482->op484
+op484->sub486
+sub486->op488
+op488->op490
+op490->op492
+op492->op494
+op494->sub496
+sub496->sub498
+sub498->cond501
+cond501->e511
+e511->st515
+st515->io517
+io517->op520
+op520->op522
+op522->cond525
+cond525(yes)->cond579
+cond579(yes)->sub583
+sub583->cond586
+cond586(yes)->op590
+op590->e593
+cond586(no)->cond600
+cond600(yes)->cond605
+cond605(yes)->op609
+op609->sub611
+sub611->cond525
+cond605(no)->op615
+op615->sub617
+sub617->cond525
+cond600(no)->cond525
+cond579(no)->cond525
+cond525(no)->e628
+e628->st632
+st632->io634
+io634->op637
+op637->op639
+op639->sub641
+sub641->sub643
+sub643->sub645
+sub645->op647
+op647->sub649
+sub649->e651
+e651->st655
+st655->io657
+io657->op660
+op660->op662
+op662->cond665
+cond665(yes)->cond733
+cond733->op743
+op743->op745
+op745->op747
+op747->op749
+op749->op751
+op751->op753
+op753->op755
+op755->op757
+op757->op759
+op759->op761
+op761->op763
+op763->op765
+op765->op767
+op767->op769
+op769->op771
+op771->sub773
+sub773->sub775
+sub775->sub777
+sub777->sub779
+sub779->sub781
+sub781->cond784
+cond784->cond665
+cond665(no)->e796
+e796->st800
+st800->io802
+io802->sub805
+sub805->op807
+op807->op809
+op809->cond812
+cond812(yes)->cond860
+cond860->cond871
+cond871(yes)->sub875
+sub875->cond812
+cond871(no)->cond880
+cond880(yes)->sub884
+sub884->cond812
+cond880(no)->cond889
+cond889->cond812
+cond812(no)->sub903
+sub903->e905
+e905->st909
+st909->io911
+io911->op914
+op914->sub916
+sub916->cond919
+cond919->sub929
+sub929->sub931
+sub931->sub933
+sub933->sub935
+sub935->sub937
+sub937->sub939
+sub939->sub941
+sub941->e943
+e943->cond947
+cond404(no)->sub425
+sub425->op427
+op427->sub482
+cond349(no)->cond433
+cond433->cond444
+cond444(yes)->cond449
+cond449->op459
+op459->op461
+op461->sub482
+cond444(no)->op465
+op465->cond468
+cond468->op478
+op478->sub482
+cond248(no)->sub256
+sub256->op259
+cond98(no)->cond107
+cond107(yes)->op111
+op111->sub113
+sub113->op182
+cond107(no)->cond118
+cond118(yes)->op122
+op122->sub124
+sub124->op182
+cond118(no)->cond129
+cond129(yes)->op133
+op133->cond136
+cond136->op146
+op146->sub148
+sub148->sub150
+sub150->op182
+cond129(no)->cond155
+cond155(yes)->cond160
+cond160(yes)->op164
+op164->sub166
+sub166->op182
+cond160(no)->op170
+op170->sub172
+sub172->op182
+cond155(no)->op182
+cond86(no)->cond98
+</textarea></div>
+        <div><button id="run" type="button">Run</button> <button onclick="HelpText()">Format Help</button></div>
+		<div id="HelpTextBlock" style="display:none"><br/>Conditions can also be redirected like cond(yes, bottom) or cond(yes, right)
+... and the other symbols too... like sub1(right)<br/>
+You can also tweak the <b>diagram.drawSVG('diagram', {});</b> script in this file for more changes<br/>
+This is based on <a href="https://github.com/adrai/flowchart.js">flowchart.js on github</a> and <a href="http://flowchart.js.org">http://flowchart.js.org</a> more documentation can be found over there.
+</div><br/><div id="svgbase64"></div>
+		<div id="pngbase64"></div>
+
+        <div id="canvas"></div>
+    </body>
+</html>
