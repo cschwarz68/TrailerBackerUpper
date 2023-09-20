@@ -28,5 +28,15 @@ We're developing a 1/10th scale truck with a trailer that can be used to demonst
 The vehicle can autonomously navigate forward. The current goal is to finish implementing model predictive control for reverse driving. The current obstacles to this goal are image processing and performance related. Please see this repositories GitHub pages site for general information, and documentation in each file source for more specific information..
 
 ## Acknowledgements
+- Bill Chen (Workplace Learning Connection intern)
+- Bivan Shrestha (Workplace Learning Connection intern)
+- Raven Levitt (Workplace Learning Connection intern)
+- Tommy Rogers (Workplace Learning Connection intern)
+- Marcus Miller (Workplace Learning Connection intern)
+- Kyle Chi (Workplace Learning Connection intern)
+- Alan Ramirez (UIowa engineering)
+- Adithya Mukundan (UIowa CS)
+- Amol Bhagavathi (UIowa CS)
+- Christopher Nair (UIowa CS)
 - [Image Processing for Autonomous Driving - David Tian](https://github.com/dctian/DeepPiCar)  
 - [Live Video Feed Streaming - An Nguyen](https://github.com/ancabilloni/udp_camera_streaming)
