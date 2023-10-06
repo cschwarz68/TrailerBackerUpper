@@ -34,6 +34,8 @@ The vehicle can autonomously navigate forward. The current goal is to finish imp
 - Tommy Rogers (Workplace Learning Connection intern)
 - Marcus Miller (Workplace Learning Connection intern)
 - Kyle Chi (Workplace Learning Connection intern)
+- Alex Yao (Workplace Learning Connection intern)
+- Natalie Hawk (Workplace Learning Connection intern)
 - Alan Ramirez (UIowa engineering)
 - Adithya Mukundan (UIowa CS)
 - Amol Bhagavathi (UIowa CS)
