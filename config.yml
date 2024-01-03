@@ -23,34 +23,15 @@ settings:
     # Camera calibrations
     camera:
 
-        # Camera offsets from center, expressed as percent
-        # =0% --> Camera is exactly in the middle.
-        # >0% --> Camera is skewed towards the left.
-        # <0% --> Camera is skewed towards the right.
 
-        # Offset of front camera
-        front offset: 0.02
-        # Offset of rear camera
-        rear offset: 0.02
+
+   
         # Framerate for OpenCV recording (this seems to produce wildly inconsistent result)
         framerate: 60
-        # NOTE: I would not reccomend changing the resolution as no resolutions have been tested other than 640x480
-        resolution width: 1600
-        resolution height: 1200
+        # NOTE: I would not reccomend changing the resolution as no resolutions have been tested other than 800x600
+        resolution width: 800
+        resolution height: 600
 
-    #Driving settings
-    driving: 
-        sharp turn threshold: 7.5
-        #threshold of front
-        sharp turn reverse threshold: 20
-        #threshold of back
-        position threshold : 0.03125        #1/60
-        #angle of trailer relative to center of lane
-        trailer angle off center threshold : 1
-        #amount of degrees before trailer correction
-        hitch angle threshold : 1
-        
-        turn ratio : 2.5
 
     #Streaming settings
     streaming:
@@ -60,9 +41,11 @@ settings:
         destination ip: "192.168.2.185"
         #Streaming destination port. Client is preconfigured with port 25565 by default. 
         destination port: 25565
-        #Stream to web browser (TCP) or the client inluded in this repo (UDP)
-        #NOTE: The web streaming is quite delayed because TCP bad
-        web streaming: true # NOT YET IMPLEMENTED. THIS OPTION DOES NOTHING
+     
+    
+    control:
+    #0 for controller, 1 for phone
+        control mode: 1
 
 
 
